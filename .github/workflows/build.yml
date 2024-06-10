@@ -1,4 +1,4 @@
-name: Build Complete Delete
+name: Build
 
 on:
   # push currently not needed and disabled
@@ -10,16 +10,12 @@ on:
     types: [closed]
     branches:
       - main
-      - v0.8.x # needs to be the same as vars.DEV_BRANCH
+      - stable
 
   workflow_dispatch:
 
 jobs:
   build:
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == '${{ vars.DEV_BRANCH }}' && github.head_ref != 'config') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/${{ vars.DEV_BRANCH }}')
     runs-on: windows-latest
 
     steps:
@@ -39,10 +35,7 @@ jobs:
       # remove --verbose for less verbosity
       run: cmake --build build --config Release --verbose
 
-    - name: Short commit SHA
-      run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-
-    - name: Create first zip file (file.dll and config.json)
+    - name: Create first zip file (vSID.dll and config.json)
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path output
@@ -111,10 +104,10 @@ jobs:
       id: prerelease
       shell: bash
       run: |
-        if [[ ${{github.ref}} == "refs/heads/${{ vars.DEV_BRANCH }}" ]]; then
+        if [[ ${{github.ref}} == "refs/heads/main" ]]; then
           echo "Prerelease is true"
           echo "prerelease=true" >> $GITHUB_OUTPUT
-        elif [[ ${{github.event_name}} == 'pull_request' && github.base_ref == ${{ vars.DEV_BRANCH }} ]]; then
+        elif [[ ${{github.event_name}} == 'pull_request' && github.base_ref == main ]]; then
           echo "Prerelease is true"
           echo "prerelease=true" >> $GITHUB_OUTPUT
         else
@@ -161,13 +154,11 @@ jobs:
           cat releases.json | while read -r release; do
             echo "Checking $release"
             if echo "$release" | jq -e 'has("tagName") and has("isPrerelease")' > /dev/null; then
-              echo "Inside if of isPrerelease"
               TAG=$(echo "$release" | jq -r '.tagName')
               RELEASE_PRERELEASE=$(echo "$release" | jq -r '.isPrerelease')
               echo "RELEASE_PRERELEASE is ${RELEASE_PRERELEASE}"
               if [[ "${RELEASE_PRERELEASE}" == "true" ]]; then
                 VERSION_RELEASE_PRERELEASE=$(echo "$TAG" | sed -e 's/^v//')
-                echo "Now inside is_prerelese true for next check to delete with version_release_pre ${VERSION_RELEASE_PRERELEASE}"
                   if [[ "${{steps.version.outputs.version}}" == "${VERSION_RELEASE_PRERELEASE}" ]]; then
                     echo "Deleting pre-release $TAG"
                     gh release delete "${TAG}" -y
@@ -189,13 +180,17 @@ jobs:
           if echo "$release" | jq -e 'has("tagName") and has("isPrerelease")' > /dev/null; then
             TAG=$(jq -r '.tagName' <<< "$release")
             IS_PRERELEASE=$(jq -r '.isPrerelease' <<< "$release")
-            if [[ "${IS_PRERELEASE}" == "true" && "$TAG" != "${{ env.RELEASE_TAG }}" ]]; then
+            if [[ "${IS_PRERELEASE}" == "true" ]]; then
               echo "Deleting pre-release $TAG"
               gh release delete "$TAG" -y
             fi
           fi
         done
 
+    - name: Remove old tag if it already exists
+      run: |
+          git push origin :refs/tags/v${{ env.DLL_VERSION }} || echo "Tag v${{ env.DLL_VERSION}} does not exist."
+          
     - name: Create GitHub Release and Upload Assets
       id: create_release
       uses: softprops/action-gh-release@v2
@@ -205,6 +200,7 @@ jobs:
         tag_name: v${{ env.DLL_VERSION }}
         body_path: release_body.txt
         name: v${{ env.DLL_VERSION }}
+        target_commitish: ${{ github.sha }}
         draft: false
         prerelease: ${{steps.prerelease.outputs.prerelease}}
         files: |
