@@ -104,10 +104,10 @@ jobs:
       id: prerelease
       shell: bash
       run: |
-        if [[ ${{github.ref}} == "refs/heads/main" ]]; then
+        if [[ ${{github.event_name}} == 'pull_request' && github.base_ref == main ]]; then
           echo "Prerelease is true"
           echo "prerelease=true" >> $GITHUB_OUTPUT
-        elif [[ ${{github.event_name}} == 'pull_request' && github.base_ref == main ]]; then
+        elif [[ ${{github.ref}} != "refs/heads/stable" ]]; then
           echo "Prerelease is true"
           echo "prerelease=true" >> $GITHUB_OUTPUT
         else
