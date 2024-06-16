@@ -1,4 +1,4 @@
-name: Build Complete Delete SHA v2
+name: Build
 
 on:
   # push currently not needed and disabled
