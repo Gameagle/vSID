@@ -1918,6 +1918,24 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 						this->activeAirports[*it].settings["auto"] = !this->activeAirports[*it].settings["auto"];
 						messageHandler->writeMessage("INFO", *it + " automode is: " + ((this->activeAirports[*it].settings["auto"]) ? "ON" : "OFF"));
+
+						if (this->activeAirports[*it].settings["auto"])
+						{
+							auto count = std::erase_if(this->processed, [&](auto item)
+								{
+									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
+									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
+									if (!fpln.GetClearenceFlag() &&
+										this->activeAirports.contains(fplnData.GetOrigin()) &&
+										this->activeAirports[fplnData.GetOrigin()].settings["auto"]
+										)
+									{
+										return true;
+									}
+									else return false;
+								}
+							);
+						}
 						if (this->activeAirports[*it].settings["auto"] && this->activeAirports[*it].hasLowerAtc(ControllerMyself()))
 						{
 							this->activeAirports[*it].forceAuto = true;
