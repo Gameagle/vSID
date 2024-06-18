@@ -50,7 +50,7 @@ namespace vsid
 
 		// Überschreibungen
 	public:
-		virtual BOOL InitInstance();
+		virtual BOOL InitInstance() override;
 		/**
 		 * @brief pointer to the plugin for ES
 		 *
