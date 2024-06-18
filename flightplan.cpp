@@ -126,7 +126,7 @@ bool vsid::fpln::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const s
 	std::string scratch = cad.GetScratchPadString();
 	scratch += toAdd;
 
-	messageHandler->writeMessage("DEBUG", "Setting scratch : " + scratch, vsid::MessageHandler::DebugArea::Req);
+	messageHandler->writeMessage("DEBUG", "[REQ] Setting scratch : " + scratch, vsid::MessageHandler::DebugArea::Req);
 
 	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 }
@@ -145,7 +145,7 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 
 		if (newScratch != scratch)
 		{
-			messageHandler->writeMessage("DEBUG", "Removing request. New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
+			messageHandler->writeMessage("DEBUG", "[REQ] Removing request. New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
 
 			return cad.SetScratchPadString(vsid::utils::trim(newScratch).c_str());
 		}

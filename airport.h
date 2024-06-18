@@ -103,8 +103,8 @@ namespace vsid
 						if (controller.second.facility < myself.GetFacility()) return true;
 						else if (appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si) &&
-							(appSI[myself.GetPositionId()] > appSI[controller.second.si] && !toActivate) ||
-							appSI[myself.GetPositionId()] >= appSI[controller.second.si] && toActivate)
+							((appSI[myself.GetPositionId()] > appSI[controller.second.si] && !toActivate) ||
+							(appSI[myself.GetPositionId()] >= appSI[controller.second.si] && toActivate)))
 							 return true;
 						else if (!appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si)) return true;
