@@ -2,6 +2,7 @@
 
 [CHANGED]
 *	further enhanced auto mode to accept inactive rwys (e.g. arr rwys)
+*	streamlined debugging messages
 
 [FIXED]
 *	forced auto mode only worked for new flightplans coming online - now the flightplans are reset correctly
