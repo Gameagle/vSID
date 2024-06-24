@@ -1676,7 +1676,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						this->activeAirports[icao].customRules[rule] = !this->activeAirports[icao].customRules[rule];
 						messageHandler->writeMessage(icao + " Rule", rule + " " + (this->activeAirports[icao].customRules[rule] ? "ON" : "OFF"));
 
-						auto count = std::erase_if(this->processed, [&](auto item)
+						std::erase_if(this->processed, [&](auto item)
 							{
 								EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 								EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -1849,7 +1849,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					messageHandler->writeMessage("INFO", ss.str());
 
-					auto count = std::erase_if(this->processed, [&](auto item)
+					std::erase_if(this->processed, [&](auto item)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -1917,7 +1917,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 						if (this->activeAirports[*it].settings["auto"])
 						{
-							auto count = std::erase_if(this->processed, [&](auto item)
+							std::erase_if(this->processed, [&](auto item)
 								{
 									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -2014,7 +2014,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					}
 					else messageHandler->writeMessage(icao + " " + command[3], "Area is unknown");
 					
-					auto count = std::erase_if(this->processed, [&](auto item)
+					std::erase_if(this->processed, [&](auto item)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -2839,7 +2839,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		{
 			if (now > it->second.first)
 			{
-				auto rm = std::erase_if(this->processed, [&](auto item) { return it->first == item.first; });
+				std::erase_if(this->processed, [&](auto fpln) { return it->first == fpln.first; });
 				it = this->removeProcessed.erase(it);
 			}
 			else ++it;
