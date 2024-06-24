@@ -142,7 +142,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 	std::string callsign = fpln.GetCallsign();
 	std::string icao = fplnData.GetOrigin();
-	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
+	// EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
 	std::vector<std::string> filedRoute = vsid::utils::split(std::string(fplnData.GetRoute()), ' ');
 	std::string sidWpt = vsid::VSIDPlugin::findSidWpt(fplnData);
 	vsid::Sid setSid = {};
@@ -1081,7 +1081,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		else if (strlen(sItemString) != 0)
 		{
-			EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
+			// EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
 			
 			std::string scratch = ".vsid_req_" + std::string(sItemString) + "/" +
 								std::to_string(std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now()).time_since_epoch().count());
@@ -1163,11 +1163,11 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 			else if ((atcBlock.first == "" ||
 					atcBlock.first == fplnData.GetOrigin()) &&
-					(this->processed[callsign].customSid.empty() ||
+					((this->processed[callsign].customSid.empty() ||
 					this->processed[callsign].sid == this->processed[callsign].customSid) ||
-					(std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V" &&
-					std::string(sItemString) == "VFR"
-					)
+					((std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V" &&
+					std::string(sItemString) == "VFR")
+					))
 					)
 			{
 				*pRGB = this->configParser.getColor("sidSuggestion");
@@ -1300,7 +1300,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 
 			// determine if climb via is needed depending on customSid
-			if (atcSid == "" || atcSid == sidName || atcSid == fplnData.GetOrigin() && sidName != customSidName)
+			if ((atcSid == "" || atcSid == sidName || atcSid == fplnData.GetOrigin()) && sidName != customSidName)
 			{
 				climbVia = this->processed[callsign].sid.climbvia;
 			}
@@ -1676,7 +1676,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						this->activeAirports[icao].customRules[rule] = !this->activeAirports[icao].customRules[rule];
 						messageHandler->writeMessage(icao + " Rule", rule + " " + (this->activeAirports[icao].customRules[rule] ? "ON" : "OFF"));
 
-						auto count = std::erase_if(this->processed, [&](auto item)
+						std::erase_if(this->processed, [&](auto item)
 							{
 								EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 								EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -1849,7 +1849,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					messageHandler->writeMessage("INFO", ss.str());
 
-					auto count = std::erase_if(this->processed, [&](auto item)
+					std::erase_if(this->processed, [&](auto item)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -1917,7 +1917,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 						if (this->activeAirports[*it].settings["auto"])
 						{
-							auto count = std::erase_if(this->processed, [&](auto item)
+							std::erase_if(this->processed, [&](auto item)
 								{
 									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -2014,7 +2014,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					}
 					else messageHandler->writeMessage(icao + " " + command[3], "Area is unknown");
 					
-					auto count = std::erase_if(this->processed, [&](auto item)
+					std::erase_if(this->processed, [&](auto item)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
@@ -2839,7 +2839,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		{
 			if (now > it->second.first)
 			{
-				auto rm = std::erase_if(this->processed, [&](auto item) { return it->first == item.first; });
+				std::erase_if(this->processed, [&](auto fpln) { return it->first == fpln.first; });
 				it = this->removeProcessed.erase(it);
 			}
 			else ++it;
