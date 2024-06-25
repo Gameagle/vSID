@@ -245,10 +245,13 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         // sids
                         for (auto &sid : this->parsedConfig.at(apt.first).at("sids").items())
                         {
-                            std::string wpt = sid.key();
+                            //std::string wpt = sid.key();
+                            std::string base = sid.key();
 
                             for (auto& sidWpt : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).items())
                             {
+                                // defaults to SID base if no waypoint is configured
+                                std::string wpt = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wpt", base));
                                 std::string id = sidWpt.key();
                                 std::string confDesig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
                                 char desig = (confDesig.length() > 0 ? confDesig[0] : ' ');
@@ -282,7 +285,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 int timeFrom = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeFrom", -1);
                                 int timeTo = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeTo", -1);
                                 
-                                vsid::Sid newSid = { wpt, id, ' ', desig, rwys, initial, via, prio,
+                                vsid::Sid newSid = { base, wpt, id, ' ', desig, rwys, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
                                                     mtow, customRule, area, equip, lvp,
                                                     timeFrom, timeTo };

@@ -31,17 +31,18 @@ namespace vsid
 	{
 	public:
 
-		Sid(std::string waypoint = "", std::string id = "", char number = ' ', char designator = ' ',
+		Sid(std::string base = "", std::string waypoint = "", std::string id = "", char number = ' ', char designator = ' ',
 			std::string rwy = "", int initialClimb = 0, bool climbvia = false, int prio = 99,
 			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
 			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0,
 			std::string customRule = "", std::string area = "", std::string equip = "", int lvp = -1,
-			int timeFrom = -1, int timeTo = -1) : waypoint(waypoint), id(id), number(number), designator(designator),
+			int timeFrom = -1, int timeTo = -1) : base(base), waypoint(waypoint), id(id), number(number), designator(designator),
 			rwy(rwy), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
 			pilotfiled(pilotfiled), actArrRwy(actArrRwy), actDepRwy(actDepRwy), wtc(wtc), engineType(engineType),
 			acftType(acftType), engineCount(engineCount), mtow(mtow),
 			customRule(customRule), area(area), equip(equip), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo) {};
 
+		std::string base;
 		std::string waypoint;
 		std::string id;
 		char number;
@@ -65,7 +66,7 @@ namespace vsid
 		int timeFrom;
 		int timeTo;
 		/**
-		 * @brief Gets the SID name (wpt + number + designator)
+		 * @brief Gets the SID name (base + number + designator)
 		 *
 		 * @param sid - the sid object to check
 		 */
@@ -82,7 +83,7 @@ namespace vsid
 		 */
 		std::string getRwy() const;
 		/**
-		 * @brief Checks if a SID object is empty (waypoint is checked)
+		 * @brief Checks if a SID object is empty (base is checked)
 		 *
 		 * @param sid - the sid object
 		 */
