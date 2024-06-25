@@ -1,3 +1,12 @@
+[Changelog v0.9.0]
+
+[CHANGED]
+*	automode activation now also ignores flightplans with present rwys (only clearance flag before)
+
+[FIXED]
+*	removed unused variables and using direct calls instead
+*	fixed parenthesis warnings
+
 [Changelog v0.8.3]
 
 [CHANGED]

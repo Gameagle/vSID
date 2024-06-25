@@ -1849,13 +1849,16 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					messageHandler->writeMessage("INFO", ss.str());
 
-					std::erase_if(this->processed, [&](auto item)
+					// remove processed flightplans if they're not cleared or if the set rwy is not part of depRwys anymore
+					std::erase_if(this->processed, [&](std::pair<std::string, vsid::fpln::Info> pFpln)
 						{
-							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
+							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-							if (!fpln.GetClearenceFlag() &&
-								this->activeAirports.contains(fplnData.GetOrigin()) &&
-								this->activeAirports[fplnData.GetOrigin()].settings["auto"]
+							std::string icao = fplnData.GetOrigin();
+							std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+							if (this->activeAirports.contains(fplnData.GetOrigin()) &&
+								this->activeAirports[icao].settings["auto"] &&
+								!fpln.GetClearenceFlag() && !pFpln.second.atcRWY
 								)
 							{
 								return true;
@@ -1917,14 +1920,14 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 						if (this->activeAirports[*it].settings["auto"])
 						{
-							std::erase_if(this->processed, [&](auto item)
+							// remove processed flightplans if they're not cleared or if the set rwy is not part of depRwys anymore
+							std::erase_if(this->processed, [&](std::pair<std::string, vsid::fpln::Info> pFpln)
 								{
-									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(item.first.c_str());
+									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-									if (!fpln.GetClearenceFlag() &&
-										this->activeAirports.contains(fplnData.GetOrigin()) &&
-										this->activeAirports[fplnData.GetOrigin()].settings["auto"]
-										)
+									std::string icao = fplnData.GetOrigin();
+									std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+									if (*it == icao && !fpln.GetClearenceFlag() && !pFpln.second.atcRWY)
 									{
 										return true;
 									}
