@@ -31,20 +31,21 @@ namespace vsid
 	{
 	public:
 
-		Sid(std::string waypoint = "", char number = ' ', std::string designator = "",
+		Sid(std::string waypoint = "", std::string id = "", char number = ' ', char designator = ' ',
 			std::string rwy = "", int initialClimb = 0, bool climbvia = false, int prio = 99,
 			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
 			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0,
 			std::string customRule = "", std::string area = "", std::string equip = "", int lvp = -1,
-			int timeFrom = -1, int timeTo = -1) : waypoint(waypoint), number(number), designator(designator),
+			int timeFrom = -1, int timeTo = -1) : waypoint(waypoint), id(id), number(number), designator(designator),
 			rwy(rwy), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
 			pilotfiled(pilotfiled), actArrRwy(actArrRwy), actDepRwy(actDepRwy), wtc(wtc), engineType(engineType),
 			acftType(acftType), engineCount(engineCount), mtow(mtow),
 			customRule(customRule), area(area), equip(equip), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo) {};
 
 		std::string waypoint;
+		std::string id;
 		char number;
-		std::string designator;
+		char designator;
 		std::string rwy;
 		int initialClimb;
 		bool climbvia;
@@ -70,10 +71,10 @@ namespace vsid
 		 */
 		std::string name() const;
 		/**
-		 * @brief Return the full name of a sid (including indexed designators)
+		 * @brief Return the full name of a sid (including id)
 		 * 
 		 */
-		std::string fullName() const;
+		std::string idName() const;
 		/**
 		 * @brief Gets the runway associated with a sid
 		 *

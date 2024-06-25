@@ -4,23 +4,17 @@
 
 std::string vsid::Sid::name() const
 {
-	return (this->empty()) ? "" : this->waypoint + this->number + this->designator[0];
+	return (this->empty()) ? "" : this->waypoint + this->number + this->designator;
 }
 
-std::string vsid::Sid::fullName() const
+std::string vsid::Sid::idName() const
 {
-	return (this->empty()) ? "" : this->waypoint + this->number + this->designator;
+	return (this->empty()) ? "" : this->waypoint + this->number + this->designator + " (ID: " + this->id + ")";
 }
 
 std::string vsid::Sid::getRwy() const
 {
 	return vsid::utils::split(this->rwy, ',').at(0);
-
-	/*if (this->rwy.find(",") != std::string::npos)
-	{
-		return vsid::utils::split(this->rwy, ',').front();
-	}
-	else return this->rwy;*/
 }
 
 bool vsid::Sid::empty() const
@@ -32,7 +26,7 @@ bool vsid::Sid::operator==(const Sid& sid)
 {
 	if (this->waypoint == sid.waypoint &&
 		this->number == sid.number &&
-		this->designator[0] == sid.designator[0]
+		this->designator == sid.designator
 		)
 	{
 		return true;
@@ -44,7 +38,7 @@ bool vsid::Sid::operator!=(const Sid& sid)
 {
 	if (this->waypoint != sid.waypoint ||
 		this->number != sid.number ||
-		this->designator[0] != sid.designator[0]
+		this->designator != sid.designator
 		)
 	{
 		return true;

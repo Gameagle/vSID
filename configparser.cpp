@@ -249,7 +249,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                             for (auto& sidWpt : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).items())
                             {
-                                std::string desig = sidWpt.key();
+                                std::string id = sidWpt.key();
+                                std::string confDesig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
+                                char desig = (confDesig.length() > 0 ? confDesig[0] : ' ');
                                 std::string rwys = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", "");
                                 int initial = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("initial", 0);
                                 bool via = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("climbvia", false);
@@ -280,7 +282,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 int timeFrom = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeFrom", -1);
                                 int timeTo = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeTo", -1);
                                 
-                                vsid::Sid newSid = { wpt, ' ', desig, rwys, initial, via, prio,
+                                vsid::Sid newSid = { wpt, id, ' ', desig, rwys, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
                                                     mtow, customRule, area, equip, lvp,
                                                     timeFrom, timeTo };
