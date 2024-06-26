@@ -1,3 +1,47 @@
+[Changelog v0.9.0]
+
+[CHANGED]
+*	automode activation now also ignores flightplans with present rwys (only clearance flag before)
+
+[FIXED]
+*	removed unused variables and using direct calls instead
+*	fixed parenthesis warnings
+
+[Changelog v0.8.3]
+
+[CHANGED]
+*	further enhanced auto mode to accept inactive rwys (e.g. arr rwys)
+*	streamlined debugging messages
+
+[FIXED]
+*	forced auto mode only worked for new flightplans coming online - now the flightplans are reset correctly
+
+[Changelog v0.8.2]
+
+[FIXED]
+*	requests were reset when setting a squawk without deletion in the request list
+	resulting in wrong numbered requests (e.g. request no. 2 although only 1 request was present)
+*	auto and manual SID selection now respect the rwy set by atc so the "default" rwy is no longer overwriting
+	atc decision
+*	very rare access violation caused by additional whitespaces at specific positions in a flightplan
+	(by wrong flightplans or controller error during edits)
+*	requests were not saved when updating active airports or runways or when using airport settings like rules
+
+[CHANGED]
+*	reverted copy parameters back to reference parameters
+*	added additional checks for flightplan invalidity past the initial check for the case a flightplan becomes
+	invalid after the first check was passed
+
+[Changelog v0.8.1a - HOTFIX]
+
+[FIXED]
+*	selecting a custom rwy that is not part of the active rwys resulted in SID displayed as RWY
+
+[Changelog v0.8.1]
+
+[NEW]
+*	synced requests with timer
+
 [Changelog v0.8.0]
 
 [NEW]

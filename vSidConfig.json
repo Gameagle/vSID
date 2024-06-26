@@ -1,5 +1,5 @@
 {
-    "airportConfigs": "config",
+    "airportConfigs": "../vSID Airportconfig",
     "colors": {
         "sidSuggestion": {
             "r": 255,
@@ -70,6 +70,25 @@
             "r": 230,
             "g": 230,
             "b": 60
+        },
+        "requestNeutral": {
+            "r": 128,
+            "g": 128,
+            "b": 128
+        },
+        "requestCaution":  {
+            "r": 230,
+            "g": 230,
+            "b": 60
+        },
+        "requestWarning": {
+            "r": 220,
+            "g": 30,
+            "b": 20
         }
+    },
+    "requests": {
+        "caution": 2,
+        "warning": 5
     }
 }

@@ -16,9 +16,9 @@ bool vsid::time::isActive(const std::string& timezone, const int start, const in
 
 		if ((ztEnd.get_local_time() < ztStart.get_local_time() &&
 			(zt.get_local_time() > ztStart.get_local_time() || zt.get_local_time() < ztEnd.get_local_time())) ||
-			ztEnd.get_local_time() > ztStart.get_local_time() &&
+			(ztEnd.get_local_time() > ztStart.get_local_time() &&
 			zt.get_local_time() > ztStart.get_local_time() &&
-			zt.get_local_time() < ztEnd.get_local_time()
+			zt.get_local_time() < ztEnd.get_local_time())
 			)
 		{
 			return true;

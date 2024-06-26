@@ -38,11 +38,11 @@ namespace vsid
 			bool atcRWY = false;
 			bool noFplnUpdate = false;
 			bool remarkChecked = false;
-			bool autoWarning = false;
 			vsid::Sid sid = {};
 			vsid::Sid customSid = {};
 			std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
 			int updateCounter = 0;
+			bool request = false;
 		};
 		/**
 		 * @brief Strip the filed route from SID/RWY and/or SID to have a bare route to populate with set SID.
@@ -72,7 +72,7 @@ namespace vsid
 		 * @return true - if the string was found
 		 * @return false - if the string was not found
 		 */
-		bool findRemarks(const EuroScopePlugIn::CFlightPlanData& fplnData, const std::string(& searchStr));
+		bool findRemarks(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& searchStr));
 
 		/**
 		 * @brief Removes the given string from the flightplan remarks if present
@@ -80,7 +80,7 @@ namespace vsid
 		 * @param fplnData - flightplan data to remove the remarks from
 		 * @param searchStr - which string to remove
 		 */
-		bool removeRemark(EuroScopePlugIn::CFlightPlanData& fplnData, const std::string(&toRemove));
+		bool removeRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toRemove));
 
 		/**
 		 * @brief Adds the given string to the flightplan remarks
@@ -88,12 +88,12 @@ namespace vsid
 		 * @param fplnData - flightplan data to edit the remarks for
 		 * @param searchStr - which string to add
 		 */
-		bool addRemark(EuroScopePlugIn::CFlightPlanData& fplnData, const std::string(& toAdd));
+		bool addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& toAdd));
 
-		bool findScratchPad(EuroScopePlugIn::CFlightPlanControllerAssignedData& cad, const std::string& toSearch);
+		bool findScratchPad(const EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toSearch);
 
-		bool setScratchPad(EuroScopePlugIn::CFlightPlanControllerAssignedData& cad, const std::string& toAdd);
+		bool setScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toAdd);
 
-		bool removeScratchPad(EuroScopePlugIn::CFlightPlanControllerAssignedData& cad, const std::string& toRemove);
+		bool removeScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toRemove);
 	}
 }

@@ -40,7 +40,16 @@ namespace vsid
 			this->arrAsDep = false;
 		};
 
+		/**
+		 * @brief Debug function - doesn't "show" but rather prints coordinates
+		 * 
+		 */
 		void showline();
+		/**
+		 * @brief If a given flightplan is indie the area
+		 * 
+		 * @param fplnPos - flightplan position
+		 */
 		bool inside(const EuroScopePlugIn::CPosition& fplnPos);
 		bool isActive;
 		bool arrAsDep;
@@ -55,7 +64,19 @@ namespace vsid
 		using Line = std::pair<Point, Point>;
 		std::vector<Line> lines;
 
+		/**
+		 * @brief Creates a decimal position pair
+		 * 
+		 * @param pos the fpln position as pair of lat/long coordinates
+		 */
 		Point toPoint(std::pair<std::string, std::string> &pos);
+
+		/**
+		 * @brief Transforms lat/long string value into decimal equivalent
+		 * 
+		 * @param coord 
+		 * @return double 
+		 */
 		double toDeg(std::string& coord);
 	};
 }

@@ -1,0 +1,204 @@
+name: Build
+
+on:
+  # push currently not needed and disabled
+  #push:
+      #branches:
+        #- v0.8.x # needs to be the same as vars.DEV_BRANCH
+
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - stable
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get dll version
+      id: dllversion
+      shell: bash
+      run: |
+        version=$(grep -Eo 'const std::string pluginVersion = "[^"]+"' vSIDPlugin.h | cut -d'"' -f2)
+        echo "Version is: $version"
+        echo "version=$version" >> $GITHUB_OUTPUT
+        
+    - name: Determine prerelease of current build
+      id: prerelease
+      shell: bash
+      run: |
+        if [[ ${{github.ref}} != "refs/heads/stable" ]]; then
+          echo "Prerelease is true"
+          echo "prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "Prerelease is not true"
+          echo "prerelease=false" >> $GITHUB_OUTPUT
+        fi
+        echo "github.ref is ${{ github.ref }}"
+        
+    - name: Append commit sha to version
+      if: ${{ steps.prerelease.outputs.prerelease == 'true' }}
+      id: commitversion
+      shell: bash
+      run: |
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        SHA_VERSION="${{steps.dllversion.outputs.version}}-$SHORT_SHA"
+        echo "shaversion=$SHA_VERSION" >> $GITHUB_OUTPUT
+        echo "Versions. version = ${{steps.dllversion.outputs.version}}, short_sha = $SHORT_SHA, new_version = $SHA_VERSION"
+        sed -i 's/const std::string pluginVersion = ".*";/const std::string pluginVersion = "'$SHA_VERSION'";/' vSIDPlugin.h      
+      
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: 17
+
+    - name: Configure CMake
+      # remove --trace for less verbosity
+      run: cmake -B build -S . -A Win32 --trace
+      
+    - name: Build DLL
+      # remove --verbose for less verbosity
+      run: cmake --build build --config Release --verbose
+
+    - name: Create first zip file (vSID.dll and config.json)
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path output
+        Compress-Archive -Path build\Release\vSID.dll, vSIDConfig.json -DestinationPath output/files.zip
+
+    - name: Create second zip file (config folder)
+      shell: pwsh
+      run: |
+        Compress-Archive -Path config -DestinationPath output/config.zip
+          
+    - name: Extract and Compare Versions
+      id: changelog_version
+      shell: bash
+      run: |
+          # Extract version from Changelog
+          version=$(grep -o '\[Changelog v[0-9]\{1,2\}\.[0-9]\{1,2\}\.[0-9]\{1,2\}\]' Changelog.txt | head -n 1 | sed 's/\[Changelog v\([0-9]\{1,2\}\.[0-9]\{1,2\}\.[0-9]\{1,2\}\)\]/\1/')
+          
+          # Compare with current app version
+          if [[ "$version" == "${{steps.dllversion.outputs.version}}" ]]; then
+            echo "Versions match!"
+            echo "match=true" >> $GITHUB_OUTPUT
+            echo "version=$version" >> $GITHUB_OUTPUT
+          else
+            echo "Versions do not match."
+            echo "match=false" >> $GITHUB_OUTPUT
+          fi
+          echo "DLL Version - '${{steps.dllversion.outputs.version}}' and log version - '$version'"
+          
+    - name: Extract Release Body
+      if: ${{ steps.changelog_version.outputs.match == 'true' }}
+      id: release_body
+      shell: bash
+      run: |
+          # Extract version and release body
+          version="${{ steps.changelog_version.outputs.version }}"
+          releaseBody=$(awk -v version="$version" '
+            $0 ~ "\\[Changelog v" version "\\]" { 
+              found=1
+              next 
+            } 
+            found && /^\[Changelog v/ { 
+              exit 
+            } 
+            found { 
+              print 
+            }' Changelog.txt)
+        
+          echo "Release Body:"
+          echo "$releaseBody"
+        
+          # Save release body to a file
+          echo "$releaseBody" > release_body.txt
+
+    - name: Delete old pre-releases
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+          latest_release=$(gh release list --limit 1 --json tagName,isPrerelease --jq '.[0]')
+
+          if [ -z "$latest_release" ]; then
+            echo "No releases found."
+          else
+            echo "Release found."
+
+            gh release list --json tagName,isPrerelease --jq '.[] | {tagName: .tagName, isPrerelease: .isPrerelease}' > releases.json
+            cat releases.json | while read -r release; do
+              echo "Checking $release"
+              if echo "$release" | jq -e 'has("tagName") and has("isPrerelease")' > /dev/null; then
+                TAG=$(echo "$release" | jq -r '.tagName')
+                RELEASE_PRERELEASE=$(echo "$release" | jq -r '.isPrerelease')
+                echo "RELEASE_PRERELEASE is ${RELEASE_PRERELEASE}"
+                if [[ "${RELEASE_PRERELEASE}" == "true" ]]; then
+                  VERSION_RELEASE_PRERELEASE=$(echo "$TAG" | sed -e 's/^v//')
+                    if [[ "${{steps.prerelease.outputs.prerelease}}" == "true" && "$VERSION_RELEASE_PRERELEASE" == *"${{steps.dllversion.outputs.version}}"* ]]; then
+                      echo "Deleting pre-release with same version $TAG"
+                      gh release delete "${TAG}" -y
+                    elif [[ "${{steps.prerelease.outputs.prerelease}}" == "false" && "$RELEASE_PRERELEASE" == "true" ]]; then
+                      echo "Deleting pre-release $TAG on new stable release"
+                      gh release delete "$TAG" -y
+                    fi
+                fi
+              else
+                echo "Skipping invalid release entry: $release"
+              fi
+            done
+          fi
+
+    - name: Remove old tags
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        tags=$(gh api repos/${GITHUB_REPOSITORY}/tags --jq '.[].name')
+        
+        for tag in $tags; do
+          # if tag is in format vX.Y.Z-abcd but not in format vX.Y.Z remove (pre-release tags)
+          if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-.*$ && ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Deleting tag: $tag"
+            git push origin :refs/tags/$tag
+          fi
+        done
+
+
+    - name: Determine release name
+      id: releasename
+      shell: bash
+      run: |
+        if [[ "${{ steps.prerelease.outputs.prerelease }}" == 'true' ]]; then
+          echo "Setting pre-release name"
+          echo "releasename=v${{ steps.commitversion.outputs.shaversion }}" >> $GITHUB_OUTPUT
+        else
+          echo "Setting stable name"
+          echo "releasename=v${{steps.dllversion.outputs.version}}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create GitHub Release and Upload Assets
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.releasename.outputs.releasename }}
+        body_path: release_body.txt
+        name: ${{ steps.releasename.outputs.releasename }}
+        target_commitish: ${{ github.sha }}
+        draft: false
+        prerelease: ${{steps.prerelease.outputs.prerelease}}
+        files: |
+          output/files.zip
+          output/config.zip

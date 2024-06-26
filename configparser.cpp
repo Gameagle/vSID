@@ -44,10 +44,13 @@ void vsid::ConfigParser::loadMainConfig()
             COLORREF rgbColor = RGB(
                 this->vSidConfig.at("colors").at(elem.key()).value("r", 60),
                 this->vSidConfig.at("colors").at(elem.key()).value("g", 80),
-                this->vSidConfig.at("colors").at(elem.key()).value("b", 240),
+                this->vSidConfig.at("colors").at(elem.key()).value("b", 240)
                 );
             this->colors[elem.key()] = rgbColor;
         }
+
+        // pseudo values for special color use cases
+        if (!this->colors.contains("squawkSet")) this->colors["squawkSet"] = RGB(300, 300, 300);
     }
     catch (std::error_code& e)
     {
@@ -56,21 +59,20 @@ void vsid::ConfigParser::loadMainConfig()
 
     try
     {
-        for (auto& elem : this->vSidConfig.at("requests").items())
-        {
-            this->reqTimes.insert({ elem.key(), elem.value()});
-        }
+        this->reqTimes.insert({ "caution", this->vSidConfig.at("requests").value("caution", 2) });
+        this->reqTimes.insert({ "warning", this->vSidConfig.at("requests").value("warning", 5) });
     }
-    catch (std::error_code& e)
+    catch (json::parse_error& e)
     {
-        messageHandler->writeMessage("ERROR", "Failed to get request timers: " + e.message());
+        messageHandler->writeMessage("ERROR", "Failed to get request timers: " + std::string(e.what()));
     }
 }
 
 void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
                                         std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
                                         std::map<std::string, std::map<std::string, bool>>& savedSettings,
-                                        std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas
+                                        std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
+                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
                                         )
 {
     // get the current path where plugins .dll is stored
@@ -141,16 +143,17 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.requests["pushback"] = {};
                         apt.second.requests["taxi"] = {};
                         apt.second.requests["departure"] = {};
-                        std::map<std::string, bool> customRules;
 
                         // customRules
 
+                        std::map<std::string, bool> customRules;
                         for (auto &el : this->parsedConfig.at(apt.first).value("customRules", std::map<std::string, bool>{}))
                         {
                             std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
                             customRules.insert(rule);
                         }
                         // overwrite loaded rule settings from config with current values at the apt
+
                         if (savedCustomRules.contains(apt.first))
                         {
                             for (std::pair<const std::string, bool>& rule : savedCustomRules[apt.first])
@@ -161,9 +164,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 }
                             }
                         }
-                        apt.second.customRules = customRules;
-                        customRules.clear();
-                        savedCustomRules.clear();
+                        apt.second.customRules = customRules;                        
 
                         std::set<std::string> appSI;
                         int appSIPrio = 0;
@@ -221,7 +222,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 apt.second.areas.insert({ vsid::utils::toupper(area.key()), vsid::Area{coords, isActive, arrAsDep} });
                             }
                         }
-                        savedAreas.clear();
 
                         // airport settings
                         if (savedSettings.contains(apt.first))
@@ -235,7 +235,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                     {"auto", false}
                             };
                         }
-                        savedSettings.clear();
+
+                        // saved requests - if not found base settings already in general settings
+                        if (savedRequests.contains(apt.first))
+                        {
+                            apt.second.requests = savedRequests[apt.first];
+                        }
 
                         // sids
                         for (auto &sid : this->parsedConfig.at(apt.first).at("sids").items())
@@ -315,6 +320,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
             }
         }
     }
+    /*savedCustomRules.clear(); // MONITOR - DROPPED ANYWAYS
+    savedAreas.clear();
+    savedSettings.clear();*/
 
     // airport health check - remove apt without config
 

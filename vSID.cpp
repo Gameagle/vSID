@@ -69,5 +69,3 @@ BOOL vsid::VSIDApp::InitInstance()
 }
 
 //vsid::VSIDPlugin* vsidPlugin = NULL;
-
-

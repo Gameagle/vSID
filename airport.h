@@ -46,6 +46,18 @@ namespace vsid
 	};
 	struct Airport
 	{
+		/**
+		 * @brief Compare operator for custom request sorting.
+		 *
+		 */
+		struct compreq
+		{
+			bool operator()(auto l, auto r) const
+			{
+				return l.second > r.second;
+			}
+		};
+
 		std::string icao = "";
 		int elevation = 0;
 		std::vector<std::string> allRwys = {};
@@ -62,13 +74,14 @@ namespace vsid
 		int maxInitialClimb = 0;
 		std::map<std::string, bool> settings = {};
 		std::map<std::string, vsid::Controller> controllers = {};
-		std::map<std::string, std::map<std::string, std::pair<int, std::chrono::time_point<std::chrono::utc_clock, std::chrono::minutes>>>> requests = {};
+		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
 		bool forceAuto = false;
 
 		/**
 		 * @brief Checks if another controller with a lower facility is online
 		 * 
 		 * @param myself - Controller().ControllerMyself()
+		 * @param toActivate - if the check should consider activation of automode (true) or only if it needs to be disabled
 		 */
 		inline bool hasLowerAtc(const EuroScopePlugIn::CController &myself, bool toActivate = false)
 		{
@@ -90,62 +103,17 @@ namespace vsid
 						if (controller.second.facility < myself.GetFacility()) return true;
 						else if (appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si) &&
-							(appSI[myself.GetPositionId()] > appSI[controller.second.si] && !toActivate) ||
-							appSI[myself.GetPositionId()] >= appSI[controller.second.si] && toActivate)
+							((appSI[myself.GetPositionId()] > appSI[controller.second.si] && !toActivate) ||
+							(appSI[myself.GetPositionId()] >= appSI[controller.second.si] && toActivate)))
 							 return true;
 						else if (!appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si)) return true;
 						else return false;
-
-						/*if (controller.second.facility < myself.GetFacility() ||
-							(appSI.contains(myself.GetPositionId()) &&
-								appSI.contains(controller.second.si) &&
-								appSI[myself.GetPositionId()] > appSI[controller.second.si]) ||
-							(!appSI.contains(myself.GetPositionId()) &&
-								appSI.contains(controller.second.si))
-							) return true;
-						else return false;*/
 					}))
 			{
 				return false;
 			}
 			else return true;
-		}
-
-		/**
-		 * @brief Compare operator for custom request sorting.
-		 * 
-		 * @param second.first - current stored position
-		 * @param first - callsign
-		 */
-		struct compreq
-		{
-			bool operator()(auto l, auto r) const
-			{
-				if (l.second.first != r.second.first) return l.second.first < r.second.first;
-				return l.first < r.first;
-			}
-		};
-
-		/**
-		 * @brief Sorts requests based on position in queue and updates positions
-		 * 
-		 */
-		inline void sortRequests()
-		{
-			for (auto& req : this->requests)
-			{
-				std::set<std::pair<std::string, std::pair<int, std::chrono::time_point<std::chrono::utc_clock, std::chrono::minutes>>>, compreq> setReq(req.second.begin(), req.second.end());
-
-				for (auto it = setReq.begin(); it != setReq.end(); ++it)
-				{
-					int pos = std::distance(setReq.begin(), it);
-					if (req.second.contains(it->first))
-					{
-						req.second[it->first].first = pos + 1;
-					}
-				}
-			}
 		}
 	};
 }

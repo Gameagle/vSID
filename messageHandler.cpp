@@ -12,6 +12,8 @@ vsid::MessageHandler::~MessageHandler() { this->closeConsole(); }
 
 void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, DebugArea debugArea)
 {
+	if (sender == "DEBUG" && this->getLevel() != Level::Debug) return;
+
 	try
 	{
 		if (this->currentLevel == Level::Debug && (this->debugArea ==  debugArea || this->debugArea == DebugArea::All) && sender == "DEBUG")
@@ -119,6 +121,11 @@ bool vsid::MessageHandler::setDebugArea(std::string debugArea)
 	else if (debugArea == "DEV")
 	{
 		this->debugArea = DebugArea::Dev;
+		return true;
+	}
+	else if (debugArea == "REQ")
+	{
+		this->debugArea = DebugArea::Req;
 		return true;
 	}
 	else return false;
