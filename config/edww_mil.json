@@ -80,31 +80,6 @@
 			}
 		}
 	},
-	"ETHN": {
-        "elevation": 39,
-        "runways": "08,26",
-        "transAlt": 5000,
-        "maxInitialClimb": 7000,
-		"appSI": "",
-        "sids": {
-            "NH108": {
-                "1": {
-					"wpt": "XXX",
-                    "rwy": "08",
-                    "initial": 2500,
-                    "prio": 1
-                }
-			},
-			"NL126": {
-                "1": {
-					"wpt": "XXX",
-                    "rwy": "26",
-                    "initial": 2500,
-                    "prio": 1
-                }
-			}
-		}
-	},
 	"ETNH": {
         "elevation": 39,
         "runways": "08,26",
