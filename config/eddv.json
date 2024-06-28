@@ -6,66 +6,74 @@
         "maxInitialClimb": 7000,
         "customRules" : {"high":false},
 		"appSI": "HAN,HRZ,DST,EIDW",
-        "timeMode": true,
         "timezone": "Europe/Berlin",
         "sids": {
             "CEL": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"Y3": {
+				"3": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
                     "Remark": "req in case 09R clsd"
                 },
-                "G": {
+                "4": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-			    "S1": {
+			    "5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"S3": {
+				"7": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-				"S4": {
+				"8": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
                     "Remark": "req in case 27L clsd"
                 },
-			    "F": {
+			    "9": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -73,54 +81,62 @@
                 }
             },
 			"MULDO": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-                "G": {
+                "3": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-			    "S1": {
+			    "4": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
 					"wtc": "HJ"
                 },
-				"S2": {
+				"5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"S3": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-				"S4": {
+				"7": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
 					"Remark": "req in case 27L clsd"
                 },
-			    "F": {
+			    "8": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -128,62 +144,71 @@
                 }
             },
 			"NIE": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"Y3": {
+				"3": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
                     "Remark": "req in case 09R clsd"
                 },
-                "G": {
+                "4": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-			    "S1": {
+			    "5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"S3": {
+				"7": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-				"S4": {
+				"8": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
                     "Remark": "req in case 27L clsd"
                 },
-			    "F": {
+			    "9": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -191,46 +216,53 @@
                 }
             },
 			"POVEL": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-                "H": {
+                "3": {
+					"designator": "H",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-			    "S1": {
+			    "4": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"S3": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-			    "F": {
+			    "7": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -238,54 +270,62 @@
                 }
             },
 			"VAXEV": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2,
                     "customRule": "high"
                 },
-				"Y3": {
+				"3": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 4,
                     "Remark": "req in case 09R clsd"
                 },
-                "G": {
+                "4": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-			    "S1": {
+			    "5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"S3": {
+				"7": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-			    "F": {
+			    "8": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -293,46 +333,53 @@
                 }
             },
 			"WERRA": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-                "G": {
+                "3": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-			    "S1": {
+			   "4": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"S3": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-			    "F": {
+			    "7": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
@@ -340,46 +387,53 @@
                 }
             },
 			"WRB": {
-                "Y1": {
+                "1": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"Y2": {
+				"2": {
+					"designator": "Y",
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-                "G": {
+                "3": {
+					"designator": "G",
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-			    "S1": {
+			    "4": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1,
                     "wtc": "HJ"
                 },
-				"S2": {
+				"5": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 3
                 },
-				"S3": {
+				"6": {
+					"designator": "S",
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
 					"prio": 1,
 					"area": "gat"
                 },
-			    "F": {
+			    "7": {
+					"designator": "F",
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,

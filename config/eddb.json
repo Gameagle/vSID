@@ -4,12 +4,12 @@
         "runways": "07L,07R,25L,25R",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
-        "timeMode": true,
 		"appSI": "FLG,BOR,MAR,MRZ,WC",
 		"timezone": "Europe/Berlin",
         "sids": {
             "ARSAP": {
-                "B1": {
+                "1":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -17,46 +17,53 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"B2": {
+				"2":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 3,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-                "Q1": {
+                "3":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"Q2": {
+				"4":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"Z": {
+				"5":{
+					"designator":"Z",
                     "rwy": "07R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 99
                 },
-				"N1": {
+				"6":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"N2": {
+				"7":{
+					"designator":"N2",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"A1": {
+				"8":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
@@ -64,14 +71,16 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"A2": {
+				"9":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 3,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-				"M": {
+				"10":{
+					"designator":"M",
                     "rwy": "25R",
                     "initial": 4000,
                     "climbvia": false,
@@ -81,7 +90,8 @@
                 }
 			},
 			"GERGA": {
-                "B1": {
+                "1":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -89,40 +99,46 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"B2": {
+				"2":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 2,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-                "Q1": {
+                "3":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"Q2": {
+				"4":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 3
                 },
-				"Z": {
+				"5":{
+					"designator":"Z",
                     "rwy": "07R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 99
                 },
-				"N": {
+				"6":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"A1": {
+				"7":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
@@ -130,14 +146,16 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"A2": {
+				"8":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-				"M": {
+				"9":{
+					"designator":"M",
                     "rwy": "25R",
                     "initial": 4000,
                     "climbvia": false,
@@ -146,7 +164,8 @@
                 }
 			},
 			"LUROS": {
-                "B1": {
+                "1":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -154,47 +173,54 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"B2": {
+				"2":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 3,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-                "Q1": {
+                "3":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"Q2": {
+				"4":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"Z": {
+				"5":{
+					"designator":"Z",
                     "rwy": "07R",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 99,
                     "pilotfiled": true
                 },
-				"N1": {
+				"6":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"N2": {
+				"7":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"A1": {
+				"8":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
@@ -202,14 +228,16 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"A2": {
+				"9":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 3,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-				"M": {
+				"10":{
+					"designator":"M",
                     "rwy": "25R",
                     "initial": 4000,
                     "climbvia": false,
@@ -218,7 +246,8 @@
                 }
 			},
 			"SUKIP": {
-                "B1": {
+                "1":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -226,14 +255,16 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"B2": {
+				"2":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 2,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-				"K": {
+				"3":{
+					"designator":"K",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -241,40 +272,46 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
                     "pilotfiled": true
                 },
-                "Q1": {
+                "4":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"Q2": {
+				"5":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 3
                 },
-				"Z": {
+				"6":{
+					"designator":"Z",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": false,
                     "prio": 99,
                     "pilotfiled": true
                 },
-				"N1": {
+				"7":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"N2": {
+				"8":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 3
                 },
-				"A1": {
+				"9":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": false,
@@ -282,7 +319,8 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"A2": {
+				"10":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": false,
@@ -291,7 +329,8 @@
                 }
 			},
 			"LOGDO": {
-                "B1": {
+                "1":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": true,
@@ -299,14 +338,16 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"B2": {
+				"2":{
+					"designator":"B",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 3,
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false}
                 },
-				"K": {
+				"3":{
+					"designator":"K",
                     "rwy": "07L",
                     "initial": 5000,
                     "climbvia": false,
@@ -314,40 +355,46 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
                     "pilotfiled": true
                 },
-                "Q1": {
+                "4":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"Q2": {
+				"5":{
+					"designator":"Q",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"Z": {
+				"6":{
+					"designator":"Z",
                     "rwy": "07R",
                     "initial": 8000,
                     "climbvia": false,
                     "prio": 99,
                     "pilotfiled": true
                 },
-				"N1": {
+				"7":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1,
 					"area": "south"
                 },
-				"N2": {
+				"8":{
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"A1": {
+				"9":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": false,
@@ -355,7 +402,8 @@
 					"acftType": {"B748": false, "A388": false,"AN124":false,"AN225":false},
 					"area": "north"
                 },
-				"A2": {
+				"10":{
+					"designator":"A",
                     "rwy": "25R",
                     "initial": 5000,
                     "climbvia": false,
@@ -364,7 +412,8 @@
                 }
 			},
 			"ROKMU": {
-                "P": {
+                "1":{
+					"designator":"P",
                     "rwy": "25L",
                     "initial": 4000,
                     "climbvia": false,

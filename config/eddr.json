@@ -7,25 +7,29 @@
         "appSI": "PFA,EIF,RUD,GIN,KTG",
         "sids": {
             "GTQ": {
-                "L": {
+                "1":{
+					"designator":"L",
                     "rwy": "09",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "M": {
+                "2":{
+					"designator":"M",
                     "rwy": "27",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"E": {
+				"3":{
+					"designator":"E",
                     "rwy": "09",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 99
                 },
-                "W": {
+                "4":{
+					"designator":"W",
                     "rwy": "27",
                     "initial": 8000,
                     "climbvia": true,
@@ -33,19 +37,22 @@
                 }
 			},
 			"TOMPI": {
-                "L": {
+                "11":{
+					"designator":"L",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 2
                 },
-                "M": {
+                "2":{
+					"designator":"M",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 2
                 },
-				"E1": {
+				"3":{
+					"designator":"E",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": true,
@@ -53,7 +60,8 @@
                     "engineType": "PT",
                     "mtow": 5700
                 },
-                "W1": {
+                "4":{
+					"designator":"W",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,
@@ -63,25 +71,29 @@
                 }
 			},
 			"ZWN": {
-                "L": {
+                "1":{
+					"designator":"L",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "M": {
+                "2":{
+					"designator":"M",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"E": {
+				"3":{
+					"designator":"E",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 99
                 },
-                "W": {
+                "4":{
+					"designator":"W",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,

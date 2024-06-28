@@ -7,7 +7,8 @@
         "appSI": "DMSL,DMNL,DMSH,DMNH,NDG,ZUG,RDG,EDMM",
         "sids": {
             "ATMAX": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": false,
@@ -15,13 +16,15 @@
                 }
 			},
 			"MAH": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "C": {
+                "2":{
+					"designator":"C",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
