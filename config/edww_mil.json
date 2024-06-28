@@ -59,7 +59,7 @@
 					"wpt": "XXX",
                     "rwy": "09",
                     "initial": 4000,
-                    "prio": 99
+                    "prio": 2
                 }
 			},
 			"NL127": {
@@ -67,12 +67,12 @@
 					"wpt": "XXX",
                     "rwy": "27",
                     "initial": 4000,
-                    "prio": 99
+                    "prio": 2
                 }
 			},
 			"NL227": {
                 "1": {
-					"wpt": "GASBO",
+					"wpt": "XXX",
                     "rwy": "27",
                     "initial": 4000,
                     "prio": 99
@@ -275,7 +275,7 @@
 					"wpt": "XXX",
                     "rwy": "08",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"HC126": {
@@ -283,7 +283,7 @@
 					"wpt": "XXX",
                     "rwy": "26",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"AMALI": {
@@ -358,7 +358,7 @@
 					"wpt": "XXX",
                     "rwy": "26",
                     "initial": 4000,
-                    "prio": 1
+                    "prio": 99
                 }
 			},
 			"HB32": {
@@ -366,7 +366,7 @@
 					"wpt": "XXX",
                     "rwy": "08",
                     "initial": 4000,
-                    "prio": 1
+                    "prio": 99
                 }
 			},
 			"HB13": {
@@ -390,7 +390,7 @@
 					"wpt": "XXX",
                     "rwy": "08",
                     "initial": 2600,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"HB126": {
@@ -398,7 +398,7 @@
 					"wpt": "XXX",
                     "rwy": "26",
                     "initial": 2600,
-                    "prio": 1
+                    "prio": 2
                 }
 			}
 		}
@@ -513,7 +513,7 @@
 					"wpt": "XXX",
                     "rwy": "02",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"NW120": {
@@ -521,7 +521,7 @@
 					"wpt": "XXX",
                     "rwy": "20",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"NW308": {
@@ -529,7 +529,7 @@
 					"wpt": "XXX",
                     "rwy": "08",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"NW326": {
@@ -537,7 +537,7 @@
 					"wpt": "XXX",
                     "rwy": "26",
                     "initial": 2000,
-                    "prio": 1
+                    "prio": 2
                 }
 			}
 		}

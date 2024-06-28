@@ -11,14 +11,14 @@
 					"designator": "H",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "X",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
@@ -42,14 +42,14 @@
 					"designator": "H",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "X",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
@@ -58,14 +58,14 @@
 					"designator": "H",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "X",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
@@ -74,14 +74,14 @@
 					"designator": "H",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "X",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
@@ -90,14 +90,14 @@
 					"designator": "H",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "X",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 }
 			}
@@ -112,30 +112,35 @@
         "sids": {
             "BOLKI": {
                 "1": {
+					"wpt": "RINEX",
 					"designator": "E",
                     "rwy": "08,09",
                     "initial": 5000,
                     "prio": 1
                 },
                 "2": {
+					"wpt": "LIMGO",
 					"designator": "L",
                     "rwy": "08,09",
                     "initial": 5000,
                     "prio": 1
                 },
                 "3": {
+					"wpt": "RUDOT",
 					"designator": "N",
                     "rwy": "08,09",
                     "initial": 5000,
                     "prio": 1
                 },
                 "4": {
+					"wpt": "BADLI",
 					"designator": "S",
                     "rwy": "08,09",
                     "initial": 5000,
                     "prio": 1
                 },
                 "5": {
+					"wpt": "SARRI",
 					"designator": "W",
                     "rwy": "08,09",
                     "initial": 5000,
@@ -144,30 +149,35 @@
 			},
             "TOLEY": {
                 "0": {
+					"wpt": "RINEX",
 					"designator": "E",
                     "rwy": "26,27",
                     "initial": 5000,
                     "prio": 1
                 },
                 "2": {
+					"wpt": "LIMGO",
 					"designator": "L",
                     "rwy": "26,27",
                     "initial": 5000,
                     "prio": 1
                 },
                 "3": {
+					"wpt": "RUDOT",
 					"designator": "N",
                     "rwy": "26,27",
                     "initial": 5000,
                     "prio": 1
                 },
                 "4": {
+					"wpt": "BADLI",
 					"designator": "S",
                     "rwy": "26,27",
                     "initial": 5000,
                     "prio": 1
                 },
                 "5": {
+					"wpt": "SARRI",
 					"designator": "W",
                     "rwy": "26,27",
                     "initial": 5000,
@@ -247,14 +257,14 @@
                 "1": {
 					"wpt": "XXX",
                     "rwy": "09",
-                    "prio": 1
+                    "prio": 2
                 }
 			},
 			"NG227": {
                 "1": {
 					"wpt": "XXX",
                     "rwy": "27",
-                    "prio": 1
+                    "prio": 2
                 }
 			}
         }
@@ -270,7 +280,7 @@
                 "1": {
 					"designator": "X",
                     "rwy": "07",
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
@@ -292,7 +302,7 @@
                 "1": {
 					"designator": "X",
                     "rwy": "07",
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
@@ -315,7 +325,7 @@
 					"designator": "X",
                     "rwy": "07",
 					"initial": 5000,
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
@@ -337,7 +347,7 @@
                 "1": {
 					"designator": "X",
                     "rwy": "07",
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
@@ -359,7 +369,7 @@
                 "1": {
 					"designator": "X",
                     "rwy": "07",
-                    "prio": 99,
+                    "prio": 1,
 					"climbvia": true
                 },
                 "2": {
