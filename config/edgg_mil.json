@@ -196,14 +196,14 @@
             "KENUM": {
                 "1": {
 					"designator": "A",
-                    "rwy": "09",
+                    "rwy": "27",
                     "initial": 3000,
                     "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "B",
-                    "rwy": "27",
+                    "rwy": "09",
                     "initial": 3000,
                     "prio": 1,
 					"climbvia": true
@@ -212,14 +212,14 @@
             "MILGI": {
                 "1": {
 					"designator": "A",
-                    "rwy": "09",
+                    "rwy": "27",
                     "initial": 3000,
                     "prio": 1,
 					"climbvia": true
                 },
                 "2": {
 					"designator": "B",
-                    "rwy": "27",
+                    "rwy": "09",
                     "initial": 3000,
                     "prio": 1,
 					"climbvia": true
@@ -416,12 +416,12 @@
 	},
 	"ETHF": {
         "elevation": 565,
-        "runways": "12,30",
+        "runways": "11,29",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
 		"appSI": "",
         "sids": {
-            "HF112": {
+            "HF111": {
                 "1": {
 					"wpt": "XXX",
                     "rwy": "12",
@@ -429,7 +429,7 @@
                     "prio": 1
                 }
 			},
-			"HF130": {
+			"HF129": {
                 "1": {
 					"wpt": "XXX",
                     "rwy": "30",
