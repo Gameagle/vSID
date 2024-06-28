@@ -110,7 +110,7 @@
         "maxInitialClimb": 7000,
 		"appSI": "PFA,EIF,RUD,GIN,KTG",
         "sids": {
-            "BOLKI": {
+            "BOLK": {
                 "1": {
 					"wpt": "RINEX",
 					"designator": "E",
@@ -147,7 +147,7 @@
                     "prio": 1
                 }
 			},
-            "TOLEY": {
+            "TOLE": {
                 "0": {
 					"wpt": "RINEX",
 					"designator": "E",
