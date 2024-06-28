@@ -245,14 +245,14 @@
 			},
 			"NG209": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "09",
                     "prio": 1
                 }
 			},
 			"NG227": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "27",
                     "prio": 1
                 }
@@ -388,7 +388,7 @@
         "sids": {
             "SB103": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "03",
                     "initial": 4000,
                     "prio": 1
@@ -396,7 +396,7 @@
 			},
 			"SB121": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "21",
                     "initial": 4000,
                     "prio": 1
@@ -413,7 +413,7 @@
         "sids": {
             "HF112": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "12",
                     "initial": 4000,
                     "prio": 1
@@ -421,7 +421,7 @@
 			},
 			"HF130": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "30",
                     "initial": 4000,
                     "prio": 1
@@ -438,7 +438,7 @@
         "sids": {
             "NN106": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "06",
                     "initial": 3000,
                     "prio": 1
@@ -446,7 +446,7 @@
 			},
 			"NN124": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "24",
                     "initial": 3300,
                     "prio": 1
@@ -454,7 +454,7 @@
 			},
 			"NN224": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "24",
                     "initial": 3300,
                     "prio": 99
@@ -471,7 +471,7 @@
         "sids": {
             "HN107": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "07",
                     "initial": 3500,
                     "prio": 1
@@ -479,7 +479,7 @@
 			},
 			"HN125": {
                 "1": {
-					"wpt": "ALL",
+					"wpt": "XXX",
                     "rwy": "25",
                     "initial": 3500,
                     "prio": 1
