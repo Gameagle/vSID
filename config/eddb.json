@@ -56,7 +56,7 @@
 					"area": "south"
                 },
 				"7":{
-					"designator":"N2",
+					"designator":"N",
                     "rwy": "25L",
                     "initial": 5000,
                     "climbvia": true,
