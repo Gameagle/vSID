@@ -1262,7 +1262,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			{
 				messageHandler->writeMessage("DEBUG", "[SID] [" + callsign + "] not yet processed, calling processFlightplan without atcRwy" +
 											((!checkOnly) ? " and setting the fpln." : " and only checking the fpln"),
-											vsid::MessageHandler::DebugArea::Dev);
+											vsid::MessageHandler::DebugArea::Sid);
 				this->processFlightplan(FlightPlan, checkOnly);
 			}
 			
@@ -2765,6 +2765,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 	if (this->activeAirports.size() > 0)
 	{
 		this->configParser.loadAirportConfig(this->activeAirports, this->savedRules, this->savedSettings, this->savedAreas, this->savedRequests);
+		messageHandler->writeMessage("DEBUG", "[CONF] Checking .ese file for SID mastering...", vsid::MessageHandler::DebugArea::Conf);
 
 		// if there are configured airports check for remaining sid data
 		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS);
@@ -2774,9 +2775,8 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		{
 			if (!this->activeAirports.contains(vsid::utils::trim(sfe.GetAirportName()))) continue;
 
-			std::string name = sfe.GetName();	
+			std::string name = sfe.GetName();
 			
-
 			for (vsid::Sid& sid : this->activeAirports[vsid::utils::trim(sfe.GetAirportName())].sids)
 			{
 				if (sid.designator != ' ')
@@ -2787,15 +2787,20 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
 					{
 						sid.number = name[name.length() - 2];
+						messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
 					}
 				}
 				else
 				{
 					if (name != sid.base) continue;
 					sid.number = 'X';
+					messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
 				}
 			}
-			//// DOCUMENTATION
+		}
+	}
+
+	//// DOCUMENTATION
 			//if (!sidSection)
 			//{
 			//	if (std::string(sfe.GetAirportName()) == "EDDF")
@@ -2813,11 +2818,8 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			//	messageHandler->writeMessage("DEBUG", "sfe elem: " + std::string(sfe.GetName()));
 			//}
 
-		}
-	}
-
 	// health check in case SIDs in config do not match sector file
-	std::map<std::string, std::set<std::string>> incompSid;
+	std::map<std::string, std::set<std::string>> incompSids;
 	for (std::pair<const std::string, vsid::Airport> &apt : this->activeAirports)
 	{
 		for (vsid::Sid& sid : apt.second.sids)
@@ -2826,46 +2828,116 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			{
 				if (std::string("0123456789").find_first_of(sid.number) == std::string::npos)
 				{
-					incompSid[apt.first].insert(sid.base + '?' + sid.designator);
+					incompSids[apt.first].insert(sid.base + '?' + sid.designator);
 				}
 			}
 			else
 			{
-				if (sid.number != 'X')
-				{
-					incompSid[apt.first].insert(sid.base);
-				}
-				else sid.number = ' ';
+				if (sid.number != 'X') incompSids[apt.first].insert(sid.base);
 			}
 		}
 	}
-	// if incompatible SIDs (not in sector file) have been found remove them
-	for (auto& elem : incompSid)
+
+	// fallback check if incompatible SIDs remain after checking .ese file. Now .sct is checked
+	if (incompSids.size() > 0)
 	{
-		messageHandler->writeMessage("WARNING", "Check config for [" + elem.first + "] - Could not master sids: " + vsid::utils::join(elem.second, ','));
-		for (const std::string& incompSid : elem.second)
+		messageHandler->writeMessage("DEBUG", "[CONF] Incompatible SIDs found. Rechecking in .sct file...", vsid::MessageHandler::DebugArea::Conf);
+		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SID);
+			sfe.IsValid();
+			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SID))
 		{
-			for (auto it = this->activeAirports[elem.first].sids.begin(); it != this->activeAirports[elem.first].sids.end(); it++)
+			std::vector<std::string> components = vsid::utils::split(std::string(sfe.GetName()), ' ');
+			std::string elIcao;
+			std::string elSid;
+
+			if (components.size() == 4)
+			{
+				elIcao = components.at(0);
+				elSid = components.at(3);
+			}
+			else continue;
+
+			if (!incompSids.contains(elIcao)) continue;
+			if (!this->activeAirports.contains(elIcao)) continue;
+
+			for (vsid::Sid& sid : this->activeAirports[elIcao].sids)
+			{
+				if (sid.number != ' ') continue;
+
+				if (sid.designator != ' ')
+				{
+					if (elSid.substr(0, elSid.length() - 2) != sid.base) continue;
+					if (elSid[elSid.length() - 1] != sid.designator) continue;
+
+					if (std::string("0123456789").find_first_of(elSid[elSid.length() - 2]) != std::string::npos)
+					{
+						sid.number = elSid[elSid.length() - 2];
+						incompSids[elIcao].erase(sid.base + '?' + sid.designator);
+						messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
+					}
+				}
+				else
+				{
+					if (elSid != sid.base) continue;
+					incompSids[elIcao].erase(sid.base);
+					messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
+				}
+			}
+
+			if (incompSids[elIcao].size() == 0) incompSids.erase(elIcao);
+
+			if (incompSids.size() == 0)
+			{
+				messageHandler->writeMessage("DEBUG", "[CONF] All incompatible SIDs mastered, stopping fallback checks...", vsid::MessageHandler::DebugArea::Conf);
+				break;
+			}
+		}
+	}
+
+
+	// if incompatible SIDs (not in sector file) have been found remove them
+	for (std::pair<const std::string, std::set<std::string>>& incompSidPair : incompSids)
+	{
+		messageHandler->writeMessage("WARNING", "Check config for [" + incompSidPair.first +
+									"] - Could not master sids with .sct or .ese file: " + vsid::utils::join(incompSidPair.second, ','));
+
+		for (const std::string& incompSid : incompSidPair.second)
+		{
+			for (auto it = this->activeAirports[incompSidPair.first].sids.begin(); it != this->activeAirports[incompSidPair.first].sids.end();)
 			{
 				if (it->designator != ' ')
 				{
 					if (it->waypoint == incompSid.substr(0, incompSid.length() - 2) && it->designator == incompSid[incompSid.length() - 1])
 					{
-						this->activeAirports[elem.first].sids.erase(it);
-						break;
+						messageHandler->writeMessage("DEBUG", "[CONF] [" + incompSidPair.first + "] [" + it->waypoint + it->number + it->designator + "] incompatible and erased");
+						it = this->activeAirports[incompSidPair.first].sids.erase(it);
+						continue;
 					}
 				}
 				else
 				{
 					if (it->base == incompSid)
 					{
-						this->activeAirports[elem.first].sids.erase(it);
-						break;
+						messageHandler->writeMessage("DEBUG", "[CONF] [" + incompSidPair.first + "] [" + it->base + "] incompatible and erased");
+						it = this->activeAirports[incompSidPair.first].sids.erase(it);
+						continue;
 					}
 				}
+				++it;
 			}
 		}
 	}
+
+	// remove dummy value for SIDs without designator
+	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
+	{
+		for (vsid::Sid& sid : apt.second.sids)
+		{
+			if (sid.designator != 'X') continue;
+			sid.designator = ' ';
+		}
+	}
+
 	messageHandler->writeMessage("INFO", "Airports updated. [" + std::to_string(this->activeAirports.size()) + "] active.");
 }
 
