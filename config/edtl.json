@@ -7,25 +7,29 @@
         "appSI": "REU,STG,BAD,DKB,KTG",
         "sids": {
             "NATOR": {
-                "W": {
+                "1": {
+					"designator":"W",
                     "rwy": "03",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "Q": {
+                "2": {
+					"designator":"Q",
                     "rwy": "03",
                     "initial": 8000,
                     "climbvia": true,
                     "prio": 99
                 },
-				"X": {
+				"3": {
+					"designator":"X",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "R": {
+                "4": {
+					"designator":"R",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
@@ -33,25 +37,29 @@
                 }
 			},
 			"STR": {
-                "W": {
+                "1": {
+					"designator":"W",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "Q": {
+                "2": {
+					"designator":"Q",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 99
                 },
-				"X": {
+				"3": {
+					"designator":"X",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "R": {
+                "4": {
+					"designator":"R",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
@@ -59,25 +67,29 @@
                 }
 			},
 			"SUL": {
-                "W": {
+                "1": {
+					"designator":"W",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "Q": {
+                "2": {
+					"designator":"Q",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 99
                 },
-				"X": {
+				"3": {
+					"designator":"X",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "R": {
+                "4": {
+					"designator":"R",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,

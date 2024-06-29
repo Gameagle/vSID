@@ -7,13 +7,15 @@
 		"appSI": "TRS,GER,MEI,HAL,HOF,EDMM",
         "sids": {
             "ERSIL": {
-                "C": {
+                "1":{
+					"designator":"C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "D": {
+                "2":{
+					"designator":"D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -21,13 +23,15 @@
                 }
 			},
 			"LASTO": {
-                "C": {
+                "1":{
+					"designator":"C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "D": {
+                "2":{
+					"designator":"D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -35,13 +39,15 @@
                 }
 			},
 			"NEVKO": {
-                "C": {
+                "1":{
+					"designator":"C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "D": {
+                "2":{
+					"designator":"D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -49,7 +55,8 @@
                 }
 			},
 			"PILAM": {
-                "D": {
+                "1":{
+					"designator":"D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": false,
@@ -57,13 +64,15 @@
                 }
 			},
 			"ERF": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "B": {
+                "2":{
+					"designator":"B",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,

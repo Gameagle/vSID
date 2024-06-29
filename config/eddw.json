@@ -5,23 +5,25 @@
         "transAlt": 5000,
         "maxInitialClimb": 7000,
         "appSI": "FRI,EIDE,ALR,EIDW,WC",
-        "timeMode": true,
 		"timezone": "Europe/Berlin",
         "sids": {
             "BASUM": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "Z": {
+                "2": {
+					"designator": "Z",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-                "L": {
+                "3": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
@@ -30,19 +32,22 @@
                 }
 			},
 			"ERLAD": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "Z": {
+                "2": {
+					"designator": "Z",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-                "L": {
+                "3": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
@@ -51,19 +56,22 @@
                 }
 			},
 			"GESTO": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "Z": {
+                "2": {
+					"designator": "Z",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-                "L": {
+                "3": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
@@ -72,19 +80,22 @@
                 }
 			},
 			"NIE": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "Z": {
+                "2": {
+					"designator": "Z",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 2
                 },
-                "L": {
+                "3": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
@@ -93,13 +104,15 @@
                 }
 			},
 			"OTEXE": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "L": {
+                "2": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,
@@ -107,13 +120,15 @@
                 }
 			},
 			"SOFED": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "L": {
+                "2": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
@@ -121,13 +136,15 @@
                 }
 			},
 			"WSN": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "L": {
+                "2": {
+					"designator": "L",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,

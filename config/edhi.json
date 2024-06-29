@@ -5,17 +5,18 @@
         "transAlt": 5000,
         "maxInitialClimb": 7000,
         "appSI": "HEI,ALR,EIDW,WC",
-        "timeMode": true,
 		"timezone": "Europe/Berlin",
         "sids": {
             "AMLUH": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": true,
@@ -23,13 +24,15 @@
                 }
 			},
 			"BASUM": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
@@ -37,13 +40,15 @@
                 }
 			},
 			"IDEKO": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
@@ -51,13 +56,15 @@
                 }
 			},
 			"ELSOB": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
@@ -65,13 +72,15 @@
                 }
 			},
 			"RAMAR": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": true,
@@ -79,13 +88,15 @@
                 }
 			},
 			"WSN": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
@@ -93,25 +104,29 @@
                 }
 			},
 			"HAM": {
-                "E": {
+                "1": {
+					"designator": "E",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2": {
+					"designator": "W",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"R": {
+				"3": {
+					"designator": "R",
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 99
                 },
-                "V": {
+                "4": {
+					"designator": "V",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
