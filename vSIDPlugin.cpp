@@ -95,42 +95,45 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 {
 	std::string filedSid = FlightPlanData.GetSidName();
 	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlanData.GetRoute(), ' ');
-	std::string sidWpt = "";
 
 	if (filedRoute.size() == 0) return "";
 	if (filedSid != "")
 	{
-		return filedSid.substr(0, filedSid.length() - 2);
-	}
-	else
-	{
-		std::set<std::string> sidWpts = {};
-		for (const vsid::Sid &sid : this->activeAirports[FlightPlanData.GetOrigin()].sids)
+		std::string esWpt = filedSid.substr(0, filedSid.length() - 2);
+		for (const vsid::Sid& sid : this->activeAirports[FlightPlanData.GetOrigin()].sids)
 		{
-			sidWpts.insert(sid.waypoint);
+			if (esWpt == sid.waypoint) return esWpt;			
 		}
-		for (std::string &wpt : filedRoute)
+	}
+
+	// continue checks if esWpt hasn't been returned
+	std::set<std::string> sidWpts = {};
+
+	for (const vsid::Sid &sid : this->activeAirports[FlightPlanData.GetOrigin()].sids)
+	{
+		if(sid.waypoint != "XXX") sidWpts.insert(sid.waypoint);
+	}
+	for (std::string &wpt : filedRoute)
+	{
+		if (wpt.find("/") != std::string::npos)
 		{
-			if (wpt.find("/") != std::string::npos)
+			try
 			{
-				try
-				{
-					wpt = vsid::utils::split(wpt, '/').at(0);
-				}
-				catch (std::out_of_range)
-				{
-					messageHandler->writeMessage("ERROR", "Failed to get the waypoint of a waypoint" 
-												" and speed/level group. Waypoint is: " + wpt);
-				}
+				wpt = vsid::utils::split(wpt, '/').at(0);
+			}
+			catch (std::out_of_range)
+			{
+				messageHandler->writeMessage("ERROR", "Failed to get the waypoint of a waypoint" 
+											" and speed/level group. Waypoint is: " + wpt);
+			}
 				
-			}
-			if (std::any_of(sidWpts.begin(), sidWpts.end(), [&](auto item)
-				{
-					return item == wpt;
-				}))
+		}
+		if (std::any_of(sidWpts.begin(), sidWpts.end(), [&](std::string sidWpt)
 			{
-				return wpt;
-			}
+				return sidWpt == wpt;
+			}))
+		{
+			return wpt;
 		}
 	}
 	return "";
@@ -249,10 +252,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	for(vsid::Sid &currSid : this->activeAirports[icao].sids)
 	{
 		// skip if current SID does not match found SID wpt
-		if (currSid.waypoint != sidWpt)
-		{	
-			continue;
-		}
+		if (currSid.waypoint != sidWpt && currSid.waypoint != "XXX") continue;
 
 		bool rwyMatch = false;
 		bool restriction = false;
@@ -2933,8 +2933,8 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 	{
 		for (vsid::Sid& sid : apt.second.sids)
 		{
-			if (sid.designator != 'X') continue;
-			sid.designator = ' ';
+			if (sid.number != 'X') continue;
+			sid.number = ' ';
 		}
 	}
 
