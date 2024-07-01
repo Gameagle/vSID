@@ -5,11 +5,15 @@
 *	Config - SIDs are now ID based, which means every SID now has an "id" entry (json key below "base" json key) to distinguish them
 	** !! Old configs are not compatible anymore !! **
 *	Config - (probably) due to a Euroscope bug SIDs in the .ese file without a route (e.g. MIL SIDs) cannot be accessed. A fallback to .sct file has been added if a SID fails to be mastered
+*	"Special" SIDs that are valid for any waypoint (entry "XXX") are now detected and set
 
 [CHANGED]
 *	automode activation now also ignores flightplans with present rwys (only clearance flag before)
 *	Config - SIDs now have a "base" (the json key) which will become the waypoint if no "wpt" entry was specified
 *	Config - SIDs now have a "designator" entry to specify the designator. As SIDs are now ID based several SIDs can use the same designator (no more indexed designators)
+*	evaluation for matching sid and route waypoints now also re-checks if an Euroscope based waypoint was found but doesn't match any in the route
+*	manual SID selection now offers all SIDs if no valid waypoint is present in the flightplan if a) rwy is set by atc or b) SID rwy is part of departure rwys
+*	SIDs with the "all waypoints" designator ("XXX") are offered in addition to SIDs matching the valid flightplan waypoint
 
 [FIXED]
 *	removed unused variables and using direct calls instead
