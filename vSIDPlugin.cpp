@@ -113,6 +113,7 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 	{
 		if(sid.waypoint != "XXX") sidWpts.insert(sid.waypoint);
 	}
+
 	for (std::string &wpt : filedRoute)
 	{
 		if (wpt.find("/") != std::string::npos)
@@ -867,19 +868,24 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		for (vsid::Sid &sid : this->activeAirports[fplnData.GetOrigin()].sids)
 		{
-			if (sid.waypoint == filedSidWpt && sid.rwy.find(depRWY) != std::string::npos)
+			std::vector<std::string> sidRwys = vsid::utils::split(sid.rwy, ',');
+
+			if ((sid.waypoint == filedSidWpt || sid.waypoint == "XXX") && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
 				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
 			}
-			else if (filedSidWpt == "" && depRWY == "")
+			else if (filedSidWpt == "" && depRWY == "" &&
+					std::any_of(sidRwys.begin(), sidRwys.end(), [&](std::string sidRwy)
+					{
+						return this->activeAirports[fplnData.GetOrigin()].depRwys.contains(sidRwy);
+					}
+					))
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
 				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
 			}
-			else if (filedSidWpt == "" && sid.rwy.find(depRWY) != std::string::npos &&
-					this->activeAirports[fplnData.GetOrigin()].depRwys.contains(depRWY)
-					)
+			else if (filedSidWpt == "" && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
 				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
@@ -936,7 +942,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			{
 				depRWY = validDepartures[sItemString].getRwy();
 			}
-			messageHandler->writeMessage("DEBUG", "Calling manual SID with rwy: " + depRWY, vsid::MessageHandler::DebugArea::Sid);
+			messageHandler->writeMessage("DEBUG", "[SID] Calling manual SID with rwy: " + depRWY, vsid::MessageHandler::DebugArea::Sid);
 			this->processFlightplan(fpln, false, depRWY, validDepartures[sItemString]);
 		}
 		// FlightPlan->flightPlan.GetControllerAssignedData().SetFlightStripAnnotation(0, sItemString) // test on how to set annotations (-> exclusive per plugin)
