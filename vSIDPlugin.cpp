@@ -870,19 +870,19 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (sid.waypoint == filedSidWpt && sid.rwy.find(depRWY) != std::string::npos)
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", 'R', 'V', depRWY);
+				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
 			}
 			else if (filedSidWpt == "" && depRWY == "")
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", 'R', 'V', depRWY);
+				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
 			}
 			else if (filedSidWpt == "" && sid.rwy.find(depRWY) != std::string::npos &&
 					this->activeAirports[fplnData.GetOrigin()].depRwys.contains(depRWY)
 					)
 			{
 				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", 'R', 'V', depRWY);
+				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
 			}
 		}
 
@@ -1294,8 +1294,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					if (atcSid.find_first_of("0123456789") != std::string::npos)
 					{
 						if (sid.waypoint != atcSid.substr(0, atcSid.length() - 2)) continue;
-						if (sid.designator != atcSid[atcSid.length() - 1]) continue;
-						if (sid.number != atcSid[atcSid.length() - 2]) break;
+						if (sid.designator != std::string(1, atcSid[atcSid.length() - 1])) continue;
+						if (sid.number != std::string(1, atcSid[atcSid.length() - 2])) break;
 					}
 					else
 					{
@@ -2303,7 +2303,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 					if (atcBlock.first.find_first_of("0123456789") != std::string::npos)
 					{
 						if (sid.waypoint != atcBlock.first.substr(0, atcBlock.first.length() - 2)) continue;
-						if (sid.designator != atcBlock.first[atcBlock.first.length() - 1]) continue;
+						if (sid.designator != std::string(1, atcBlock.first[atcBlock.first.length() - 1])) continue;
 					}
 					else
 					{
@@ -2779,10 +2779,10 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			
 			for (vsid::Sid& sid : this->activeAirports[vsid::utils::trim(sfe.GetAirportName())].sids)
 			{
-				if (sid.designator != ' ')
+				if (sid.designator != "")
 				{
-					if (name.substr(0, name.length() - 2) != sid.base) continue;
-					if (name[name.length() - 1] != sid.designator) continue;
+					if (sid.base != name.substr(0, name.length() - 2)) continue;
+					if (sid.designator != std::string(1, name[name.length() - 1])) continue;
 
 					if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
 					{
@@ -2824,7 +2824,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 	{
 		for (vsid::Sid& sid : apt.second.sids)
 		{
-			if (sid.designator != ' ')
+			if (sid.designator != "")
 			{
 				if (std::string("0123456789").find_first_of(sid.number) == std::string::npos)
 				{
@@ -2833,7 +2833,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			}
 			else
 			{
-				if (sid.number != 'X') incompSids[apt.first].insert(sid.base);
+				if (sid.number != "X") incompSids[apt.first].insert(sid.base);
 			}
 		}
 	}
@@ -2847,44 +2847,44 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SID))
 		{
 			std::vector<std::string> components = vsid::utils::split(std::string(sfe.GetName()), ' ');
-			std::string elIcao;
-			std::string elSid;
+			std::string compIcao = "";
+			std::string compSid = "";
 
 			if (components.size() == 4)
 			{
-				elIcao = components.at(0);
-				elSid = components.at(3);
+				compIcao = components.at(0);
+				compSid = components.at(3);
 			}
 			else continue;
 
-			if (!incompSids.contains(elIcao)) continue;
-			if (!this->activeAirports.contains(elIcao)) continue;
+			if (!incompSids.contains(compIcao)) continue;
+			if (!this->activeAirports.contains(compIcao)) continue;
 
-			for (vsid::Sid& sid : this->activeAirports[elIcao].sids)
+			for (vsid::Sid& sid : this->activeAirports[compIcao].sids)
 			{
-				if (sid.number != ' ') continue;
+				if (sid.number != "") continue;
 
-				if (sid.designator != ' ')
+				if (sid.designator != "")
 				{
-					if (elSid.substr(0, elSid.length() - 2) != sid.base) continue;
-					if (elSid[elSid.length() - 1] != sid.designator) continue;
+					if (sid.base != compSid.substr(0, compSid.length() - 2)) continue;
+					if (sid.designator != std::string(1, compSid[compSid.length() - 1])) continue;
 
-					if (std::string("0123456789").find_first_of(elSid[elSid.length() - 2]) != std::string::npos)
+					if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
 					{
-						sid.number = elSid[elSid.length() - 2];
-						incompSids[elIcao].erase(sid.base + '?' + sid.designator);
+						sid.number = compSid[compSid.length() - 2];
+						incompSids[compIcao].erase(sid.base + '?' + sid.designator);
 						messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
 					}
 				}
 				else
 				{
-					if (elSid != sid.base) continue;
-					incompSids[elIcao].erase(sid.base);
+					if (sid.base != compSid) continue;
+					incompSids[compIcao].erase(sid.base);
 					messageHandler->writeMessage("DEBUG", "[CONF] [" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
 				}
 			}
 
-			if (incompSids[elIcao].size() == 0) incompSids.erase(elIcao);
+			if (incompSids[compIcao].size() == 0) incompSids.erase(compIcao);
 
 			if (incompSids.size() == 0)
 			{
@@ -2905,9 +2905,9 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		{
 			for (auto it = this->activeAirports[incompSidPair.first].sids.begin(); it != this->activeAirports[incompSidPair.first].sids.end();)
 			{
-				if (it->designator != ' ')
+				if (it->designator != "")
 				{
-					if (it->waypoint == incompSid.substr(0, incompSid.length() - 2) && it->designator == incompSid[incompSid.length() - 1])
+					if (it->waypoint == incompSid.substr(0, incompSid.length() - 2) && it->designator == std::string(1, incompSid[incompSid.length() - 1]))
 					{
 						messageHandler->writeMessage("DEBUG", "[CONF] [" + incompSidPair.first + "] [" + it->waypoint + it->number + it->designator + "] incompatible and erased");
 						it = this->activeAirports[incompSidPair.first].sids.erase(it);
@@ -2933,8 +2933,8 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 	{
 		for (vsid::Sid& sid : apt.second.sids)
 		{
-			if (sid.number != 'X') continue;
-			sid.number = ' ';
+			if (sid.number != "X") continue;
+			sid.number = "";
 		}
 	}
 

@@ -31,7 +31,7 @@ namespace vsid
 	{
 	public:
 
-		Sid(std::string base = "", std::string waypoint = "", std::string id = "", char number = ' ', char designator = ' ',
+		Sid(std::string base = "", std::string waypoint = "", std::string id = "", std::string number = "", std::string designator = "",
 			std::string rwy = "", int initialClimb = 0, bool climbvia = false, int prio = 99,
 			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
 			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0,
@@ -45,8 +45,8 @@ namespace vsid
 		std::string base;
 		std::string waypoint;
 		std::string id;
-		char number;
-		char designator;
+		std::string number;
+		std::string designator;
 		std::string rwy;
 		int initialClimb;
 		bool climbvia;

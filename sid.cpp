@@ -24,7 +24,7 @@ bool vsid::Sid::empty() const
 
 bool vsid::Sid::operator==(const Sid& sid)
 {
-	if (this->designator != ' ')
+	if (this->designator != "")
 	{
 		if (this->base == sid.base &&
 			this->number == sid.number &&
@@ -40,7 +40,7 @@ bool vsid::Sid::operator==(const Sid& sid)
 
 bool vsid::Sid::operator!=(const Sid& sid)
 {
-	if (this->designator != ' ')
+	if (this->designator != "")
 	{
 		if (this->base != sid.base ||
 			this->number != sid.number ||
