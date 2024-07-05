@@ -8,7 +8,8 @@
 *	"Special" SIDs that are valid for any waypoint (entry "XXX") are now detected and set
 
 [CHANGED]
-*	Automode activation now also ignores flightplans with present rwys (only clearance flag before)
+*	Automode - activation now also ignores flightplans with present rwys (only clearance flag before)
+*	Automode - active rules can now be overwritten when selecting a rwy
 *	Config - SIDs now have a "base" (the json key) which will become the waypoint if no "wpt" entry was specified
 *	Config - SIDs now have a "designator" entry to specify the designator. As SIDs are now ID based several SIDs can use the same designator (no more indexed designators)
 *	Evaluation for matching sid and route waypoints now also re-checks if an Euroscope based waypoint was found but doesn't match any in the route
