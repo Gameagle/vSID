@@ -7,13 +7,15 @@
 		"appSI": "SAS,TRS,MEI,GER,HAL,HOF,EDMM",
         "sids": {
             "BEBEX": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": false,
@@ -21,19 +23,22 @@
                 }
 			},
 			"OSKAN": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"D": {
+				"2":{
+					"designator":"D",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "W": {
+                "3":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
@@ -41,13 +46,15 @@
                 }
 			},
 			"KOBUS": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": false,
@@ -55,13 +62,15 @@
                 }
 			},
 			"HDO": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
@@ -69,13 +78,15 @@
                 }
 			},
 			"DEKOV": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
@@ -83,13 +94,15 @@
                 }
 			},
 			"LALUK": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
@@ -97,13 +110,15 @@
                 }
 			},
 			"MAREM": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": true,
@@ -111,13 +126,15 @@
                 }
 			},
 			"ABKIS": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "04",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "22",
                     "initial": 7000,
                     "climbvia": false,

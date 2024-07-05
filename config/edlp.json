@@ -7,13 +7,15 @@
         "appSI": "PADL,HMM,PADH",
         "sids": {
             "DOMEG": {
-                "X": {
+                "1":{
+					"designator":"X",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": false,
@@ -21,13 +23,15 @@
                 }
 			},
 			"GISDI": {
-                "X": {
+                "1":{
+					"designator":"X",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
@@ -35,13 +39,15 @@
                 }
 			},
 			"HMM": {
-                "X": {
+                "1":{
+					"designator":"X",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": false,
@@ -49,13 +55,15 @@
                 }
 			},
 			"TINSA": {
-                "X": {
+                "1":{
+					"designator":"X",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
@@ -63,13 +71,15 @@
                 }
 			},
 			"WRB": {
-                "X": {
+                "1":{
+					"designator":"X",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": false,

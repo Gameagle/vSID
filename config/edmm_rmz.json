@@ -7,13 +7,15 @@
 		"appSI": "SAS,TRS,MEI,GER,HAL,HOF,EDMM",
         "sids": {
             "ABLOX": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "07",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "25",
                     "initial": 5000,
                     "prio": 1,
@@ -21,13 +23,15 @@
                 }
 			},
 			"BUSIR": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "07",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "25",
                     "initial": 5000,
                     "prio": 1,
@@ -44,73 +48,84 @@
 		"appSI": "TRS,TRN,GER,MEI,HAL,HOF,EDMM",
         "sids": {
             "EKPEK": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "04",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "B": {
+                "2":{
+					"designator":"B",
                     "rwy": "22",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"H": {
+				"3":{
+					"designator":"H",
                     "rwy": "22",
                     "initial": 5000,
                     "prio": 99
                 }
 			},
 			"GOLAT": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "04",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "B": {
+                "2":{
+					"designator":"B",
                     "rwy": "22",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"G": {
+				"3":{
+					"designator":"G",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 1,
+                    "prio": 99,
 					"climbvia": true
                 },
-                "H": {
+                "4":{
+					"designator":"H",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 1,
+                    "prio": 99,
 					"climbvia": true
                 }
 			},
 			"OSKAT": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "04",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "B": {
+                "2":{
+					"designator":"B",
                     "rwy": "22",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"G": {
+				"3":{
+					"designator":"G",
                     "rwy": "04",
                     "initial": 5000,
-                    "prio": 1,
+                    "prio": 99,
 					"climbvia": true
                 },
-                "H": {
+                "4":{
+					"designator":"H",
                     "rwy": "22",
                     "initial": 5000,
-                    "prio": 1,
+                    "prio": 99,
 					"climbvia": true
                 }
 			}
@@ -124,13 +139,15 @@
 		"appSI": "FRK,BBG,HOF,RDG,EDMM",
         "sids": {
             "PEROX": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "08",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "T": {
+                "2":{
+					"designator":"T",
                     "rwy": "26",
                     "initial": 7000,
                     "prio": 1,
@@ -138,13 +155,15 @@
                 }
 			},
 			"TABAT": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "08",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "T": {
+                "2":{
+					"designator":"T",
                     "rwy": "26",
                     "initial": 7000,
                     "prio": 1,
@@ -152,13 +171,15 @@
                 }
 			},
 			"ABERU": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "08",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "T": {
+                "2":{
+					"designator":"T",
                     "rwy": "26",
                     "initial": 7000,
                     "prio": 1,
@@ -166,13 +187,15 @@
                 }
 			},
 			"KULOK": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "08",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "T": {
+                "2":{
+					"designator":"T",
                     "rwy": "26",
                     "initial": 5000,
                     "prio": 1,
@@ -180,13 +203,15 @@
                 }
 			},
 			"LASGA": {
-                "S": {
+                "1":{
+					"designator":"S",
                     "rwy": "08",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "T": {
+                "2":{
+					"designator":"T",
                     "rwy": "26",
                     "initial": 7000,
                     "prio": 1,
@@ -203,12 +228,14 @@
 		"appSI": "FRK,BBG,HOF,RDG,EDMM",
         "sids": {
             "LASGA": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "12",
                     "initial": 7000,
                     "prio": 1
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "30",
                     "initial": 7000,
                     "prio": 1,
@@ -216,13 +243,15 @@
                 }
 			},
 			"LONLI": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "12",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "30",
                     "initial": 7000,
                     "prio": 1,
@@ -239,63 +268,73 @@
 		"appSI": "FRK,BBG,HOF,RDG,EDMM",
         "sids": {
             "ABERU": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "06",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "24",
                     "initial": 5000,
                     "prio": 1
                 }
 			},
 			"KULOK": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "06",
                     "initial": 5000,
                     "prio": 1
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "24",
                     "initial": 5000,
                     "prio": 1
                 }
 			},
 			"ANELA": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "06",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "24",
                     "initial": 5000,
                     "prio": 1
                 }
 			},
 			"LONLI": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "06",
                     "initial": 5000,
                     "prio": 1
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "24",
                     "initial": 5000,
                     "prio": 1
                 }
 			},
 			"PIVIR": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "06",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "24",
                     "initial": 5000,
                     "prio": 1
@@ -311,13 +350,15 @@
 		"appSI": "FRK,BBG,HOF,RDG,EDMM",
         "sids": {
             "ANELA": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "03",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "21",
                     "initial": 5000,
                     "prio": 1,
@@ -325,13 +366,15 @@
                 }
 			},
 			"SULUS": {
-                "E": {
+                "1":{
+					"designator":"E",
                     "rwy": "03",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "W": {
+                "2":{
+					"designator":"W",
                     "rwy": "21",
                     "initial": 5000,
                     "prio": 1,
@@ -348,12 +391,14 @@
 		"appSI": "RDG,EGG,ALB,WLD,ZUG,EDMM",
         "sids": {
             "MAMOR": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "09",
                     "initial": 5000,
                     "prio": 1
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "27",
                     "initial": 5000,
                     "prio": 1,
@@ -361,13 +406,15 @@
                 }
 			},
 			"RDG": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "09",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "27",
                     "initial": 6000,
                     "prio": 1,
@@ -375,13 +422,15 @@
                 }
 			},
 			"STAUB": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "09",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "G": {
+                "2":{
+					"designator":"G",
                     "rwy": "27",
                     "initial": 5000,
                     "prio": 1
@@ -397,13 +446,15 @@
 		"appSI": "EGG,RDG,ALB,WLD,ZUG,EDMM",
         "sids": {
             "BIBAG": {
-                "R": {
+                "1":{
+					"designator":"R",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "L": {
+                "2":{
+					"designator":"L",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,

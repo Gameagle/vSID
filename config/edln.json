@@ -7,13 +7,15 @@
         "appSI": "DLD,DLA,BOT,PADH",
         "sids": {
             "ABODU": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -21,13 +23,15 @@
                 }
 			},
 			"COL": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": true,
@@ -35,13 +39,15 @@
                 }
 			},
 			"GMH": {
-                "Z": {
+                "1":{
+					"designator":"Z",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -49,13 +55,15 @@
                 }
 			},
 			"KUMIK": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": true,
@@ -63,13 +71,15 @@
                 }
 			},
 			"MODRU": {
-                "M": {
+                "1":{
+					"designator":"M",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -77,13 +87,15 @@
                 }
 			},
 			"NVO": {
-                "Z": {
+                "1":{
+					"designator":"Z",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -91,13 +103,15 @@
                 }
 			},
 			"NUDGO": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -105,13 +119,15 @@
                 }
 			},
 			"ROMIN": {
-                "M": {
+                "1":{
+					"designator":"M",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": false,
@@ -119,13 +135,15 @@
                 }
 			},
 			"SONEB": {
-                "A": {
+                "1":{
+					"designator":"A",
                     "rwy": "13",
                     "initial": 2000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "N": {
+                "2":{
+					"designator":"N",
                     "rwy": "31",
                     "initial": 2000,
                     "climbvia": true,

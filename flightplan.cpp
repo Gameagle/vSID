@@ -41,6 +41,24 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 			it = filedRoute.erase(it);
 		}
 	}
+	/* if the route has no sid waypoint clean up until the probably first waypoint*/
+	else if (filedRoute.size() > 0 && filedSidWpt == "")
+	{
+		for (std::vector<std::string>::iterator it = filedRoute.begin(); it != filedRoute.end();)
+		{
+			try
+			{
+				*it = vsid::utils::split(*it, '/').at(0); // to fetch wrong speed/level groups
+			}
+			catch (std::out_of_range)
+			{
+				messageHandler->writeMessage("ERROR", "Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
+					" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcer");
+			}
+			if (*it != origin) break;
+			it = filedRoute.erase(it);
+		}
+	}
 }
 
 std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const std::vector<std::string>& filedRoute, const std::string origin)

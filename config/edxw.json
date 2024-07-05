@@ -5,17 +5,18 @@
         "transAlt": 5000,
         "maxInitialClimb": 7000,
         "appSI": "EIDE,ALR,EIDW,WC",
-        "timeMode": true,
 		"timezone": "Europe/Berlin",
         "sids": {
             "OLDIP": {
-                "A": {
+                "1": {
+					"designator": "A",
                     "rwy": "14",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "B": {
+                "2": {
+					"designator": "B",
                     "rwy": "32",
                     "initial": 4000,
                     "climbvia": true,
