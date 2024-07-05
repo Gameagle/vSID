@@ -257,7 +257,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 	// include atc set rwy if present as dep rwy
 	if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) depRwys.insert(atcRwy);
-
 	else if (atcRwy != "" && !this->processed.contains(callsign) &&
 			this->activeAirports[icao].settings["auto"] &&
 			(vsid::fpln::findRemarks(fpln, "VSID/RWY") || fplnData.IsAmended())) depRwys.insert(atcRwy);
@@ -417,7 +416,8 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 										" customRule NOT active for waypoint, but SID has a rule set",
 										vsid::MessageHandler::DebugArea::Sid
 			);
-			continue;
+			// in addition - if a rwy was set by ATC don't skip
+			if(this->processed.contains(callsign) && !this->processed[callsign].atcRWY) continue;
 		}
 
 		// skip if custom rules are inactive but a rule exists in sid
