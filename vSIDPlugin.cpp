@@ -102,7 +102,19 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 		std::string esWpt = filedSid.substr(0, filedSid.length() - 2);
 		for (const vsid::Sid& sid : this->activeAirports[FlightPlanData.GetOrigin()].sids)
 		{
-			if (esWpt == sid.waypoint) return esWpt;			
+			if (esWpt == sid.waypoint && std::any_of(filedRoute.begin(), filedRoute.end(), [&](std::string wpt)
+				{
+					try
+					{
+						if (esWpt == vsid::utils::split(wpt, '/').at(0)) return true;
+						else return false;
+					}
+					catch (std::out_of_range)
+					{
+						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking");
+						return false;
+					}
+				})) return esWpt;
 		}
 	}
 
