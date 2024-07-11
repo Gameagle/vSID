@@ -7,25 +7,29 @@
         "appSI": "REU,STG,BAD,DKB,KTG",
         "sids": {
             "GAGSI": {
-                "Y": {
+                "1":{
+					"designator":"Y",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"N": {
+				"2":{
+					"designator":"N",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": false,
                     "prio": 99
                 },
-                "Z": {
+                "3":{
+					"designator":"Z",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "P": {
+                "4":{
+					"designator":"P",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": true,
@@ -33,19 +37,22 @@
                 }
 			},
 			"STR": {
-                "Y": {
+                "1":{
+					"designator":"Y",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "Z": {
+               "2":{
+					"designator":"Z",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "P": {
+                "3":{
+					"designator":"P",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": false,
@@ -53,19 +60,22 @@
                 }
 			},
 			"TUBLO": {
-                "Y": {
+                "1":{
+					"designator":"Y",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-				"N": {
+				"2":{
+					"designator":"N",
                     "rwy": "03",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 99
                 },
-                "Z": {
+                "3":{
+					"designator":"Z",
                     "rwy": "21",
                     "initial": 7000,
                     "climbvia": false,

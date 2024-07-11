@@ -52,6 +52,7 @@ namespace vsid
 			Rwy,
 			Atc,
 			Req,
+			Conf,
 			Dev
 		};
 

@@ -5,17 +5,18 @@
         "transAlt": 5000,
         "maxInitialClimb": 7000,
         "appSI": "HRZ,DST,EIDW,WC",
-        "timeMode": true,
 		"timezone": "Europe/Berlin",
         "sids": {
             "ELNAT": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": false,
@@ -23,13 +24,15 @@
                 }
 			},
 			"EMBAD": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": false,
@@ -37,13 +40,15 @@
                 }
 			},
 			"XAROL": {
-                "M": {
+               "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": false,
@@ -51,13 +56,15 @@
                 }
 			},
 			"LUXUX": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": false,
@@ -65,13 +72,15 @@
                 }
 			},
 			"WERRA": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": false,
@@ -79,13 +88,15 @@
                 }
 			},
 			"WRB": {
-                "M": {
+                "1": {
+					"designator": "M",
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "N": {
+                "2": {
+					"designator": "N",
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,

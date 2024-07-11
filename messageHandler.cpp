@@ -128,6 +128,11 @@ bool vsid::MessageHandler::setDebugArea(std::string debugArea)
 		this->debugArea = DebugArea::Req;
 		return true;
 	}
+	else if (debugArea == "CONF")
+	{
+		this->debugArea = DebugArea::Conf;
+		return true;
+	}
 	else return false;
 }
 
