@@ -8,14 +8,14 @@
 		"appSI": "MRZ,MAR,BOR,WC",
         "sids": {
             "MASOR": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
+                "2": {
 					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
