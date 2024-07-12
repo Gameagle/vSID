@@ -1,3 +1,8 @@
+[Changelog v0.9.1]
+
+[CHANGED]
+*	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
+
 [Changelog v0.9.0]
 
 [NEW]
