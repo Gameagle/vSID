@@ -1,7 +1,11 @@
-[Changelog v0.9.1]
+[Changelog v0.10.0]
 
 [CHANGED]
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
+*	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all
+
+[FIXED]
+*	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
 
 [Changelog v0.9.0]
 
