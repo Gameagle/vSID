@@ -62,14 +62,16 @@
                     "rwy": "06",
                     "initial": 7000,
                     "climbvia": true,
-                    "prio": 99
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1
                 },
                 "2":{
 					"designator":"T",
                     "rwy": "24",
                     "initial": 7000,
                     "climbvia": true,
-                    "prio": 99
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1
                 }
 			}
         }

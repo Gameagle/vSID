@@ -1092,6 +1092,7 @@
                     "rwy": "18",
                     "initial": 4000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 99
                 },
                 "2": {
@@ -1099,6 +1100,7 @@
                     "rwy": "07C,07R",
                     "initial": 4000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 99
                 },
                 "3": {
@@ -1106,6 +1108,7 @@
                     "rwy": "25C,25L",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 99
                 }
             },
@@ -1115,6 +1118,7 @@
                     "rwy": "25C,25L",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 99
                 }
             },
@@ -1124,6 +1128,7 @@
                     "rwy": "07C,07R",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 99
                 }
             }
