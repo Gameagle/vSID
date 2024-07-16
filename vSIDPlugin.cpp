@@ -641,6 +641,13 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 										);
 			continue;
 		}
+		// if a SID has the special prio "0" return an empty SID for forced manual selection
+		if (currSid.prio == 0)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] special prio value '0' detected. Returning empty SID for forced manual mode",
+										vsid::MessageHandler::DebugArea::Sid);
+			return vsid::Sid();
+		}
 		
 		// if a SID is accepted when filed by a pilot set the SID
 		if (currSid.pilotfiled && currSid.name() == fplnData.GetSidName() && currSid.prio < prio)
