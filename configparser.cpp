@@ -134,6 +134,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                         apt.second.icao = apt.first;
                         apt.second.elevation = this->parsedConfig.at(apt.first).value("elevation", 0);
+                        apt.second.equipCheck = this->parsedConfig.at(apt.first).value("equipCheck", true);
                         apt.second.allRwys = vsid::utils::split(this->parsedConfig.at(apt.first).value("runways", ""), ',');
                         apt.second.transAlt = this->parsedConfig.at(apt.first).value("transAlt", 0);
                         apt.second.maxInitialClimb = this->parsedConfig.at(apt.first).value("maxInitialClimb", 0);
@@ -245,7 +246,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         // sids
                         for (auto &sid : this->parsedConfig.at(apt.first).at("sids").items())
                         {
-                            //std::string wpt = sid.key();
                             std::string base = sid.key();
 
                             for (auto& sidWpt : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).items())
@@ -253,10 +253,25 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 // defaults to SID base if no waypoint is configured
                                 std::string wpt = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wpt", base));
                                 std::string id = sidWpt.key();
-                                //std::string confDesig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
-                                //char desig = (confDesig.length() > 0 ? confDesig[0] : ' ');
                                 std::string desig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
                                 std::string rwys = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", "");
+                                std::map<std::string, bool> equip = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("equip", std::map<std::string, bool>{});
+                                
+                                // updating equipment codes to upper case if in lower case
+                                for (std::map<std::string, bool>::iterator it = equip.begin(); it != equip.end();)
+                                {
+                                    if (it->first != vsid::utils::toupper(it->first))
+                                    {
+                                        std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+                                        it = equip.erase(it);
+                                        equip.insert(it, cap);
+                                        continue;
+                                    }
+                                    ++it;
+                                }
+
+                                if (equip.empty()) equip["RNAV"] = true;
+
                                 int initial = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("initial", 0);
                                 bool via = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("climbvia", false);
                                 int prio = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("prio", 99);
@@ -281,14 +296,13 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
-                                std::string equip = "";
                                 int lvp = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("lvp", -1);
                                 int timeFrom = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeFrom", -1);
                                 int timeTo = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeTo", -1);
                                 
-                                vsid::Sid newSid = { base, wpt, id, "", desig, rwys, initial, via, prio,
+                                vsid::Sid newSid = { base, wpt, id, "", desig, rwys, equip, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
-                                                    mtow, customRule, area, equip, lvp,
+                                                    mtow, customRule, area, lvp,
                                                     timeFrom, timeTo };
                                 apt.second.sids.push_back(newSid);
                                 if (newSid.timeFrom != -1 && newSid.timeTo != -1) apt.second.timeSids.push_back(newSid);
