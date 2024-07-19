@@ -447,9 +447,35 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			!this->activeAirports[icao].customRules[currSid.customRule])
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" +
-										currSid.idName() + "\" because the SID custom rule is not active.",
-										vsid::MessageHandler::DebugArea::Sid);
+				currSid.idName() + "\" because the SID custom rule is not active.",
+				vsid::MessageHandler::DebugArea::Sid);
 			continue;
+		}
+
+		// skip if equipment does not match
+
+		if (this->activeAirports[icao].equipCheck)
+		{
+			std::string equip = vsid::fpln::getEquip(FlightPlan);
+			std::string pbn = vsid::fpln::getPbn(FlightPlan);
+
+			if (currSid.equip.contains("RNAV"))
+			{
+				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "") continue;				
+			}
+			else if (currSid.equip.contains("NON-RNAV"))
+			{
+				if (equip.size() < 2 && pbn == "") continue;
+				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "") continue;
+			}
+			else
+			{
+				for (const std::pair<std::string, bool>& sidEquip : currSid.equip)
+				{
+					if(sidEquip.second && equip.find(sidEquip.first) == std::string::npos) continue;
+					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos) continue;
+				}
+			}
 		}
 
 		// skip if custom rules are inactive but a rule exists in sid
@@ -462,6 +488,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			continue;
 		}
 
+		// area checks
 		if (currSid.area != "")
 		{
 			std::vector<std::string> sidAreas = vsid::utils::split(currSid.area, ',');
@@ -631,6 +658,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			}
 			else restriction = true;
 		}
+
 		// skip if sid has night times set but they're not active
 		if (!actTSid.contains(currSid.waypoint) &&
 			(currSid.timeFrom != -1 || currSid.timeTo != -1)
@@ -641,6 +669,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 										);
 			continue;
 		}
+
 		// if a SID has the special prio "0" return an empty SID for forced manual selection
 		if (currSid.prio == 0)
 		{
@@ -1165,11 +1194,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 	{
 		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 		std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetOrigin());
-
-		// DEV
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] acftInfo: " + std::string(fplnData.GetAircraftInfo()), vsid::MessageHandler::DebugArea::Dev);
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] rem: " + std::string(fplnData.GetRemarks()), vsid::MessageHandler::DebugArea::Dev);
-		// END DEV
 
 		if (this->removeProcessed.size() > 0 &&
 			this->removeProcessed.contains(callsign) &&
