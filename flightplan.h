@@ -95,5 +95,9 @@ namespace vsid
 		bool setScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toAdd);
 
 		bool removeScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toRemove);
+
+		std::string getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan);
+
+		std::string getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan);
 	}
 }
