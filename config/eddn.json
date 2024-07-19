@@ -7,15 +7,15 @@
         "appSI": "FRK,BBG,HOF,RDG,EDMM",
         "sids": {
             "BOLSI": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"G",
+                "2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": true,
@@ -23,15 +23,15 @@
                 }
 			},
 			"ERETO": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"G",
+                "2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": true,
@@ -39,8 +39,8 @@
                 }
 			},
 			"ERL": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
@@ -48,8 +48,8 @@
                     "engineType": "PT",
                     "mtow": 5700
                 },
-				"2":{
-					"designator":"G",
+				"2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": true,
@@ -59,15 +59,15 @@
                 }
 			},
 			"RODIS": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"G",
+                "2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": true,
@@ -75,15 +75,15 @@
                 }
 			},
 			"SUKAD": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"G",
+                "2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": false,
@@ -91,15 +91,15 @@
                 }
 			},
 			"SULUS": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "10",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"G",
+                "2": {
+					"designator": "G",
                     "rwy": "28",
                     "initial": 7000,
                     "climbvia": true,
@@ -107,19 +107,21 @@
                 }
 			},
 			"NUB": {
-                "1":{
-					"designator":"A",
+                "1": {
+					"designator": "A",
                     "rwy": "10",
                     "initial": 6000,
                     "climbvia": true,
-                    "prio": 99
+					"equip": {"NON-RNAV": true},
+                    "prio": 1
                 },
-                "2":{
-					"designator":"B",
+                "2": {
+					"designator": "B",
                     "rwy": "28",
                     "initial": 6000,
                     "climbvia": true,
-                    "prio": 99
+					"equip": {"NON-RNAV": true},
+                    "prio": 1
                 }
 			}
         }

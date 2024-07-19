@@ -170,3 +170,47 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	}
 	return false; // default / fallback state
 }
+
+std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan &FlightPlan) {
+
+	std::vector<std::string> vecEquip = vsid::utils::split(FlightPlan.GetFlightPlanData().GetAircraftInfo(), '-');
+
+	if (vecEquip.size() >= 2)
+	{
+		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
+	}
+
+	try
+	{
+		return vecEquip.at(0);
+	}
+	catch (std::out_of_range)
+	{
+		return "";
+	}
+}
+
+std::string vsid::fpln::getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan)
+{
+	if (vsid::fpln::findRemarks(FlightPlan, "PBN/"))
+	{
+		std::string pbn;
+		std::vector<std::string> vecPbn = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRemarks(), ' ');
+
+		for (std::string &rem : vecPbn)
+		{
+			if (rem.find("PBN/") != std::string::npos)
+			{
+				try
+				{
+					return vsid::utils::split(rem, '/').at(1);
+				}
+				catch (std::out_of_range)
+				{
+					return "";
+				}
+			}
+		}
+	}
+	return "";
+}

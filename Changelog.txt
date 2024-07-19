@@ -2,6 +2,9 @@
 
 [NEW]
 *	SID - special prio value "0" added in evaluation. This special value forces manual SID selection. This value should only be used in very restrictiv set up SIDs (e.g. with areas or rules).
+*	SID - added equipment checks. Special values for "RNAV" and "NON-RNAV" are available or single equipment codes can be set to mandatory or forbidden (each SID defaults to RNAV mandatory)
+*	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
+
 [CHANGED]
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
 *	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all

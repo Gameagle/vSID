@@ -12,6 +12,7 @@
                     "rwy": "03",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 },
                 "2":{
@@ -19,6 +20,7 @@
                     "rwy": "03",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 }
 			},

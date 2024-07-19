@@ -60,6 +60,7 @@ namespace vsid
 
 		std::string icao = "";
 		int elevation = 0;
+		bool equipCheck = true;
 		std::vector<std::string> allRwys = {};
 		std::set<std::string> depRwys = {};
 		std::set<std::string> arrRwys = {};
