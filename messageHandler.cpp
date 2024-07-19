@@ -18,7 +18,16 @@ void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, Deb
 	{
 		if (this->currentLevel == Level::Debug && (this->debugArea ==  debugArea || this->debugArea == DebugArea::All) && sender == "DEBUG")
 		{
-			std::cout << "[" << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] " << msg << '\n';
+			std::string area;
+			if (debugArea == DebugArea::Atc) area = "ATC";
+			else if (debugArea == DebugArea::Conf) area = "CONF";
+			else if (debugArea == DebugArea::Dev) area = "DEV";
+			else if (debugArea == DebugArea::Req) area = "REQ";
+			else if (debugArea == DebugArea::Rwy) area = "RWY";
+			else if (debugArea == DebugArea::Sid) area = "SID";
+			else area = "N/A";
+
+			std::cout << "[" << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] [" << area << "] " << msg << '\n';
 		}
 		else if (/*this->currentLevel != Level::Debug && */sender != "DEBUG") this->msg.push_back(std::pair<std::string, std::string>(sender, msg));
 	}
@@ -126,6 +135,11 @@ bool vsid::MessageHandler::setDebugArea(std::string debugArea)
 	else if (debugArea == "REQ")
 	{
 		this->debugArea = DebugArea::Req;
+		return true;
+	}
+	else if (debugArea == "CONF")
+	{
+		this->debugArea = DebugArea::Conf;
 		return true;
 	}
 	else return false;

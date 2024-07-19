@@ -1,11 +1,37 @@
-[Changelog v0.9.0]
+[Changelog v0.10.0]
 
+[NEW]
+*	SID - special prio value "0" added in evaluation. This special value forces manual SID selection. This value should only be used in very restrictiv set up SIDs (e.g. with areas or rules).
 [CHANGED]
-*	automode activation now also ignores flightplans with present rwys (only clearance flag before)
+*	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
+*	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all
 
 [FIXED]
-*	removed unused variables and using direct calls instead
-*	fixed parenthesis warnings
+*	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
+
+[Changelog v0.9.0]
+
+[NEW]
+*	Config - "wpt" entry to specify a waypoint that needs to be matched
+*	Config - SIDs are now ID based, which means every SID now has an "id" entry (json key below "base" json key) to distinguish them
+	** !! Old configs are not compatible anymore !! **
+*	Config - (probably) due to a Euroscope bug SIDs in the .ese file without a route (e.g. MIL SIDs) cannot be accessed. A fallback to .sct file has been added if a SID fails to be mastered
+*	"Special" SIDs that are valid for any waypoint (entry "XXX") are now detected and set
+
+[CHANGED]
+*	Automode - activation now also ignores flightplans with present rwys (only clearance flag before)
+*	Automode - active rules can now be overwritten when selecting a rwy
+*	Config - SIDs now have a "base" (the json key) which will become the waypoint if no "wpt" entry was specified
+*	Config - SIDs now have a "designator" entry to specify the designator. As SIDs are now ID based several SIDs can use the same designator (no more indexed designators)
+*	Evaluation for matching sid and route waypoints now also re-checks if an Euroscope based waypoint was found but doesn't match any in the route
+*	If an Euroscope based waypoint is matched with a SID it is only accepted if the waypoint is found in the route (to prevent entire route clearings in case a SID mismatches the route)
+*	Manual SID selection now offers all SIDs if no valid waypoint is present in the flightplan if a) rwy is set by atc or b) SID rwy is part of departure rwys
+*	SIDs with the "all waypoints" designator ("XXX") are offered in addition to SIDs matching the valid flightplan waypoint
+*	Flightplan cleanup now considers routes without a valid SID waypoint - this flightplans are cleared up to the first entry which is not ADEP
+
+[FIXED]
+*	Removed unused variables and using direct calls instead
+*	Fixed parenthesis warnings
 
 [Changelog v0.8.3]
 
