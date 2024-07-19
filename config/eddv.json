@@ -22,6 +22,7 @@
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2,
                     "customRule": "high"
                 },
@@ -30,6 +31,7 @@
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 4,
                     "Remark": "req in case 09R clsd"
                 },
@@ -38,6 +40,7 @@
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 3
                 },
 			    "5": {
@@ -108,6 +111,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
 					"wtc": "HJ"
                 },
@@ -116,6 +120,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2,
                     "customRule": "high"
                 },
@@ -124,6 +129,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
 					"prio": 1,
 					"area": "gat"
                 },
@@ -132,6 +138,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 4,
 					"Remark": "req in case 27L clsd"
                 },
@@ -140,6 +147,7 @@
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 3
                 }
             },
@@ -149,6 +157,7 @@
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "wtc": "HJ"
                 },
@@ -157,6 +166,7 @@
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2,
                     "customRule": "high"
                 },
@@ -165,6 +175,7 @@
                     "rwy": "09L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 4,
                     "Remark": "req in case 09R clsd"
                 },
@@ -173,6 +184,7 @@
                     "rwy": "09R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 3
                 },
 			    "5": {
@@ -180,6 +192,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "wtc": "HJ"
                 },
@@ -188,6 +201,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2,
                     "customRule": "high"
                 },
@@ -196,6 +210,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
 					"prio": 1,
 					"area": "gat"
                 },
@@ -204,6 +219,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 4,
                     "Remark": "req in case 27L clsd"
                 },
@@ -212,6 +228,7 @@
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 3
                 }
             },
@@ -243,6 +260,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "wtc": "HJ"
                 },
@@ -251,6 +269,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 3
                 },
 				"6": {
@@ -258,6 +277,7 @@
                     "rwy": "27R",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
 					"prio": 1,
 					"area": "gat"
                 },
@@ -266,6 +286,7 @@
                     "rwy": "27L",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2
                 }
             },

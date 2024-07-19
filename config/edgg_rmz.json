@@ -7,43 +7,43 @@
 		"appSI": "ZHA",
         "sids": {
             "MOPAN": {
-                "1":{
-					"designator":"S",
+                "1": {
+					"designator": "S",
                     "rwy": "18",
                     "initial": 6000,
                     "prio": 1
                 },
-                "2":{
-					"designator":"N",
+                "2": {
+					"designator": "N",
                     "rwy": "36",
                     "initial": 6000,
                     "prio": 1
                 }
 			},
 			"NEDOV": {
-                "1":{
-					"designator":"S",
+                "1": {
+					"designator": "S",
                     "rwy": "18",
                     "initial": 6000,
                     "prio": 1
                 },
-                "2":{
-					"designator":"N",
+                "2": {
+					"designator": "N",
                     "rwy": "36",
                     "initial": 6000,
                     "prio": 1
                 }
 			},
 			"TRA": {
-                "1":{
-					"designator":"S",
+                "1": {
+					"designator": "S",
                     "rwy": "18",
                     "initial": 9000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"N",
+                "2": {
+					"designator": "N",
                     "rwy": "36",
                     "initial": 9000,
                     "prio": 1,
@@ -60,15 +60,15 @@
 		"appSI": "ZHA",
         "sids": {
             "LEBSO": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "07",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "25",
                     "initial": 6000,
                     "prio": 1,
@@ -76,15 +76,15 @@
                 }
 			},
 			"TINOX": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "07",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "25",
                     "initial": 6000,
                     "prio": 1,
@@ -101,15 +101,15 @@
 		"appSI": "STG,BAD,DKB,KTG",
         "sids": {
             "DKB": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,
@@ -117,15 +117,15 @@
                 }
 			},
 			"GUPIN": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,
@@ -133,15 +133,15 @@
                 }
 			},
 			"LBU": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,
@@ -149,8 +149,8 @@
                 }
 			},
 			"WUHFU": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
@@ -158,15 +158,15 @@
                 }
 			},
 			"ETASA": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,
@@ -174,15 +174,15 @@
                 }
 			},
 			"LAMPU": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "10",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "28",
                     "initial": 5000,
                     "prio": 1,
@@ -199,15 +199,15 @@
 		"appSI": "DKB,KTG,BAD",
         "sids": {
             "COSJE": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "08",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "",
                     "initial": 5000,
                     "prio": 1,
@@ -215,15 +215,15 @@
                 }
 			},
 			"TAKUT": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "08",
                     "initial": 5000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"W",
+                "2": {
+					"designator": "W",
                     "rwy": "",
                     "initial": 5000,
                     "prio": 1,
@@ -240,81 +240,85 @@
 		"appSI": "PFA,EIF,RUD,GIN,KTG",
         "sids": {
             "LADAT": {
-                "1":{
-					"designator":"P",
+                "1": {
+					"designator": "P",
                     "rwy": "03",
                     "initial": 4000,
                     "prio": 1
                 },
-				"2":{
-					"designator":"G",
+				"2": {
+					"designator": "G",
                     "rwy": "03",
                     "initial": 4000,
-                    "prio": 99
+					"equip": {"NON-RNAV": true},
+                    "prio": 1
                 }
 			},
 			"PIREK": {
-                "1":{
-					"designator":"P",
+                "1": {
+					"designator": "P",
                     "rwy": "03",
                     "initial": 4000,
                     "prio": 1
                 },
-				"2":{
-					"designator":"G",
+				"2": {
+					"designator": "G",
                     "rwy": "03",
                     "initial": 4000,
-                    "prio": 99
+                    "equip": {"NON-RNAV": true},
+                    "prio": 1
                 }
 			},
 			"ZWN": {
-                "1":{
-					"designator":"R",
+                "1": {
+					"designator": "R",
                     "rwy": "21",
                     "initial": 4000,
                     "prio": 1
                 },
-				"2":{
-					"designator":"D",
+				"2": {
+					"designator": "D",
                     "rwy": "21",
                     "initial": 4000,
-                    "prio": 99
+                    "equip": {"NON-RNAV": true},
+                    "prio": 1
                 }
 			},
 			"SARRI": {
-                "1":{
-					"designator":"P",
+                "1": {
+					"designator": "P",
                     "rwy": "03",
                     "initial": 4000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"2":{
-					"designator":"R",
+				"2": {
+					"designator": "R",
                     "rwy": "21",
                     "initial": 4000,
                     "prio": 1
                 }
 			},
 			"TOMPI": {
-                "1":{
-					"designator":"P",
+                "1": {
+					"designator": "P",
                     "rwy": "03",
                     "initial": 4000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"2":{
-					"designator":"R",
+				"2": {
+					"designator": "R",
                     "rwy": "21",
                     "initial": 4000,
                     "prio": 1
                 },
-				"3":{
-					"designator":"G",
+				"3": {
+					"designator": "G",
                     "rwy": "03",
                     "initial": 4000,
-                    "prio": 99,
+                    "equip": {"NON-RNAV": true},
+                    "prio": 1,
 					"climbvia": true
                 }
 			}
@@ -328,15 +332,15 @@
 		"appSI": "SIG,TAU,GIN,RUD,KTG",
         "sids": {
             "ARPEG": {
-                "1":{
-					"designator":"S",
+                "1": {
+					"designator": "S",
                     "rwy": "13",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"N",
+                "2": {
+					"designator": "N",
                     "rwy": "31",
                     "initial": 6000,
                     "prio": 1,
@@ -344,44 +348,46 @@
                 }
 			},
 			"NVO": {
-                "1":{
-					"designator":"G",
+                "1": {
+					"designator": "G",
                     "rwy": "13",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"H",
+                "2": {
+					"designator": "H",
                     "rwy": "31",
                     "initial": 6000,
                     "prio": 1,
 					"climbvia": true
                 },
-				"3":{
-					"designator":"S",
+				"3": {
+					"designator": "S",
                     "rwy": "13",
                     "initial": 6000,
-                    "prio": 99,
+                    "equip": {"NON-RNAV": true},
+                    "prio": 1,
 					"climbvia": true
                 },
-                "4":{
-					"designator":"L",
+                "4": {
+					"designator": "L",
                     "rwy": "31",
                     "initial": 6000,
-                    "prio": 99,
+                    "equip": {"NON-RNAV": true},
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
 			"TOBAK": {
-                "1":{
-					"designator":"R",
+                "1": {
+					"designator": "R",
                     "rwy": "13",
                     "initial": 6000,
                     "prio": 1
                 },
-                "2":{
-					"designator":"K",
+                "2": {
+					"designator": "K",
                     "rwy": "31",
                     "initial": 6000,
                     "prio": 1,
@@ -398,50 +404,52 @@
 		"appSI": "GIN,RUD,KTG",
         "sids": {
             "KULIX": {
-                "1":{
-					"designator":"V",
+                "1": {
+					"designator": "V",
                     "rwy": "11",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"C",
+                "2": {
+					"designator": "C",
                     "rwy": "29",
                     "initial": 7000,
-                    "prio": 11,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
 			"OHMAR": {
-                "1":{
-					"designator":"V",
+                "1": {
+					"designator": "V",
                     "rwy": "11",
                     "initial": 7000,
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"C",
+                "2": {
+					"designator": "C",
                     "rwy": "29",
                     "initial": 7000,
-                    "prio": 11,
+                    "prio": 1,
 					"climbvia": true
                 }
 			},
 			"WRB": {
-                "1":{
-					"designator":"V",
+                "1": {
+					"designator": "V",
                     "rwy": "11",
                     "initial": 7000,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
 					"climbvia": true
                 },
-                "2":{
-					"designator":"C",
+                "2": {
+					"designator": "C",
                     "rwy": "29",
                     "initial": 7000,
-                    "prio": 11,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1,
 					"climbvia": true
                 }
 			}

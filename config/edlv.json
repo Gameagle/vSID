@@ -7,15 +7,15 @@
         "appSI": "BOT,DLD,DLA,DLT,PADH",
         "sids": {
             "ERKUM": {
-                "1":{
-					"designator":"R",
+                "1": {
+					"designator": "R",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1
                 },
-                "2":{
-					"designator":"S",
+                "2": {
+					"designator": "S",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": true,
@@ -23,15 +23,15 @@
                 }
 			},
 			"SONEB": {
-                "1":{
-					"designator":"R",
+                "1": {
+					"designator": "R",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"S",
+                "2": {
+					"designator": "S",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": true,
@@ -39,18 +39,20 @@
                 }
 			},
 			"VEBAK": {
-                "1":{
-					"designator":"R",
+                "1": {
+					"designator": "R",
                     "rwy": "09",
                     "initial": 5000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 },
-                "2":{
-					"designator":"S",
+                "2": {
+					"designator": "S",
                     "rwy": "27",
                     "initial": 5000,
                     "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 }
 			}

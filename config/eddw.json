@@ -20,6 +20,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2
                 },
                 "3": {
@@ -27,6 +28,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "pilotfiled": true
                 }
@@ -44,6 +46,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2
                 },
                 "3": {
@@ -51,6 +54,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "pilotfiled": true
                 }
@@ -85,6 +89,7 @@
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 },
                 "2": {
@@ -92,6 +97,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 2
                 },
                 "3": {
@@ -99,6 +105,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1,
                     "pilotfiled": true
                 }
@@ -116,6 +123,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 }
 			},
@@ -141,6 +149,7 @@
                     "rwy": "09",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 },
                 "2": {
@@ -148,6 +157,7 @@
                     "rwy": "27",
                     "initial": 4000,
                     "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 }
 			}

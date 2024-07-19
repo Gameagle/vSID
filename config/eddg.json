@@ -7,15 +7,15 @@
 		"appSI": "HMM,PADL,PADH",
         "sids": {
             "DOMEG": {
-                "1":{
-					"designator":"E",
+                "1": {
+					"designator": "E",
                     "rwy": "07",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 2
                 },
-                "2":{
-					"designator":"Y",
+                "2": {
+					"designator": "Y",
                     "rwy": "07",
                     "initial": 5000,
                     "climbvia": false,
@@ -23,81 +23,15 @@
                     "engineType": "PT",
                     "mtow": 5700
                 },
-			    "3":{
-					"designator":"C",
+			    "3": {
+					"designator": "C",
                     "rwy": "25",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 3
-                },
-			    "4":{
-					"designator":"Z",
-                    "rwy": "25",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 1,
-                    "engineType": "J",
-                    "mtow": 20000
-                },
-				"5":{
-					"designator":"Z",
-                    "rwy": "25",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 2,
-                    "engineType": "TP"
-                }
-            },
-            "RKN": {
-                "1":{
-					"designator":"E",
-                    "rwy": "07",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 3
-                },
-                "2":{
-					"designator":"Y",
-                    "rwy": "07",
-                    "initial": 5000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "engineType": "J",
-                    "mtow": 20000
-                },
-				"3":{
-					"designator":"Y",
-                    "rwy": "07",
-                    "initial": 5000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "engineType": "PT"
-                },
-			    "4":{
-					"designator":"C",
-                    "rwy": "25",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 3
-                }
-            },
-			"OSN": {
-                "1":{
-					"designator":"E",
-                    "rwy": "07",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 2
                 },
-			    "2":{
-					"designator":"C",
-                    "rwy": "25",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 3
-                },
-			    "3":{
-					"designator":"X",
+			    "4": {
+					"designator": "Z",
                     "rwy": "25",
                     "initial": 5000,
                     "climbvia": false,
@@ -105,41 +39,118 @@
                     "engineType": "J",
                     "mtow": 20000
                 },
-				"4":{
-					"designator":"X",
+				"5": {
+					"designator": "Z",
                     "rwy": "25",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 2,
+                    "prio": 1,
+                    "engineType": "TP"
+                }
+            },
+            "RKN": {
+                "1": {
+					"designator": "E",
+                    "rwy": "07",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 2
+                },
+                "2": {
+					"designator": "Y",
+                    "rwy": "07",
+                    "initial": 5000,
+                    "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1,
+                    "engineType": "J",
+                    "mtow": 20000
+                },
+				"3": {
+					"designator": "Y",
+                    "rwy": "07",
+                    "initial": 5000,
+                    "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1,
+                    "engineType": "PT"
+                },
+			    "4": {
+					"designator": "C",
+                    "rwy": "25",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1
+                }
+            },
+			"OSN": {
+                "1": {
+					"designator": "E",
+                    "rwy": "07",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1
+                },
+			    "2": {
+					"designator": "C",
+                    "rwy": "25",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 2
+                },
+			    "3": {
+					"designator": "X",
+                    "rwy": "25",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1,
+                    "engineType": "J",
+                    "mtow": 20000
+                },
+				"4": {
+					"designator": "X",
+                    "rwy": "25",
+                    "initial": 5000,
+                    "climbvia": false,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 1,
                     "engineType": "TP"
                 }
             },
 			"HMM": {
-                "1":{
-					"designator":"Y",
+                "1": {
+					"designator": "Y",
                     "rwy": "07",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 2,
-                   "engineType": "PT",
-                    "mtow": 5700
+                    "prio": 1,
+                    "engineType": "PT",
+                    "mtow": 5700,
+					"equip": {"NON-RNAV": true}
                 },
-			    "2":{
-					"designator":"Z",
+			    "2": {
+					"designator": "Z",
                     "rwy": "25",
                     "initial": 5000,
                     "climbvia": false,
                     "prio": 1,
                     "engineType": "J",
-                    "mtow": 20000
+                    "mtow": 20000,
+					"equip": {"NON-RNAV": true}
                 },
-				"3":{
-					"designator":"Z",
+				"3": {
+					"designator": "Z",
                     "rwy": "25",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 2,
-                    "engineType": "TP"
+                    "prio": 1,
+                    "engineType": "TP",
+					"equip": {"NON-RNAV": true}
                 }
             }
         }
