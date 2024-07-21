@@ -173,19 +173,54 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 
 std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan &FlightPlan) {
 
-	std::vector<std::string> vecEquip = vsid::utils::split(FlightPlan.GetFlightPlanData().GetAircraftInfo(), '-');
+	std::string equip = FlightPlan.GetFlightPlanData().GetAircraftInfo();
+	std::string callsign = FlightPlan.GetCallsign();
+	char cap = FlightPlan.GetFlightPlanData().GetCapibilities();
+	std::vector<std::string> vecEquip = {};
+
+	if (equip.find("-") != std::string::npos)
+	{
+		vecEquip = vsid::utils::split(equip, '-');
+	}
+	else vecEquip.clear(); // equipment not present
 
 	if (vecEquip.size() >= 2)
 	{
 		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
-	}
 
-	try
-	{
-		return vecEquip.at(0);
+		try
+		{
+			return vecEquip.at(0);
+		}
+		catch (std::out_of_range)
+		{
+			return "";
+		}
 	}
-	catch (std::out_of_range)
+	else if (cap != ' ')
 	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+									"] failed to get equipment, falling back to capability checking. Reported equipment \"" +
+									equip + "\". Reported capability \"" + cap + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+		std::map<char, std::string> faaToIcao = {
+			{'X', "SF"}, {'T', "SF"}, {'U', "SF"},
+			{'D', "SDF"}, {'B', "SDF"}, {'A', "SDF"},
+			{'M', "DFILTUV"}, {'N', "DFILTUV"}, {'P', "DFILTUV"},
+			{'Y', "SDFIRY"}, {'C', "SDFIRY"}, {'I', "SDFIRY"},
+			{'V', "SDFGRY"}, {'S', "SDFGRY"}, {'G', "SDFGRY"},
+			{'W', "SDFWY"},
+			{'Z', "SDE2E3FIJ1RWY"},
+			{'L', "SDE2E3FGIJ1RWY"}
+		};
+
+		if (faaToIcao.contains(cap)) return faaToIcao[cap];
+		else return faaToIcao['L'];
+	}
+	else
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to get equipment or capabilities. Returning empty equipment",
+									vsid::MessageHandler::DebugArea::Sid);
 		return "";
 	}
 }

@@ -111,7 +111,7 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 					}
 					catch (std::out_of_range)
 					{
-						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking");
+						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking #fswpt");
 						return false;
 					}
 				})) return esWpt;
@@ -461,16 +461,34 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 			if (currSid.equip.contains("RNAV"))
 			{
-				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "") continue;				
+				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "")
+				{
+					messageHandler->writeMessage("DEBU", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+												"\" because RNAV ('A', 'B', 'G' or 'R' is required, but not found in equipment \"" +
+												equip + "\" and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					continue;
+				}
 			}
 			else if (currSid.equip.contains("NON-RNAV"))
 			{
-				if (equip.size() < 2 && pbn == "") continue;
-				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "") continue;
+				if (equip.size() < 2 && pbn == "")
+				{ 
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+												"\" because only NON-RNAV is allowed, but equipment \"" + equip +
+												"\" has less than 2 entry and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					continue;
+				}
+				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "")
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+						"\" because only NON-RNAV is allowed, but RNAV ('G' or 'R') was found in equipment \"" + equip +
+						"\" or equipment was empty and PBN is not empty", vsid::MessageHandler::DebugArea::Sid);
+					continue;
+				}
 			}
 			else
 			{
-				for (const std::pair<std::string, bool>& sidEquip : currSid.equip)
+				for (const auto &sidEquip : currSid.equip)
 				{
 					if(sidEquip.second && equip.find(sidEquip.first) == std::string::npos) continue;
 					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos) continue;
@@ -1233,6 +1251,12 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (this->processed.contains(callsign))
 		{
+			// DEV
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] equipment \"" + vsid::fpln::getEquip(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] PBN \"" + vsid::fpln::getPbn(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] capabilites \"" + FlightPlan.GetFlightPlanData().GetCapibilities() + "\"", vsid::MessageHandler::DebugArea::Dev);
+			// END DEV
+
 			std::string sidName = this->processed[callsign].sid.name();
 			std::string customSidName = this->processed[callsign].customSid.name();
 
