@@ -158,6 +158,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 	std::string callsign = fpln.GetCallsign();
 	std::string icao = fplnData.GetOrigin();
+	std::string dest = fplnData.GetDestination();
 	// EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
 	std::vector<std::string> filedRoute = vsid::utils::split(std::string(fplnData.GetRoute()), ' ');
 	std::string sidWpt = vsid::VSIDPlugin::findSidWpt(fplnData);
@@ -675,6 +676,30 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 				continue;
 			}
 			else restriction = true;
+		}
+
+		// skip if destination restrictions present and flightplan doesn't match
+
+		if (!currSid.dest.empty())
+		{
+			if (currSid.dest.contains(dest) && !currSid.dest[dest])
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() + "\" because destination \"" + 
+											dest + "\" is not allowed", vsid::MessageHandler::DebugArea::Sid
+				);
+				continue;
+			}
+			else if (!currSid.dest.contains(dest) && std::any_of(currSid.dest.begin(), currSid.dest.end(), [](const std::pair<std::string, bool>& sidDest)
+				{
+					return sidDest.second;
+				}))
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() + "\" because destination \"" +
+											dest + "\" was not found for this SID and the SID has mandatory destinations",
+											vsid::MessageHandler::DebugArea::Sid);
+				continue;
+			}
+
 		}
 
 		// skip if sid has night times set but they're not active
@@ -1252,9 +1277,9 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		if (this->processed.contains(callsign))
 		{
 			// DEV
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] equipment \"" + vsid::fpln::getEquip(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] PBN \"" + vsid::fpln::getPbn(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] capabilites \"" + FlightPlan.GetFlightPlanData().GetCapibilities() + "\"", vsid::MessageHandler::DebugArea::Dev);
+			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] equipment \"" + vsid::fpln::getEquip(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
+			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] PBN \"" + vsid::fpln::getPbn(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
+			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] capabilites \"" + FlightPlan.GetFlightPlanData().GetCapibilities() + "\"", vsid::MessageHandler::DebugArea::Dev);
 			// END DEV
 
 			std::string sidName = this->processed[callsign].sid.name();
