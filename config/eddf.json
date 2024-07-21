@@ -7,7 +7,7 @@
         "customRules" : {"allnorth":false, "sulus18": false},
         "timeMode": true,
         "timezone": "Europe/Berlin",
-		"appSI": "GIN,DKB",
+		"appSI": "GIN,DKB,KTG",
         "sids": {
             "ANEKI": {
 				"1": {
@@ -100,6 +100,15 @@
                     "climbvia": true,
                     "prio": 10
                 },
+				"6": {
+                    "designator": "S",
+                    "rwy": "18",
+                    "initial": 4000,
+                    "climbvia": true,
+                    "prio": 0,
+					"dest": {"EDDN": true},
+					"actDepRwy": {"any": "07C,07L,07R"}
+                },
                 "6": {
                     "designator": "X",
                     "rwy": "07C",
@@ -107,7 +116,7 @@
                     "climbvia": true,
                     "prio": 99
                 },
-                "7": {
+                "8": {
                     "designator": "Y",
                     "rwy": "07R",
                     "initial": 4000,
