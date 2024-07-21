@@ -111,7 +111,7 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 					}
 					catch (std::out_of_range)
 					{
-						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking");
+						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking #fswpt");
 						return false;
 					}
 				})) return esWpt;
@@ -1254,6 +1254,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			// DEV
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] equipment \"" + vsid::fpln::getEquip(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] PBN \"" + vsid::fpln::getPbn(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] capabilites \"" + FlightPlan.GetFlightPlanData().GetCapibilities() + "\"", vsid::MessageHandler::DebugArea::Dev);
 			// END DEV
 
 			std::string sidName = this->processed[callsign].sid.name();
