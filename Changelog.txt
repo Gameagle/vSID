@@ -3,6 +3,7 @@
 [NEW]
 *	SID - special prio value "0" added in evaluation. This special value forces manual SID selection. This value should only be used in very restrictiv set up SIDs (e.g. with areas or rules).
 *	SID - added equipment checks. Special values for "RNAV" and "NON-RNAV" are available or single equipment codes can be set to mandatory or forbidden (each SID defaults to RNAV mandatory)
+*	SID - added faa to icao equipment code conversion based on Topsky internal conversion to adapt to a possible error during communication of ES, Topsky and Vatsim servers
 *	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
 
 [CHANGED]
