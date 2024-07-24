@@ -102,14 +102,14 @@
                 },
 				"6": {
                     "designator": "S",
-                    "rwy": "18",
+					"rwy": "18",
                     "initial": 4000,
                     "climbvia": true,
                     "prio": 0,
 					"dest": {"EDDN": true},
 					"actDepRwy": {"any": "07C,07L,07R"}
                 },
-                "6": {
+                "7": {
                     "designator": "X",
                     "rwy": "07C",
                     "initial": 4000,
