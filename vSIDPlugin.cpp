@@ -1685,7 +1685,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 		}
 		
-		if(assignedSquawk != "0000") strcpy_s(sItemString, 16, assignedSquawk.c_str());
+		if(assignedSquawk != "0000" && assignedSquawk != "1234") strcpy_s(sItemString, 16, assignedSquawk.c_str());
 	}
 
 	if (ItemCode == TAG_ITEM_VSID_REQ)
