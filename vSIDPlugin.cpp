@@ -464,7 +464,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			{
 				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "")
 				{
-					messageHandler->writeMessage("DEBU", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 												"\" because RNAV ('A', 'B', 'G' or 'R' is required, but not found in equipment \"" +
 												equip + "\" and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
 					continue;
@@ -754,7 +754,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 	std::string callsign = fpln.GetCallsign();
 	std::string icao = fplnData.GetOrigin();
 	std::string filedSidWpt = this->findSidWpt(fplnData);
-	std::vector<std::string> filedRoute = vsid::utils::split(std::string(fplnData.GetRoute()), ' ');
+	std::vector<std::string> filedRoute = vsid::fpln::clean(FlightPlan, filedSidWpt);
 	vsid::Sid sidSuggestion = {};
 	vsid::Sid sidCustomSuggestion = {};
 	std::string setRwy = "";
@@ -780,8 +780,6 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 	{
 		fplnInfo.request = true;
 	}
-
-	vsid::fpln::clean(filedRoute, icao, filedSidWpt);
 
 	if (this->processed.contains(callsign))
 	{
@@ -1033,8 +1031,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		if (std::string(sItemString) == "VFR")
 		{
-			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			vsid::fpln::clean(filedRoute, fplnData.GetOrigin(), filedSidWpt);
+			std::vector<std::string> filedRoute = vsid::fpln::clean(fpln, filedSidWpt);
 
 			if (depRWY != "")
 			{
@@ -1076,7 +1073,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		if (this->processed.contains(callsign))
 		{
 			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			std::string atcRwy = vsid::fpln::getAtcBlock(filedRoute, fplnData.GetOrigin()).second;
+			std::string atcRwy = vsid::fpln::getAtcBlock(fpln).second;
 			if (std::string(fplnData.GetPlanType()) == "I")
 			{
 				if (this->processed[callsign].atcRWY && atcRwy != "")
@@ -1149,10 +1146,9 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		if (strlen(sItemString) != 0)
 		{
-			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			vsid::fpln::clean(filedRoute, fplnData.GetOrigin());
-
+			std::vector<std::string> filedRoute = vsid::fpln::clean(fpln);
 			std::ostringstream ss;
+
 			ss << fplnData.GetOrigin() << "/" << sItemString;
 			filedRoute.insert(filedRoute.begin(), vsid::utils::trim(ss.str()));
 			
@@ -1236,7 +1232,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 	if (ItemCode == TAG_ITEM_VSID_SIDS)
 	{
 		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-		std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetOrigin());
+		std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 
 		if (this->removeProcessed.size() > 0 &&
 			this->removeProcessed.contains(callsign) &&
@@ -1276,12 +1272,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (this->processed.contains(callsign))
 		{
-			// DEV
-			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] equipment \"" + vsid::fpln::getEquip(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
-			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] PBN \"" + vsid::fpln::getPbn(FlightPlan) + "\"", vsid::MessageHandler::DebugArea::Dev);
-			//messageHandler->writeMessage("DEBUG", "[" + callsign + "] capabilites \"" + FlightPlan.GetFlightPlanData().GetCapibilities() + "\"", vsid::MessageHandler::DebugArea::Dev);
-			// END DEV
-
 			std::string sidName = this->processed[callsign].sid.name();
 			std::string customSidName = this->processed[callsign].customSid.name();
 
@@ -1419,7 +1409,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 			std::string sidName = this->processed[callsign].sid.name();
 			std::string customSidName = this->processed[callsign].customSid.name();
-			std::string atcSid = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetOrigin()).first;
+			std::string atcSid = vsid::fpln::getAtcBlock(FlightPlan).first;
 			
 			// if an unknown Sid is set (non-standard or non-custom) try to find matching Sid in config
 			if (atcSid != "" && atcSid != fplnData.GetOrigin() && atcSid != sidName && atcSid != customSidName)
@@ -1544,10 +1534,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (this->processed.contains(callsign))
 		{
-			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(
-																		vsid::utils::split(fplnData.GetRoute(), ' '),
-																		fplnData.GetOrigin()
-																		);
+			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 
 			if (atcBlock.first == fplnData.GetOrigin() &&
 				!this->processed[callsign].atcRWY &&
@@ -1838,8 +1825,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						for (std::pair<const std::string, vsid::fpln::Info> pFpln : this->processed)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
-							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-							auto atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetRoute());
+							auto atcBlock = vsid::fpln::getAtcBlock(fpln);
 							messageHandler->writeMessage("DEBUG", "[" + pFpln.first + "] rechecking due to rule change.", vsid::MessageHandler::DebugArea::Sid);
 							if (atcBlock.second != "" && fpln.IsValid())
 							{
@@ -1998,7 +1984,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 							std::string icao = fplnData.GetOrigin();
-							std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+							
 							if (this->activeAirports.contains(fplnData.GetOrigin()) &&
 								this->activeAirports[icao].settings["auto"] &&
 								!fpln.GetClearenceFlag() && !pFpln.second.atcRWY
@@ -2069,7 +2055,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 									std::string icao = fplnData.GetOrigin();
-									std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+									
 									if (*it == icao && !fpln.GetClearenceFlag() && !pFpln.second.atcRWY)
 									{
 										return true;
@@ -2179,9 +2165,9 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					for (std::pair<const std::string, vsid::fpln::Info> pFpln : this->processed)
 					{
 						EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
-						EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-						auto atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetRoute());
+						auto atcBlock = vsid::fpln::getAtcBlock(fpln);
 						messageHandler->writeMessage("DEBUG", "[" + pFpln.first + "] Rechecking due to area change.", vsid::MessageHandler::DebugArea::Sid);
+
 						if (atcBlock.second != "" && fpln.IsValid())
 						{
 							this->processFlightplan(FlightPlanSelect(pFpln.first.c_str()), true, atcBlock.second);
@@ -2372,7 +2358,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 		std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
 		if (filedRoute.size() > 0)
 		{
-			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(filedRoute, fplnData.GetOrigin());
+			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 			if (this->activeAirports[fplnData.GetOrigin()].settings["auto"] &&
 				atcBlock.first == "")
 			{

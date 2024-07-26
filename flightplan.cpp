@@ -4,9 +4,13 @@
 #include "utils.h"
 #include "messageHandler.h"
 
-void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string origin, std::string filedSidWpt)
+std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
 {
-	std::pair<std::string, std::string> atcBlock = getAtcBlock(filedRoute, origin);
+	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
+	std::string callsign = FlightPlan.GetCallsign();
+	std::string origin = fplnData.GetOrigin();
+	std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
+	std::pair<std::string, std::string> atcBlock = getAtcBlock(FlightPlan);
 
 	if (filedRoute.size() > 0)
 	{
@@ -19,10 +23,11 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Error during cleaning of route at first entry. ADEP: " + origin +
-				" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcfe");
+			messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route at first entry. ADEP: " + origin +
+				" with route \"" + vsid::utils::join(filedRoute) + "\". #rcfe");
 		}
 	}
+
 	/* if a possible SID block was found check the entire route until the sid waypoint is found*/
 	if (filedRoute.size() > 0 && filedSidWpt != "")
 	{
@@ -34,13 +39,14 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-											" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcer");
+				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
+											" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-1");
 			}
 			if (*it == filedSidWpt) break;
 			it = filedRoute.erase(it);
 		}
 	}
+
 	/* if the route has no sid waypoint clean up until the probably first waypoint*/
 	else if (filedRoute.size() > 0 && filedSidWpt == "")
 	{
@@ -52,19 +58,32 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-					" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcer");
+				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
+					" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-2");
 			}
 			if (*it != origin) break;
 			it = filedRoute.erase(it);
 		}
 	}
+
+	if (filedRoute.size() == 0 && vsid::utils::split(fplnData.GetRoute(), ' ').size() != 0)
+	{
+		messageHandler->writeMessage("WARNING", "[" + callsign +
+									"] did not clean route as cleaning resulted in an empty route (possible error in the filed route). Returning original route.");
+		return vsid::utils::split(fplnData.GetRoute(), ' ');
+	}
+
+	return filedRoute;
 }
 
-std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const std::vector<std::string>& filedRoute, const std::string origin)
+std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
+	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');
+	std::string origin = FlightPlan.GetFlightPlanData().GetOrigin();
+	std::string callsign = FlightPlan.GetCallsign();
 	std::string atcRwy = "";
 	std::string atcSid = "";
+
 	if (filedRoute.size() > 0)
 	{
 		try
@@ -82,7 +101,7 @@ std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const std::vector<st
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to get ATC block. Callsign is unknown. #fpgb");
+			messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to get ATC block. First route entry: " + filedRoute.at(0) + ". #fpgb");
 		}
 	}
 	return { atcSid, atcRwy };
