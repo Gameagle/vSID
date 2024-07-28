@@ -5,6 +5,7 @@
 *	SID - added equipment checks. Special values for "RNAV" and "NON-RNAV" are available or single equipment codes can be set to mandatory or forbidden (each SID defaults to RNAV mandatory)
 *	SID - added faa to icao equipment code conversion based on Topsky internal conversion to adapt to a possible error during communication of ES, Topsky and Vatsim servers
 *	SID - added destination restriction option. If ADES ICAO is found in the list but is forbidden (false) the SID is skipped. If it is not found in the list but there is at least one mandatory (true) the SID is skipped.
+*	SID (item) - special "EQUIP" instead of "MANUAL" display if no SID was found and the last possible check failed due to equipment missmatches
 *	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
 
 [CHANGED]
