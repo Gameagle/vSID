@@ -293,6 +293,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::map<std::string, bool> acftType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("acftType", std::map<std::string, bool>{});
                                 int engineCount = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineCount", 0);
                                 int mtow = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("mtow", 0);
+                                std::map<std::string, bool> dest = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
@@ -302,7 +303,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 
                                 vsid::Sid newSid = { base, wpt, id, "", desig, rwys, equip, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
-                                                    mtow, customRule, area, lvp,
+                                                    mtow, dest, customRule, area, lvp,
                                                     timeFrom, timeTo };
                                 apt.second.sids.push_back(newSid);
                                 if (newSid.timeFrom != -1 && newSid.timeTo != -1) apt.second.timeSids.push_back(newSid);

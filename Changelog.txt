@@ -4,14 +4,19 @@
 *	SID - special prio value "0" added in evaluation. This special value forces manual SID selection. This value should only be used in very restrictiv set up SIDs (e.g. with areas or rules).
 *	SID - added equipment checks. Special values for "RNAV" and "NON-RNAV" are available or single equipment codes can be set to mandatory or forbidden (each SID defaults to RNAV mandatory)
 *	SID - added faa to icao equipment code conversion based on Topsky internal conversion to adapt to a possible error during communication of ES, Topsky and Vatsim servers
+*	SID - added destination restriction option. If ADES ICAO is found in the list but is forbidden (false) the SID is skipped. If it is not found in the list but there is at least one mandatory (true) the SID is skipped.
 *	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
 
 [CHANGED]
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
 *	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all
+*	Route cleaning - additionaly safety if a possibly wrongly filed flightplan would result in an empty route after cleaning. Now the original route is returned with a warning to the controller
+*	Route cleaning - callsign was unknown before. Changed to make callsign available.
+*	"ATC Block" - callsign was unknown before. Changed to make callsign available. Background work only, but error messages are displayed to controllers
 
 [FIXED]
 *	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
+*	Squawk - Default value 1234 is not displayed anymore
 
 [Changelog v0.9.0]
 
