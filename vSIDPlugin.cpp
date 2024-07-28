@@ -167,6 +167,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	bool customRuleActive = false;
 	std::set<std::string> wptRules = {};
 	std::set<std::string> actTSid = {};
+	bool validEquip = true;
 
 	if (!this->activeAirports.contains(icao))
 	{
@@ -259,13 +260,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 	// include atc set rwy if present as dep rwy
 
-	//std::set<std::string> depRwys = this->activeAirports[icao].depRwys;
-	/*if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) depRwys.insert(atcRwy);
-	else if (atcRwy != "" && !this->processed.contains(callsign) &&
-			this->activeAirports[icao].settings["auto"] &&
-			(vsid::fpln::findRemarks(fpln, "VSID/RWY") || fplnData.IsAmended())) depRwys.insert(atcRwy);*/
-
-	
 	std::string actAtcRwy = "";
 	
 	if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) actAtcRwy = atcRwy;
@@ -285,6 +279,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 		bool rwyMatch = false;
 		bool restriction = false;
+		validEquip = true;
 		
 
 		// checking areas for arrAsDep - actual area evaluation down below
@@ -465,8 +460,9 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "")
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-												"\" because RNAV ('A', 'B', 'G' or 'R' is required, but not found in equipment \"" +
+												"\" because RNAV ('A', 'B', 'G' or 'R') is required, but not found in equipment \"" +
 												equip + "\" and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
 					continue;
 				}
 			}
@@ -477,6 +473,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 												"\" because only NON-RNAV is allowed, but equipment \"" + equip +
 												"\" has less than 2 entry and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
 					continue;
 				}
 				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "")
@@ -484,6 +481,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 						"\" because only NON-RNAV is allowed, but RNAV ('G' or 'R') was found in equipment \"" + equip +
 						"\" or equipment was empty and PBN is not empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
 					continue;
 				}
 			}
@@ -491,8 +489,22 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			{
 				for (const auto &sidEquip : currSid.equip)
 				{
-					if(sidEquip.second && equip.find(sidEquip.first) == std::string::npos) continue;
-					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos) continue;
+					if (sidEquip.second && equip.find(sidEquip.first) == std::string::npos)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+							"\" because equipment \"" + sidEquip.first + "\" is mandatory but was not found in equipment \"" + equip,
+							vsid::MessageHandler::DebugArea::Sid);
+						validEquip = false;
+						continue;
+					}
+					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+							"\" because equipment \"" + sidEquip.first + "\" is forbidden but was found in equipment \"" + equip,
+							vsid::MessageHandler::DebugArea::Sid);
+						validEquip = false;
+						continue;
+					}
 				}
 			}
 		}
@@ -718,6 +730,8 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] special prio value '0' detected. Returning empty SID for forced manual mode",
 										vsid::MessageHandler::DebugArea::Sid);
+
+			if (this->processed.contains(callsign)) this->processed[callsign].validEquip = true;
 			return vsid::Sid();
 		}
 		
@@ -736,11 +750,27 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			setSid = currSid;
 			prio = currSid.prio;
 		}
+		else if (currSid.prio == 99)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+			"\" because prio is 99 (manual only SID)",
+			vsid::MessageHandler::DebugArea::Sid);
+		}
 		else messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 										"\" because prio is higher",
 										vsid::MessageHandler::DebugArea::Sid);
 	}
 	messageHandler->writeMessage("DEBUG", "[" + callsign + "] Setting SID \"" + setSid.idName() + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+	// if the last valid SID fails due to equipment return a special "EQUIP" sid to also handle yet unprocessed fplns
+	// reset in processFlightplan()
+	if (!validEquip)
+	{
+		setSid.base = "EQUIP";
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Re-Setting special SID base 'EQUIP' as the last possible SID failed due to equipment checks",
+									vsid::MessageHandler::DebugArea::Sid);
+	}
+
 	return(setSid);
 }
 
@@ -781,13 +811,6 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		fplnInfo.request = true;
 	}
 
-	if (this->processed.contains(callsign))
-	{
-		fplnInfo.atcRWY = this->processed[callsign].atcRWY;
-		fplnInfo.request = this->processed[callsign].request;
-		fplnInfo.noFplnUpdate = this->processed[callsign].noFplnUpdate;
-	}
-
 	/* if a sid has been set manually choose this */
 	if (std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V")
 	{
@@ -823,6 +846,20 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		sidSuggestion = this->processSid(fpln);
 	}
 
+	// reset special 'EQUIP' SID back to empty
+	if (sidSuggestion.base == "EQUIP")
+	{
+		fplnInfo.validEquip = false;
+		sidSuggestion.base = "";
+	}
+
+	if (sidCustomSuggestion.base == "EQUIP")
+	{
+		fplnInfo.validEquip = false;
+		sidCustomSuggestion.base = "";
+	}
+
+	// determine dep rwy base on suggested SIDs
 	if (sidSuggestion.base != "" && sidCustomSuggestion.base == "")
 	{
 		try
@@ -885,6 +922,15 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		fplnInfo.sid = sidSuggestion;
 		fplnInfo.customSid = sidCustomSuggestion;
 	}
+
+	// if the fpln was already processed update values to prevent overwriting
+	if (this->processed.contains(callsign))
+	{
+		fplnInfo.atcRWY = this->processed[callsign].atcRWY;
+		fplnInfo.request = this->processed[callsign].request;
+		fplnInfo.noFplnUpdate = this->processed[callsign].noFplnUpdate;
+	}
+
 	this->processed[callsign] = fplnInfo;
 
 	// if an IFR fpln has no matching sid but the route should be set inverse - otherwise rwy changes would be overwritten
@@ -1148,7 +1194,6 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		{
 			std::vector<std::string> filedRoute = vsid::fpln::clean(fpln);
 			std::ostringstream ss;
-
 			ss << fplnData.GetOrigin() << "/" << sItemString;
 			filedRoute.insert(filedRoute.begin(), vsid::utils::trim(ss.str()));
 			
@@ -1342,7 +1387,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					this->processed[callsign].customSid.empty())
 					)
 			{
-				strcpy_s(sItemString, 16, "MANUAL");
+				if(this->processed[callsign].validEquip) strcpy_s(sItemString, 16, "MANUAL");
+				else strcpy_s(sItemString, 16, "EQUIP");
 			}
 			else if(sidName != "" && customSidName == "")
 			{
