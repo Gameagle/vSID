@@ -7,6 +7,7 @@
 *	SID - added destination restriction option. If ADES ICAO is found in the list but is forbidden (false) the SID is skipped. If it is not found in the list but there is at least one mandatory (true) the SID is skipped.
 *	SID (item) - special "EQUIP" instead of "MANUAL" display if no SID was found and the last possible check failed due to equipment missmatches
 *	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
+*	Config - new config added with prominent RNAV capable acft due to many wrongly filed flightplans
 
 [CHANGED]
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
