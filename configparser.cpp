@@ -119,7 +119,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                 try
                 {
-                    //configTest = json::parse(testFile);
                     this->parsedConfig = json::parse(configFile);
 
                     if (!this->parsedConfig.contains(apt.first))
@@ -341,9 +340,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
             }
         }
     }
-    /*savedCustomRules.clear(); // MONITOR - DROPPED ANYWAYS
-    savedAreas.clear();
-    savedSettings.clear();*/
 
     // airport health check - remove apt without config
 
@@ -390,13 +386,68 @@ void vsid::ConfigParser::loadGrpConfig()
             }
             catch (const json::parse_error& e)
             {
-                messageHandler->writeMessage("ERROR:", "Failed to load grp config : " + std::string(e.what()));
+                messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
             }
             catch (const json::type_error& e)
             {
-                messageHandler->writeMessage("ERROR:", "Failed to load grp config : " + std::string(e.what()));
+                messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
             }
         }
+    }
+}
+
+void vsid::ConfigParser::loadRnavList()
+{
+    // get the current path where plugins .dll is stored
+    char path[MAX_PATH + 1] = { 0 };
+    GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+    PathRemoveFileSpecA(path);
+    std::filesystem::path basePath = path;
+
+    if (!this->vSidConfig.empty())
+    {
+        basePath.append(this->vSidConfig.value("RNAV", "")).make_preferred();
+    }
+
+    if (!std::filesystem::exists(basePath))
+    {
+        messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
+        return;
+    }
+
+    for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+    {
+        if (entry.extension() != ".json") continue;
+        if (entry.filename().string() != "RNAV_List.json") continue;
+
+        std::ifstream configFile(entry.string());
+        json rnavConfigFile;
+
+        try
+        {
+            rnavConfigFile = json::parse(configFile);
+        }
+        catch (const json::parse_error& e)
+        {
+            messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+        }
+        catch (const json::type_error& e)
+        {
+            messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+        }
+
+        if (rnavConfigFile.empty()) return;
+
+        try
+        {
+            this->rnavList = rnavConfigFile.value("RNAV", std::set<std::string>{});
+        }
+        catch (json::type_error &e)
+        {
+            messageHandler->writeMessage("ERROR", "Failed to read rnav list: " + std::string(e.what()));
+        }
+
+        return;
     }
 }
 

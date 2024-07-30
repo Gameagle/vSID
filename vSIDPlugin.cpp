@@ -23,6 +23,7 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	//this->detectPlugins();
 	this->configParser.loadMainConfig();
 	this->configParser.loadGrpConfig();
+	this->configParser.loadRnavList();
 	this->gsList = "STUP,PUSH,TAXI,DEPA";
 
 	messageHandler->setLevel("INFO");
@@ -452,7 +453,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 		if (this->activeAirports[icao].equipCheck)
 		{
-			std::string equip = vsid::fpln::getEquip(FlightPlan);
+			std::string equip = vsid::fpln::getEquip(FlightPlan, this->configParser.rnavList);
 			std::string pbn = vsid::fpln::getPbn(FlightPlan);
 
 			if (currSid.equip.contains("RNAV"))
@@ -492,7 +493,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					if (sidEquip.second && equip.find(sidEquip.first) == std::string::npos)
 					{
 						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-							"\" because equipment \"" + sidEquip.first + "\" is mandatory but was not found in equipment \"" + equip,
+							"\" because equipment \"" + sidEquip.first + "\" is mandatory but was not found in equipment \"" + equip + "\"",
 							vsid::MessageHandler::DebugArea::Sid);
 						validEquip = false;
 						continue;
@@ -500,7 +501,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos)
 					{
 						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-							"\" because equipment \"" + sidEquip.first + "\" is forbidden but was found in equipment \"" + equip,
+							"\" because equipment \"" + sidEquip.first + "\" is forbidden but was found in equipment \"" + equip + "\"",
 							vsid::MessageHandler::DebugArea::Sid);
 						validEquip = false;
 						continue;
@@ -764,7 +765,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 	// if the last valid SID fails due to equipment return a special "EQUIP" sid to also handle yet unprocessed fplns
 	// reset in processFlightplan()
-	if (!validEquip)
+	if (!validEquip && setSid.empty())
 	{
 		setSid.base = "EQUIP";
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Re-Setting special SID base 'EQUIP' as the last possible SID failed due to equipment checks",
@@ -1965,6 +1966,14 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		{	
 			std::string atcSI = ControllerMyself().GetPositionId();
 			std::string atcIcao;
+
+			// DEV
+			for (EuroScopePlugIn::CController ctr = this->ControllerSelectFirst(); ctr.IsValid(); ctr = this->ControllerSelectNext(ctr))
+			{
+				messageHandler->writeMessage("DEBUG", "[ControllerSelect] Callsign: " + std::string(ctr.GetCallsign()) +
+					"; SI: " + std::string(ctr.GetPositionId()), vsid::MessageHandler::DebugArea::Atc);
+			}
+			// END DEV
 			
 			try
 			{
