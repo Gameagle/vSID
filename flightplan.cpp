@@ -190,7 +190,8 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	return false; // default / fallback state
 }
 
-std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan &FlightPlan) {
+std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
+{
 
 	std::string equip = FlightPlan.GetFlightPlanData().GetAircraftInfo();
 	std::string callsign = FlightPlan.GetCallsign();
@@ -215,6 +216,14 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 		{
 			return "";
 		}
+	}
+	else if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+			"] failed to get equipment, but found in RNAV list. Reported equipment \"" +
+			equip + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+		return "SDE2E3FGIJ1RWY";
 	}
 	else if (cap != ' ')
 	{

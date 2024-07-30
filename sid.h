@@ -90,22 +90,19 @@ namespace vsid
 		/**
 		 * @brief Checks if a SID object is empty (base is checked)
 		 *
-		 * @param sid - the sid object
 		 */
 		bool empty() const;
 		/**
 		 * @brief Compares if two SIDs are the same
 		 *
-		 * @param sid1 - first sid to compare
-		 * @param sid2 - second sid to compare
+		 * @param sid - sid to compare to
 		 * @return true - if waypoint, number and designator match
 		 */
 		bool operator==(const Sid& sid);
 		/**
 		 * @brief Compares if two SIDs are the different
 		 *
-		 * @param sid1 - first sid to compare
-		 * @param sid2 - second sid to compare
+		 * @param sid - sid to compare to
 		 * @return true - if at least one of waypoint, number or designator don't match
 		 */
 		bool operator!=(const Sid& sid);

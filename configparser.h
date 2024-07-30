@@ -64,6 +64,10 @@ namespace vsid
 		 */
 		void loadGrpConfig();
 		/**
+		 * @brief load list of RNAV capable acft
+		 */
+		void loadRnavList();
+		/**
 		 * @brief Fetches a specific color from the settings file
 		 * 
 		 * @param color - name of the key in the settings file
@@ -73,6 +77,7 @@ namespace vsid
 
 		int getReqTime(std::string time);
 		json grpConfig;
+		std::set<std::string> rnavList;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;

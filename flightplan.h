@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <string>
 #include <vector>
+#include <set>
 #include <chrono>
 
 namespace vsid
@@ -96,7 +97,7 @@ namespace vsid
 
 		bool removeScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toRemove);
 
-		std::string getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan);
+		std::string getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string> &rnav = {});
 
 		std::string getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan);
 	}
