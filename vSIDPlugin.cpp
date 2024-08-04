@@ -11,7 +11,7 @@
 #include <algorithm>
 
 // DEV
-//#include "display.h"
+#include "display.h"
 #include "airport.h"
 #include <thread>
 // END DEV
@@ -20,7 +20,7 @@ vsid::VSIDPlugin* vsidPlugin;
 
 vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, pluginName.c_str(), pluginVersion.c_str(), pluginAuthor.c_str(), pluginCopyright.c_str()) {
 
-	//this->detectPlugins();
+	this->detectPlugins();
 	this->configParser.loadMainConfig();
 	this->configParser.loadGrpConfig();
 	this->configParser.loadRnavList();
@@ -45,8 +45,6 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemType("vSID Request Timer", TAG_ITEM_VSID_REQTIMER);
 
-	//RegisterDisplayType("vSID (no display)", false, false, false, true); /// DEV
-
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
@@ -58,39 +56,39 @@ vsid::VSIDPlugin::~VSIDPlugin() {};
 * BEGIN OWN FUNCTIONS
 */
 
-//void vsid::VSIDPlugin::detectPlugins()
-//{
-//	HMODULE hMods[1024];
-//	HANDLE hProcess;
-//	DWORD cbNeeded;
-//	unsigned int i;
-//
-//	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
-//	if (hProcess == NULL) return;
-//
-//	if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
-//	{
-//		for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
-//		{
-//			TCHAR szModName[MAX_PATH];
-//
-//			if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
-//			{
-//				std::string modName = szModName;
-//				if (modName.find("SYSTEM32") != std::string::npos ||
-//					modName.find("System32") != std::string::npos ||
-//					modName.find("system32") != std::string::npos) continue;
-//				size_t pos = modName.find_last_of("\\");
-//				if (pos == std::string::npos) continue;
-//				modName = modName.substr(pos + 1);
-//
-//				if (modName == "CCAMS.dll") this->ccamsLoaded = true;
-//				if (modName == "TopSky.dll") this->topskyLoaded = true;
-//			}
-//		}
-//	}
-//	CloseHandle(hProcess);
-//}
+void vsid::VSIDPlugin::detectPlugins()
+{
+	HMODULE hmods[1024];
+	HANDLE hprocess;
+	DWORD cbneeded;
+	unsigned int i;
+
+	hprocess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
+	if (hprocess == NULL) return;
+
+	if (EnumProcessModules(hprocess, hmods, sizeof(hmods), &cbneeded))
+	{
+		for (i = 0; i < (cbneeded / sizeof(HMODULE)); i++)
+		{
+			TCHAR szModName[MAX_PATH];
+
+			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
+			{
+				std::string modname = szModName;
+				if (modname.find("system32") != std::string::npos ||
+					modname.find("system32") != std::string::npos ||
+					modname.find("system32") != std::string::npos) continue;
+				size_t pos = modname.find_last_of("\\");
+				if (pos == std::string::npos) continue;
+				modname = modname.substr(pos + 1);
+
+				if (modname == "CCAMS.dll") this->ccamsLoaded = true;
+				if (modname == "TopSky.dll") this->topskyLoaded = true;
+			}
+		}
+	}
+	CloseHandle(hprocess);
+}
 
 std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData FlightPlanData)
 {
@@ -977,19 +975,19 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude - #PFP");
 			}
 		}
-		//if (this->ccamsLoaded && this->radarScreen != nullptr) /// DEV
-		//{
-		//	messageHandler->writeMessage("DEBUG", "Triggering squawk assignement");
-		//	std::string squawk = FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetSquawk();
-		//	if (squawk == "" || squawk == "1234" || squawk == "0000")
-		//	{
 
-		//		messageHandler->writeMessage("DEBUG", "trying to write squawk");
-
-		//		this->radarScreen->StartTagFunction(callsign.c_str(), nullptr, 0, "", "CCAMS", 871, POINT(), RECT());
-		//	}
-		//}
-		//else if (this->radarScreen == nullptr) messageHandler->writeMessage("DEBUG", "nullptr detected");// END DEV
+		std::string squawk = fpln.GetControllerAssignedData().GetSquawk();
+		if (squawk == "0000" || squawk == "1234")
+		{
+			if (this->ccamsLoaded && !this->preferTopsky)
+			{
+				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871);
+			}
+			else if (this->topskyLoaded)
+			{
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667);
+			}
+		}
 	}
 }
 /*
@@ -999,6 +997,14 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 /*
 * BEGIN ES FUNCTIONS
 */
+
+EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated)
+{
+	this->screenId++;
+	this->radarScreens.insert({ this->screenId, new vsid::Display(this->screenId, this) });
+
+	return this->radarScreens.at(this->screenId);
+}
 
 void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, POINT Pt, RECT Area) {
 	
@@ -1129,7 +1135,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				}
 				else this->processFlightplan(fpln, false);
 			}
-		}
+		}		
 	}
 
 	if (FunctionId == TAG_FUNC_VSID_CLMBMENU)
@@ -2360,13 +2366,6 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 	return false;
 }
 
-//EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated) /// DEV
-//{
-//	messageHandler->writeMessage("INFO", "OnRadarScreenCreated called");
-//	this->radarScreen = new vsid::Display();
-//	return this->radarScreen;
-//}
-
 void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan)
 {
 	if (!FlightPlan.IsValid()) return;
@@ -3120,7 +3119,6 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 void vsid::VSIDPlugin::OnTimer(int Counter)
 {
-
 	std::pair<std::string, std::string> msg = messageHandler->getMessage();
 	if (msg.first != "" && msg.second != "")
 	{
