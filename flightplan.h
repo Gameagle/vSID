@@ -45,6 +45,7 @@ namespace vsid
 			int updateCounter = 0;
 			bool request = false;
 			bool validEquip = true;
+			std::string gndState = "";
 		};
 
 		/**
