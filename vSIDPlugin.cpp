@@ -990,6 +990,20 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		}
 	}
 }
+
+void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan)
+{
+	if (!FlightPlan.IsValid()) return;
+
+	std::string callsign = FlightPlan.GetCallsign();
+
+	if (this->processed.contains(callsign))
+	{
+		vsid::fpln::setScratchPad(FlightPlan, std::string(".vsid_state_") +
+								((FlightPlan.GetClearenceFlag()) ? "true" : "false") + "/" +
+								this->processed[callsign].gndState);
+	}
+}
 /*
 * END OWN FUNCTIONS
 */
@@ -2245,15 +2259,18 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			messageHandler->writeMessage("DEBUG", "Syncinc all requests.", vsid::MessageHandler::DebugArea::Req);
 			for (std::pair<const std::string, vsid::fpln::Info> &fp : this->processed)
 			{
+				messageHandler->writeMessage("DEBUG", "[" + fp.first + "] sync processing...", vsid::MessageHandler::DebugArea::Dev);
+				EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(fp.first.c_str());
+				if (!fpln.IsValid()) continue;
+
 				if (fp.second.request)
 				{
-					EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(fp.first.c_str());
-
-					if (!fpln.IsValid()) continue;
-
 					std::string icao = fpln.GetFlightPlanData().GetOrigin();
 					if(!this->activeAirports.contains(icao)) continue;
 					
+
+					// sync requests
+
 					bool found = false;
 					for (auto& request : this->activeAirports[icao].requests)
 					{
@@ -2274,6 +2291,14 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						}
 						if (found) break;
 					}
+				}
+				
+				// sync states
+
+				if (fpln.GetClearenceFlag() || this->processed[fp.first].gndState != "")
+				{
+					messageHandler->writeMessage("DEBUG", "[" + fp.first + "] calling sync state.", vsid::MessageHandler::DebugArea::Dev);
+					this->syncStates(fpln);
 				}
 			}
 			return true;
@@ -2515,6 +2540,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	std::string scratchpad = cad.GetScratchPadString();
 
+	messageHandler->writeMessage("DEBUG", "[" + callsign + "] scratchpad: \"" + scratchpad + "\"", vsid::MessageHandler::DebugArea::Dev);
+
 	if (this->processed.contains(callsign) && scratchpad.size() > 0)
 	{
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING && this->activeAirports[icao].settings["auto"])
@@ -2536,8 +2563,33 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				vsid::fpln::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()));
 			}
 		}
+
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
 		{
+			// GRP does not alway delete states so we delete if present
+
+			if (scratchpad.find("NOSTATE") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "NOSTATE");
+				this->processed[callsign].gndState = "NOSTATE";
+			}
+			if (scratchpad.find("ONFREQ") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "ONFREQ");
+				this->processed[callsign].gndState = "ONFREQ";
+			}
+			if (scratchpad.find("DE-ICE") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "DE-ICE");
+				this->processed[callsign].gndState = "DE-ICE";
+			}
+			if (scratchpad.find("LINEUP") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "LINEUP");
+				this->processed[callsign].gndState = "LINEUP";
+			}
+
+
 			if (scratchpad.find(".VSID_REQ_") != std::string::npos)
 			{
 				std::string toFind = ".VSID_REQ_";
@@ -2580,8 +2632,46 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to set the request");
 				}
 			}
+
+			if (scratchpad.find(".VSID_STATE_") != std::string::npos)
+			{
+				std::string toFind = ".VSID_STATE_";
+				size_t pos = scratchpad.find(toFind);
+
+				try
+				{
+					std::vector<std::string> states = vsid::utils::split(scratchpad.substr(pos + toFind.size(), scratchpad.size()), '/');
+					bool clrf = (states.at(0) == "TRUE") ? true : false;
+					std::string state = (states.size() > 1) ? states.at(1) : "";
+
+					messageHandler->writeMessage("DEBUG", "Sync state. Ground state: " + state, vsid::MessageHandler::DebugArea::Dev);
+
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] removing scratchpad: " + scratchpad, vsid::MessageHandler::DebugArea::Dev);
+					vsid::fpln::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()));
+
+					if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
+																				callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG);
+
+					if (state != "")
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling set with state: " + state, vsid::MessageHandler::DebugArea::Dev);
+						vsid::fpln::setScratchPad(FlightPlan, state);
+						//vsid::fpln::removeScratchPad(FlightPlan, "NOSTATE");
+					}
+				}
+				catch (std::out_of_range)
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to sync states to new ATC.");
+				}
+			}
 		}
+
 	}
+	else if (this->processed.contains(callsign))
+	{
+		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) this->processed[callsign].gndState = FlightPlan.GetGroundState();
+	}
+
 	else if (this->processed.contains(callsign) && this->processed[callsign].request && this->activeAirports.contains(icao))
 	{
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_CLEARENCE_FLAG)
@@ -2747,7 +2837,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	}
 	else if (atcCallsign.find("ATIS") != std::string::npos)
 	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding ATC to ignore list.",
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding ATIS to ignore list.",
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		this->ignoreAtc.insert(atcSI);
@@ -2755,7 +2845,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	}
 	else if (atcSI.find_first_of("0123456789") != std::string::npos)
 	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (" + atcSI + ").",
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (SI: " + atcSI + ").",
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		return;

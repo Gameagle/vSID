@@ -170,6 +170,12 @@ namespace vsid
 		 */
 		void OnTimer(int Counter);
 		/**
+		 * @brief Sync states and clearance flag to new controller
+		 * 
+		 * @param FlightPlan - ES flightplan object
+		 */
+		void syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan);
+		/**
 		 * @brief Radar Screen.
 		 */
 		EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);
