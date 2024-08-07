@@ -9,6 +9,7 @@
 *	Airport - each airport can have equipment checks enabled or disabled in the config (defaults to enabled)
 *	Config - new config added with prominent RNAV capable acft due to many wrongly filed flightplans
 *	Screen - external functions or in-build (but not accessible) ES functions can now be called by fetching used radar screens (vSID needs to be allowed to draw on the screens)
+*	Screen - enabling ground state syncing with .vsid sync
 
 [CHANGED]
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
