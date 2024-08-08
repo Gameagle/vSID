@@ -32,15 +32,15 @@ namespace vsid
 	public:
 
 		Sid(std::string base = "", std::string waypoint = "", std::string id = "", std::string number = "", std::string designator = "",
-			std::string rwy = "", int initialClimb = 0, bool climbvia = false, int prio = 99,
+			std::string rwy = "", std::map<std::string, bool> equip = {}, int initialClimb = 0, bool climbvia = false, int prio = 99,
 			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
-			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0,
-			std::string customRule = "", std::string area = "", std::string equip = "", int lvp = -1,
+			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0, std::map<std::string, bool> dest = {},
+			std::string customRule = "", std::string area = "", int lvp = -1,
 			int timeFrom = -1, int timeTo = -1) : base(base), waypoint(waypoint), id(id), number(number), designator(designator),
-			rwy(rwy), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
+			rwy(rwy), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
 			pilotfiled(pilotfiled), actArrRwy(actArrRwy), actDepRwy(actDepRwy), wtc(wtc), engineType(engineType),
-			acftType(acftType), engineCount(engineCount), mtow(mtow),
-			customRule(customRule), area(area), equip(equip), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo) {};
+			acftType(acftType), engineCount(engineCount), mtow(mtow), dest(dest),
+			customRule(customRule), area(area), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo) {};
 
 		std::string base;
 		std::string waypoint;
@@ -48,6 +48,11 @@ namespace vsid
 		std::string number;
 		std::string designator;
 		std::string rwy;
+		/**
+		first - std::string - equipment code
+		second - bool - mandatory (true) or forbidden (false)
+		 */
+		std::map<std::string, bool> equip;
 		int initialClimb;
 		bool climbvia;
 		int prio;
@@ -59,9 +64,9 @@ namespace vsid
 		std::map<std::string, bool> acftType;
 		int engineCount;
 		int mtow;
+		std::map<std::string, bool> dest;
 		std::string customRule;
 		std::string area;
-		std::string equip;
 		int lvp;
 		int timeFrom;
 		int timeTo;
@@ -85,22 +90,19 @@ namespace vsid
 		/**
 		 * @brief Checks if a SID object is empty (base is checked)
 		 *
-		 * @param sid - the sid object
 		 */
 		bool empty() const;
 		/**
 		 * @brief Compares if two SIDs are the same
 		 *
-		 * @param sid1 - first sid to compare
-		 * @param sid2 - second sid to compare
+		 * @param sid - sid to compare to
 		 * @return true - if waypoint, number and designator match
 		 */
 		bool operator==(const Sid& sid);
 		/**
 		 * @brief Compares if two SIDs are the different
 		 *
-		 * @param sid1 - first sid to compare
-		 * @param sid2 - second sid to compare
+		 * @param sid - sid to compare to
 		 * @return true - if at least one of waypoint, number or designator don't match
 		 */
 		bool operator!=(const Sid& sid);

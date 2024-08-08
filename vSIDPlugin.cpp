@@ -11,7 +11,7 @@
 #include <algorithm>
 
 // DEV
-//#include "display.h"
+#include "display.h"
 #include "airport.h"
 #include <thread>
 // END DEV
@@ -20,9 +20,10 @@ vsid::VSIDPlugin* vsidPlugin;
 
 vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, pluginName.c_str(), pluginVersion.c_str(), pluginAuthor.c_str(), pluginCopyright.c_str()) {
 
-	//this->detectPlugins();
+	this->detectPlugins();
 	this->configParser.loadMainConfig();
 	this->configParser.loadGrpConfig();
+	this->configParser.loadRnavList();
 	this->gsList = "STUP,PUSH,TAXI,DEPA";
 
 	messageHandler->setLevel("INFO");
@@ -44,8 +45,6 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemType("vSID Request Timer", TAG_ITEM_VSID_REQTIMER);
 
-	//RegisterDisplayType("vSID (no display)", false, false, false, true); /// DEV
-
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
@@ -57,39 +56,39 @@ vsid::VSIDPlugin::~VSIDPlugin() {};
 * BEGIN OWN FUNCTIONS
 */
 
-//void vsid::VSIDPlugin::detectPlugins()
-//{
-//	HMODULE hMods[1024];
-//	HANDLE hProcess;
-//	DWORD cbNeeded;
-//	unsigned int i;
-//
-//	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
-//	if (hProcess == NULL) return;
-//
-//	if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
-//	{
-//		for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
-//		{
-//			TCHAR szModName[MAX_PATH];
-//
-//			if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
-//			{
-//				std::string modName = szModName;
-//				if (modName.find("SYSTEM32") != std::string::npos ||
-//					modName.find("System32") != std::string::npos ||
-//					modName.find("system32") != std::string::npos) continue;
-//				size_t pos = modName.find_last_of("\\");
-//				if (pos == std::string::npos) continue;
-//				modName = modName.substr(pos + 1);
-//
-//				if (modName == "CCAMS.dll") this->ccamsLoaded = true;
-//				if (modName == "TopSky.dll") this->topskyLoaded = true;
-//			}
-//		}
-//	}
-//	CloseHandle(hProcess);
-//}
+void vsid::VSIDPlugin::detectPlugins()
+{
+	HMODULE hmods[1024];
+	HANDLE hprocess;
+	DWORD cbneeded;
+	unsigned int i;
+
+	hprocess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
+	if (hprocess == NULL) return;
+
+	if (EnumProcessModules(hprocess, hmods, sizeof(hmods), &cbneeded))
+	{
+		for (i = 0; i < (cbneeded / sizeof(HMODULE)); i++)
+		{
+			TCHAR szModName[MAX_PATH];
+
+			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
+			{
+				std::string modname = szModName;
+				if (modname.find("system32") != std::string::npos ||
+					modname.find("system32") != std::string::npos ||
+					modname.find("system32") != std::string::npos) continue;
+				size_t pos = modname.find_last_of("\\");
+				if (pos == std::string::npos) continue;
+				modname = modname.substr(pos + 1);
+
+				if (modname == "CCAMS.dll") this->ccamsLoaded = true;
+				if (modname == "TopSky.dll") this->topskyLoaded = true;
+			}
+		}
+	}
+	CloseHandle(hprocess);
+}
 
 std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData FlightPlanData)
 {
@@ -111,7 +110,7 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 					}
 					catch (std::out_of_range)
 					{
-						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking");
+						messageHandler->writeMessage("ERROR", "Failed to split waypoint during SID waypoint checking #fswpt");
 						return false;
 					}
 				})) return esWpt;
@@ -158,6 +157,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 	std::string callsign = fpln.GetCallsign();
 	std::string icao = fplnData.GetOrigin();
+	std::string dest = fplnData.GetDestination();
 	// EuroScopePlugIn::CFlightPlanControllerAssignedData cad = fpln.GetControllerAssignedData();
 	std::vector<std::string> filedRoute = vsid::utils::split(std::string(fplnData.GetRoute()), ' ');
 	std::string sidWpt = vsid::VSIDPlugin::findSidWpt(fplnData);
@@ -166,6 +166,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 	bool customRuleActive = false;
 	std::set<std::string> wptRules = {};
 	std::set<std::string> actTSid = {};
+	bool validEquip = true;
 
 	if (!this->activeAirports.contains(icao))
 	{
@@ -258,13 +259,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 	// include atc set rwy if present as dep rwy
 
-	//std::set<std::string> depRwys = this->activeAirports[icao].depRwys;
-	/*if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) depRwys.insert(atcRwy);
-	else if (atcRwy != "" && !this->processed.contains(callsign) &&
-			this->activeAirports[icao].settings["auto"] &&
-			(vsid::fpln::findRemarks(fpln, "VSID/RWY") || fplnData.IsAmended())) depRwys.insert(atcRwy);*/
-
-	
 	std::string actAtcRwy = "";
 	
 	if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) actAtcRwy = atcRwy;
@@ -284,6 +278,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 		bool rwyMatch = false;
 		bool restriction = false;
+		validEquip = true;
 		
 
 		// checking areas for arrAsDep - actual area evaluation down below
@@ -447,9 +442,70 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			!this->activeAirports[icao].customRules[currSid.customRule])
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" +
-										currSid.idName() + "\" because the SID custom rule is not active.",
-										vsid::MessageHandler::DebugArea::Sid);
+				currSid.idName() + "\" because the SID custom rule is not active.",
+				vsid::MessageHandler::DebugArea::Sid);
 			continue;
+		}
+
+		// skip if equipment does not match
+
+		if (this->activeAirports[icao].equipCheck)
+		{
+			std::string equip = vsid::fpln::getEquip(FlightPlan, this->configParser.rnavList);
+			std::string pbn = vsid::fpln::getPbn(FlightPlan);
+
+			if (currSid.equip.contains("RNAV"))
+			{
+				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "")
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+												"\" because RNAV ('A', 'B', 'G' or 'R') is required, but not found in equipment \"" +
+												equip + "\" and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
+					continue;
+				}
+			}
+			else if (currSid.equip.contains("NON-RNAV"))
+			{
+				if (equip.size() < 2 && pbn == "")
+				{ 
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+												"\" because only NON-RNAV is allowed, but equipment \"" + equip +
+												"\" has less than 2 entry and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
+					continue;
+				}
+				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "")
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+						"\" because only NON-RNAV is allowed, but RNAV ('G' or 'R') was found in equipment \"" + equip +
+						"\" or equipment was empty and PBN is not empty", vsid::MessageHandler::DebugArea::Sid);
+					validEquip = false;
+					continue;
+				}
+			}
+			else
+			{
+				for (const auto &sidEquip : currSid.equip)
+				{
+					if (sidEquip.second && equip.find(sidEquip.first) == std::string::npos)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+							"\" because equipment \"" + sidEquip.first + "\" is mandatory but was not found in equipment \"" + equip + "\"",
+							vsid::MessageHandler::DebugArea::Sid);
+						validEquip = false;
+						continue;
+					}
+					if (!sidEquip.second && equip.find(sidEquip.first) != std::string::npos)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+							"\" because equipment \"" + sidEquip.first + "\" is forbidden but was found in equipment \"" + equip + "\"",
+							vsid::MessageHandler::DebugArea::Sid);
+						validEquip = false;
+						continue;
+					}
+				}
+			}
 		}
 
 		// skip if custom rules are inactive but a rule exists in sid
@@ -462,6 +518,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			continue;
 		}
 
+		// area checks
 		if (currSid.area != "")
 		{
 			std::vector<std::string> sidAreas = vsid::utils::split(currSid.area, ',');
@@ -631,6 +688,31 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			}
 			else restriction = true;
 		}
+
+		// skip if destination restrictions present and flightplan doesn't match
+
+		if (!currSid.dest.empty())
+		{
+			if (currSid.dest.contains(dest) && !currSid.dest[dest])
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() + "\" because destination \"" + 
+											dest + "\" is not allowed", vsid::MessageHandler::DebugArea::Sid
+				);
+				continue;
+			}
+			else if (!currSid.dest.contains(dest) && std::any_of(currSid.dest.begin(), currSid.dest.end(), [](const std::pair<std::string, bool>& sidDest)
+				{
+					return sidDest.second;
+				}))
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() + "\" because destination \"" +
+											dest + "\" was not found for this SID and the SID has mandatory destinations",
+											vsid::MessageHandler::DebugArea::Sid);
+				continue;
+			}
+
+		}
+
 		// skip if sid has night times set but they're not active
 		if (!actTSid.contains(currSid.waypoint) &&
 			(currSid.timeFrom != -1 || currSid.timeTo != -1)
@@ -641,11 +723,14 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 										);
 			continue;
 		}
+
 		// if a SID has the special prio "0" return an empty SID for forced manual selection
 		if (currSid.prio == 0)
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] special prio value '0' detected. Returning empty SID for forced manual mode",
 										vsid::MessageHandler::DebugArea::Sid);
+
+			if (this->processed.contains(callsign)) this->processed[callsign].validEquip = true;
 			return vsid::Sid();
 		}
 		
@@ -664,11 +749,27 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			setSid = currSid;
 			prio = currSid.prio;
 		}
+		else if (currSid.prio == 99)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+			"\" because prio is 99 (manual only SID)",
+			vsid::MessageHandler::DebugArea::Sid);
+		}
 		else messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 										"\" because prio is higher",
 										vsid::MessageHandler::DebugArea::Sid);
 	}
 	messageHandler->writeMessage("DEBUG", "[" + callsign + "] Setting SID \"" + setSid.idName() + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+	// if the last valid SID fails due to equipment return a special "EQUIP" sid to also handle yet unprocessed fplns
+	// reset in processFlightplan()
+	if (!validEquip && setSid.empty())
+	{
+		setSid.base = "EQUIP";
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Re-Setting special SID base 'EQUIP' as the last possible SID failed due to equipment checks",
+									vsid::MessageHandler::DebugArea::Sid);
+	}
+
 	return(setSid);
 }
 
@@ -682,7 +783,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 	std::string callsign = fpln.GetCallsign();
 	std::string icao = fplnData.GetOrigin();
 	std::string filedSidWpt = this->findSidWpt(fplnData);
-	std::vector<std::string> filedRoute = vsid::utils::split(std::string(fplnData.GetRoute()), ' ');
+	std::vector<std::string> filedRoute = vsid::fpln::clean(FlightPlan, filedSidWpt);
 	vsid::Sid sidSuggestion = {};
 	vsid::Sid sidCustomSuggestion = {};
 	std::string setRwy = "";
@@ -707,15 +808,6 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 	}))
 	{
 		fplnInfo.request = true;
-	}
-
-	vsid::fpln::clean(filedRoute, icao, filedSidWpt);
-
-	if (this->processed.contains(callsign))
-	{
-		fplnInfo.atcRWY = this->processed[callsign].atcRWY;
-		fplnInfo.request = this->processed[callsign].request;
-		fplnInfo.noFplnUpdate = this->processed[callsign].noFplnUpdate;
 	}
 
 	/* if a sid has been set manually choose this */
@@ -753,6 +845,20 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		sidSuggestion = this->processSid(fpln);
 	}
 
+	// reset special 'EQUIP' SID back to empty
+	if (sidSuggestion.base == "EQUIP")
+	{
+		fplnInfo.validEquip = false;
+		sidSuggestion.base = "";
+	}
+
+	if (sidCustomSuggestion.base == "EQUIP")
+	{
+		fplnInfo.validEquip = false;
+		sidCustomSuggestion.base = "";
+	}
+
+	// determine dep rwy base on suggested SIDs
 	if (sidSuggestion.base != "" && sidCustomSuggestion.base == "")
 	{
 		try
@@ -815,6 +921,15 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		fplnInfo.sid = sidSuggestion;
 		fplnInfo.customSid = sidCustomSuggestion;
 	}
+
+	// if the fpln was already processed update values to prevent overwriting
+	if (this->processed.contains(callsign))
+	{
+		fplnInfo.atcRWY = this->processed[callsign].atcRWY;
+		fplnInfo.request = this->processed[callsign].request;
+		fplnInfo.noFplnUpdate = this->processed[callsign].noFplnUpdate;
+	}
+
 	this->processed[callsign] = fplnInfo;
 
 	// if an IFR fpln has no matching sid but the route should be set inverse - otherwise rwy changes would be overwritten
@@ -860,19 +975,33 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude - #PFP");
 			}
 		}
-		//if (this->ccamsLoaded && this->radarScreen != nullptr) /// DEV
-		//{
-		//	messageHandler->writeMessage("DEBUG", "Triggering squawk assignement");
-		//	std::string squawk = FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetSquawk();
-		//	if (squawk == "" || squawk == "1234" || squawk == "0000")
-		//	{
 
-		//		messageHandler->writeMessage("DEBUG", "trying to write squawk");
+		std::string squawk = fpln.GetControllerAssignedData().GetSquawk();
+		if (squawk == "0000" || squawk == "1234")
+		{
+			if (this->ccamsLoaded && !this->preferTopsky)
+			{
+				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871);
+			}
+			else if (this->topskyLoaded)
+			{
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667);
+			}
+		}
+	}
+}
 
-		//		this->radarScreen->StartTagFunction(callsign.c_str(), nullptr, 0, "", "CCAMS", 871, POINT(), RECT());
-		//	}
-		//}
-		//else if (this->radarScreen == nullptr) messageHandler->writeMessage("DEBUG", "nullptr detected");// END DEV
+void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan)
+{
+	if (!FlightPlan.IsValid()) return;
+
+	std::string callsign = FlightPlan.GetCallsign();
+
+	if (this->processed.contains(callsign))
+	{
+		vsid::fpln::setScratchPad(FlightPlan, std::string(".vsid_state_") +
+								((FlightPlan.GetClearenceFlag()) ? "true" : "false") + "/" +
+								this->processed[callsign].gndState);
 	}
 }
 /*
@@ -882,6 +1011,14 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 /*
 * BEGIN ES FUNCTIONS
 */
+
+EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated)
+{
+	this->screenId++;
+	this->radarScreens.insert({ this->screenId, new vsid::Display(this->screenId, this) });
+
+	return this->radarScreens.at(this->screenId);
+}
 
 void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, POINT Pt, RECT Area) {
 	
@@ -961,8 +1098,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		if (std::string(sItemString) == "VFR")
 		{
-			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			vsid::fpln::clean(filedRoute, fplnData.GetOrigin(), filedSidWpt);
+			std::vector<std::string> filedRoute = vsid::fpln::clean(fpln, filedSidWpt);
 
 			if (depRWY != "")
 			{
@@ -1004,7 +1140,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		if (this->processed.contains(callsign))
 		{
 			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			std::string atcRwy = vsid::fpln::getAtcBlock(filedRoute, fplnData.GetOrigin()).second;
+			std::string atcRwy = vsid::fpln::getAtcBlock(fpln).second;
 			if (std::string(fplnData.GetPlanType()) == "I")
 			{
 				if (this->processed[callsign].atcRWY && atcRwy != "")
@@ -1013,7 +1149,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				}
 				else this->processFlightplan(fpln, false);
 			}
-		}
+		}		
 	}
 
 	if (FunctionId == TAG_FUNC_VSID_CLMBMENU)
@@ -1077,9 +1213,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		if (strlen(sItemString) != 0)
 		{
-			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			vsid::fpln::clean(filedRoute, fplnData.GetOrigin());
-
+			std::vector<std::string> filedRoute = vsid::fpln::clean(fpln);
 			std::ostringstream ss;
 			ss << fplnData.GetOrigin() << "/" << sItemString;
 			filedRoute.insert(filedRoute.begin(), vsid::utils::trim(ss.str()));
@@ -1164,12 +1298,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 	if (ItemCode == TAG_ITEM_VSID_SIDS)
 	{
 		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-		std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetOrigin());
-
-		// DEV
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] acftInfo: " + std::string(fplnData.GetAircraftInfo()), vsid::MessageHandler::DebugArea::Dev);
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] rem: " + std::string(fplnData.GetRemarks()), vsid::MessageHandler::DebugArea::Dev);
-		// END DEV
+		std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 
 		if (this->removeProcessed.size() > 0 &&
 			this->removeProcessed.contains(callsign) &&
@@ -1279,7 +1408,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					this->processed[callsign].customSid.empty())
 					)
 			{
-				strcpy_s(sItemString, 16, "MANUAL");
+				if(this->processed[callsign].validEquip) strcpy_s(sItemString, 16, "MANUAL");
+				else strcpy_s(sItemString, 16, "EQUIP");
 			}
 			else if(sidName != "" && customSidName == "")
 			{
@@ -1346,7 +1476,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 			std::string sidName = this->processed[callsign].sid.name();
 			std::string customSidName = this->processed[callsign].customSid.name();
-			std::string atcSid = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetOrigin()).first;
+			std::string atcSid = vsid::fpln::getAtcBlock(FlightPlan).first;
 			
 			// if an unknown Sid is set (non-standard or non-custom) try to find matching Sid in config
 			if (atcSid != "" && atcSid != fplnData.GetOrigin() && atcSid != sidName && atcSid != customSidName)
@@ -1471,10 +1601,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (this->processed.contains(callsign))
 		{
-			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(
-																		vsid::utils::split(fplnData.GetRoute(), ' '),
-																		fplnData.GetOrigin()
-																		);
+			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 
 			if (atcBlock.first == fplnData.GetOrigin() &&
 				!this->processed[callsign].atcRWY &&
@@ -1612,7 +1739,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 		}
 		
-		if(assignedSquawk != "0000") strcpy_s(sItemString, 16, assignedSquawk.c_str());
+		if(assignedSquawk != "0000" && assignedSquawk != "1234") strcpy_s(sItemString, 16, assignedSquawk.c_str());
 	}
 
 	if (ItemCode == TAG_ITEM_VSID_REQ)
@@ -1765,8 +1892,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						for (std::pair<const std::string, vsid::fpln::Info> pFpln : this->processed)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
-							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-							auto atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetRoute());
+							auto atcBlock = vsid::fpln::getAtcBlock(fpln);
 							messageHandler->writeMessage("DEBUG", "[" + pFpln.first + "] rechecking due to rule change.", vsid::MessageHandler::DebugArea::Sid);
 							if (atcBlock.second != "" && fpln.IsValid())
 							{
@@ -1860,6 +1986,14 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		{	
 			std::string atcSI = ControllerMyself().GetPositionId();
 			std::string atcIcao;
+
+			// DEV
+			for (EuroScopePlugIn::CController ctr = this->ControllerSelectFirst(); ctr.IsValid(); ctr = this->ControllerSelectNext(ctr))
+			{
+				messageHandler->writeMessage("DEBUG", "[ControllerSelect] Callsign: " + std::string(ctr.GetCallsign()) +
+					"; SI: " + std::string(ctr.GetPositionId()), vsid::MessageHandler::DebugArea::Atc);
+			}
+			// END DEV
 			
 			try
 			{
@@ -1925,7 +2059,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 							std::string icao = fplnData.GetOrigin();
-							std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+							
 							if (this->activeAirports.contains(fplnData.GetOrigin()) &&
 								this->activeAirports[icao].settings["auto"] &&
 								!fpln.GetClearenceFlag() && !pFpln.second.atcRWY
@@ -1996,7 +2130,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 									EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 									EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 									std::string icao = fplnData.GetOrigin();
-									std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), icao);
+									
 									if (*it == icao && !fpln.GetClearenceFlag() && !pFpln.second.atcRWY)
 									{
 										return true;
@@ -2106,9 +2240,9 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					for (std::pair<const std::string, vsid::fpln::Info> pFpln : this->processed)
 					{
 						EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
-						EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
-						auto atcBlock = vsid::fpln::getAtcBlock(vsid::utils::split(fplnData.GetRoute(), ' '), fplnData.GetRoute());
+						auto atcBlock = vsid::fpln::getAtcBlock(fpln);
 						messageHandler->writeMessage("DEBUG", "[" + pFpln.first + "] Rechecking due to area change.", vsid::MessageHandler::DebugArea::Sid);
+
 						if (atcBlock.second != "" && fpln.IsValid())
 						{
 							this->processFlightplan(FlightPlanSelect(pFpln.first.c_str()), true, atcBlock.second);
@@ -2125,15 +2259,18 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			messageHandler->writeMessage("DEBUG", "Syncinc all requests.", vsid::MessageHandler::DebugArea::Req);
 			for (std::pair<const std::string, vsid::fpln::Info> &fp : this->processed)
 			{
+				messageHandler->writeMessage("DEBUG", "[" + fp.first + "] sync processing...", vsid::MessageHandler::DebugArea::Dev);
+				EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(fp.first.c_str());
+				if (!fpln.IsValid()) continue;
+
 				if (fp.second.request)
 				{
-					EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(fp.first.c_str());
-
-					if (!fpln.IsValid()) continue;
-
 					std::string icao = fpln.GetFlightPlanData().GetOrigin();
 					if(!this->activeAirports.contains(icao)) continue;
 					
+
+					// sync requests
+
 					bool found = false;
 					for (auto& request : this->activeAirports[icao].requests)
 					{
@@ -2154,6 +2291,14 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						}
 						if (found) break;
 					}
+				}
+				
+				// sync states
+
+				if (fpln.GetClearenceFlag() || this->processed[fp.first].gndState != "")
+				{
+					messageHandler->writeMessage("DEBUG", "[" + fp.first + "] calling sync state.", vsid::MessageHandler::DebugArea::Dev);
+					this->syncStates(fpln);
 				}
 			}
 			return true;
@@ -2246,13 +2391,6 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 	return false;
 }
 
-//EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated) /// DEV
-//{
-//	messageHandler->writeMessage("INFO", "OnRadarScreenCreated called");
-//	this->radarScreen = new vsid::Display();
-//	return this->radarScreen;
-//}
-
 void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan)
 {
 	if (!FlightPlan.IsValid()) return;
@@ -2299,7 +2437,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 		std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
 		if (filedRoute.size() > 0)
 		{
-			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(filedRoute, fplnData.GetOrigin());
+			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
 			if (this->activeAirports[fplnData.GetOrigin()].settings["auto"] &&
 				atcBlock.first == "")
 			{
@@ -2402,6 +2540,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	std::string scratchpad = cad.GetScratchPadString();
 
+	messageHandler->writeMessage("DEBUG", "[" + callsign + "] scratchpad: \"" + scratchpad + "\"", vsid::MessageHandler::DebugArea::Dev);
+
 	if (this->processed.contains(callsign) && scratchpad.size() > 0)
 	{
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING && this->activeAirports[icao].settings["auto"])
@@ -2423,8 +2563,33 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				vsid::fpln::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()));
 			}
 		}
+
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
 		{
+			// GRP does not alway delete states so we delete if present
+
+			if (scratchpad.find("NOSTATE") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "NOSTATE");
+				this->processed[callsign].gndState = "NOSTATE";
+			}
+			if (scratchpad.find("ONFREQ") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "ONFREQ");
+				this->processed[callsign].gndState = "ONFREQ";
+			}
+			if (scratchpad.find("DE-ICE") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "DE-ICE");
+				this->processed[callsign].gndState = "DE-ICE";
+			}
+			if (scratchpad.find("LINEUP") != std::string::npos)
+			{
+				vsid::fpln::removeScratchPad(FlightPlan, "LINEUP");
+				this->processed[callsign].gndState = "LINEUP";
+			}
+
+
 			if (scratchpad.find(".VSID_REQ_") != std::string::npos)
 			{
 				std::string toFind = ".VSID_REQ_";
@@ -2467,8 +2632,46 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to set the request");
 				}
 			}
+
+			if (scratchpad.find(".VSID_STATE_") != std::string::npos)
+			{
+				std::string toFind = ".VSID_STATE_";
+				size_t pos = scratchpad.find(toFind);
+
+				try
+				{
+					std::vector<std::string> states = vsid::utils::split(scratchpad.substr(pos + toFind.size(), scratchpad.size()), '/');
+					bool clrf = (states.at(0) == "TRUE") ? true : false;
+					std::string state = (states.size() > 1) ? states.at(1) : "";
+
+					messageHandler->writeMessage("DEBUG", "Sync state. Ground state: " + state, vsid::MessageHandler::DebugArea::Dev);
+
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] removing scratchpad: " + scratchpad, vsid::MessageHandler::DebugArea::Dev);
+					vsid::fpln::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()));
+
+					if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
+																				callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG);
+
+					if (state != "")
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling set with state: " + state, vsid::MessageHandler::DebugArea::Dev);
+						vsid::fpln::setScratchPad(FlightPlan, state);
+						//vsid::fpln::removeScratchPad(FlightPlan, "NOSTATE");
+					}
+				}
+				catch (std::out_of_range)
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to sync states to new ATC.");
+				}
+			}
 		}
+
 	}
+	else if (this->processed.contains(callsign))
+	{
+		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) this->processed[callsign].gndState = FlightPlan.GetGroundState();
+	}
+
 	else if (this->processed.contains(callsign) && this->processed[callsign].request && this->activeAirports.contains(icao))
 	{
 		if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_CLEARENCE_FLAG)
@@ -2634,7 +2837,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	}
 	else if (atcCallsign.find("ATIS") != std::string::npos)
 	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding ATC to ignore list.",
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding ATIS to ignore list.",
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		this->ignoreAtc.insert(atcSI);
@@ -2642,7 +2845,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	}
 	else if (atcSI.find_first_of("0123456789") != std::string::npos)
 	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (" + atcSI + ").",
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (SI: " + atcSI + ").",
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		return;
@@ -3006,7 +3209,6 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 void vsid::VSIDPlugin::OnTimer(int Counter)
 {
-
 	std::pair<std::string, std::string> msg = messageHandler->getMessage();
 	if (msg.first != "" && msg.second != "")
 	{
