@@ -456,10 +456,10 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 
 			if (currSid.equip.contains("RNAV"))
 			{
-				if (equip.size() > 1 && equip.find_first_of("ABGR") == std::string::npos && pbn == "")
+				if (equip.size() > 1 && equip.find_first_of("ABGRI") == std::string::npos && pbn == "")
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-												"\" because RNAV ('A', 'B', 'G' or 'R') is required, but not found in equipment \"" +
+												"\" because RNAV ('A', 'B', 'G', 'R' or 'I') is required, but not found in equipment \"" +
 												equip + "\" and PBN is empty", vsid::MessageHandler::DebugArea::Sid);
 					validEquip = false;
 					continue;
@@ -475,10 +475,10 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					validEquip = false;
 					continue;
 				}
-				if ((equip.find_first_of("GR") != std::string::npos || equip == "") && pbn != "")
+				if ((equip.find_first_of("GRI") != std::string::npos || equip == "") && pbn != "")
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-						"\" because only NON-RNAV is allowed, but RNAV ('G' or 'R') was found in equipment \"" + equip +
+						"\" because only NON-RNAV is allowed, but RNAV ('G', 'R' or 'I') was found in equipment \"" + equip +
 						"\" or equipment was empty and PBN is not empty", vsid::MessageHandler::DebugArea::Sid);
 					validEquip = false;
 					continue;
@@ -1392,6 +1392,30 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			if (atcBlock.first != "" && atcBlock.first != fplnData.GetOrigin())
 			{
 				strcpy_s(sItemString, 16, atcBlock.first.c_str());
+			}
+			// if the airborn aircraft has no SID set display the first waypoint of the route
+			else if (std::string(fplnData.GetPlanType()) != "V" && ((atcBlock.first != "" && atcBlock.first == fplnData.GetOrigin()) ||
+				atcBlock.first == "") && RadarTarget.GetGS() > 50 && RadarTarget.GetPosition().GetPressureAltitude() >=
+				this->activeAirports.contains(fplnData.GetOrigin()) && this->activeAirports[fplnData.GetOrigin()].elevation + 100)
+			{
+				std::vector<std::string> route = vsid::utils::split(fplnData.GetRoute(), ' ');
+				try
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] route: " + std::string(fplnData.GetRoute()), vsid::MessageHandler::DebugArea::Dev);
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] atc.first: " + atcBlock.first + " atc.second: " + atcBlock.second, vsid::MessageHandler::DebugArea::Dev);
+					int pos = 0;
+					if (atcBlock.first != "") pos = 1;
+
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] pos: " + std::to_string(pos), vsid::MessageHandler::DebugArea::Dev);
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] at pos: " + route.at(pos), vsid::MessageHandler::DebugArea::Dev);
+
+					*pRGB = this->configParser.getColor("customSidSuggestion");
+					strcpy_s(sItemString, 16, route.at(pos).c_str());
+				}
+				catch (std::out_of_range)
+				{
+					strcpy_s(sItemString, 16, "");
+				}
 			}
 			else if ((atcBlock.first == "" ||
 					atcBlock.first == fplnData.GetOrigin()) &&
