@@ -12,6 +12,7 @@
 *	Screen - enabling ground state syncing with .vsid sync
 
 [CHANGED]
+*	SID - tagItem - secondary value added. If an airborne acft has no SID set (SID/RWY) missing the first waypoint is displayed instead
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
 *	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all
 *	Route cleaning - additionaly safety if a possibly wrongly filed flightplan would result in an empty route after cleaning. Now the original route is returned with a warning to the controller
