@@ -1464,30 +1464,27 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			RadarTarget.GetPosition().GetPressureAltitude() >= this->activeAirports[fplnData.GetOrigin()].elevation + 100)
 		{
 			std::vector<std::string> route = vsid::utils::split(fplnData.GetRoute(), ' ');
-			*pRGB = this->configParser.getColor("customSidSuggestion");
 
 			if ((atcBlock.first != "" && atcBlock.first == fplnData.GetOrigin()) || atcBlock.first == "")
 			{
-				try
-				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] route: " + std::string(fplnData.GetRoute()), vsid::MessageHandler::DebugArea::Dev);
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] atc.first: " + atcBlock.first + " atc.second: " + atcBlock.second, vsid::MessageHandler::DebugArea::Dev);
-					int pos = 0;
-					if (atcBlock.first != "") pos = 1;
+				*pRGB = this->configParser.getColor("customSidSuggestion");
+				bool validWpt = false;
 
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] pos: " + std::to_string(pos), vsid::MessageHandler::DebugArea::Dev);
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] at pos: " + route.at(pos), vsid::MessageHandler::DebugArea::Dev);
-
-					strcpy_s(sItemString, 16, route.at(pos).c_str());
-				}
-				catch (std::out_of_range)
+				for (const std::string& wpt : route)
 				{
-					strcpy_s(sItemString, 16, "");
+					if (this->activeAirports[fplnData.GetOrigin()].isSidWpt(wpt))
+					{ 
+						strcpy_s(sItemString, 16, wpt.c_str());
+						validWpt = true;
+						break;
+					}
 				}
+				if(!validWpt) strcpy_s(sItemString, 16, "");
 			}
 			// processed flightplans are managed above - this is for already airborne flightplans after connecting
 			else if (!this->processed.contains(callsign) && atcBlock.first != "" && atcBlock.first != fplnData.GetOrigin())
 			{
+				*pRGB = this->configParser.getColor("customSidSuggestion");
 				strcpy_s(sItemString, 16, atcBlock.first.c_str());
 			}
 		}
