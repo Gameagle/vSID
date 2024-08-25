@@ -991,7 +991,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 	}
 }
 
-void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan)
+void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan FlightPlan)
 {
 	if (!FlightPlan.IsValid()) return;
 
@@ -2322,13 +2322,13 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					}
 				}
 				
-				// sync states
+				// sync states - DISABLED DUE TO UNKNOWN LOOP CAUSING ES TO STALL - REASON: Unlimited scratchpad entries and removals although not called
 
-				if (fpln.GetClearenceFlag() || this->processed[fp.first].gndState != "")
+				/*if (fpln.GetClearenceFlag() || this->processed[fp.first].gndState != "")
 				{
 					messageHandler->writeMessage("DEBUG", "[" + fp.first + "] calling sync state.", vsid::MessageHandler::DebugArea::Dev);
 					this->syncStates(fpln);
-				}
+				}*/
 			}
 			return true;
 		}
