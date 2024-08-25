@@ -174,7 +174,7 @@ namespace vsid
 		 * 
 		 * @param FlightPlan - ES flightplan object
 		 */
-		void syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan);
+		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Radar Screen.
 		 */
