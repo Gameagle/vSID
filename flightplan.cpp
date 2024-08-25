@@ -183,7 +183,8 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 
 		if (newScratch != scratch)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing request.New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
+										"\". New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
 
 			return cad.SetScratchPadString(vsid::utils::trim(newScratch).c_str());
 		}
