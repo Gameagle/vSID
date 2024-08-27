@@ -163,7 +163,7 @@ bool vsid::fpln::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const s
 	std::string scratch = cad.GetScratchPadString();
 	scratch += toAdd;
 
-	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] Setting scratch : " + scratch, vsid::MessageHandler::DebugArea::Req);
+	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] Setting scratch: " + scratch, vsid::MessageHandler::DebugArea::Req);
 
 	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 }
