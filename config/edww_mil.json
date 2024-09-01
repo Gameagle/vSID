@@ -3,7 +3,7 @@
         "elevation": 140,
         "runways": "09,27",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "NL12": {
@@ -84,7 +84,7 @@
         "elevation": 39,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "NH108": {
@@ -109,7 +109,7 @@
         "elevation": 39,
         "runways": "05,23",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "NS105": {
@@ -134,7 +134,7 @@
         "elevation": 73,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "MN108": {
@@ -159,7 +159,7 @@
         "elevation": 26,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "NT108": {
@@ -192,7 +192,7 @@
         "elevation": 127,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "ND108": {
@@ -217,7 +217,7 @@
         "elevation": 244,
         "runways": "09,27",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "HS109": {
@@ -242,7 +242,7 @@
         "elevation": 129,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "HC108": {
@@ -309,7 +309,7 @@
         "elevation": 229,
         "runways": "08,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "HB11": {
@@ -382,7 +382,7 @@
         "elevation": 265,
         "runways": "09,27",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "SH109": {
@@ -407,7 +407,7 @@
         "elevation": 187,
         "runways": "02,08,20,26",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 27000,
 		"appSI": "",
         "sids": {
             "CEL": {

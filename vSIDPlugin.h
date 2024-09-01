@@ -56,6 +56,18 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
+		// DEV
+		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
+		inline std::set<std::string> getDepRwy(std::string icao)
+		{
+			if (this->activeAirports.contains(icao))
+			{
+				return this->activeAirports[icao].depRwys;
+			}
+			else return {};
+		}
+		// END DEV
+
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
 		 * 

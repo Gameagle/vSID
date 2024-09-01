@@ -10,9 +10,9 @@
 #include <set>
 #include <algorithm>
 
-// DEV
 #include "display.h"
 #include "airport.h"
+// DEV
 #include <thread>
 // END DEV
 
@@ -3254,6 +3254,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		}
 	}
 }
+
 /*
 * END ES FUNCTIONS
 */

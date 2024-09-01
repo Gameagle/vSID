@@ -230,42 +230,11 @@
         "maxInitialClimb": 7000,
         "appSI": "EIDE,ALR,EIDW,WC",
         "sids": {
-            "HAM": {
+            "OTAHO": {
                 "1": {
 					"designator": "L",
                     "rwy": "08",
                     "initial": 4000,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
-                },
-                "2": {
-					"designator": "N",
-                    "rwy": "26",
-                    "initial": 4000,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
-                }
-			},
-			"LUGEG": {
-                "1": {
-					"designator": "L",
-                    "rwy": "08",
-                    "initial": 4000,
-                    "prio": 1
-                },
-                "2": {
-					"designator": "N",
-                    "rwy": "26",
-                    "initial": 4000,
-                    "prio": 1
-                }
-			},
-			"EKERN": {
-                "1": {
-					"designator": "L",
-                    "rwy": "08",
-                    "initial": 4000,
-					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 },
                 "2": {
@@ -273,7 +242,6 @@
                     "rwy": "26",
                     "initial": 4000,
 					"climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
                     "prio": 1
                 }
 			},
