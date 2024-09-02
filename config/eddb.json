@@ -3,7 +3,7 @@
         "elevation": 156,
         "runways": "07L,07R,25L,25R",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 8000,
 		"appSI": "FLG,BOR,MAR,MRZ,WC",
 		"timezone": "Europe/Berlin",
         "sids": {
