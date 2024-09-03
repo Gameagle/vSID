@@ -1139,13 +1139,21 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		if (this->processed.contains(callsign))
 		{
 			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-			std::string atcRwy = vsid::fpln::getAtcBlock(fpln).second;
+			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(fpln);
+
 			if (std::string(fplnData.GetPlanType()) == "I")
 			{
-				if (this->processed[callsign].atcRWY && atcRwy != "")
+				// if a non standard SID is detected reset the SID to the standard SID
+				if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()) && atcBlock.first != this->processed[callsign].sid.name())
 				{
-					this->processFlightplan(fpln, false, atcRwy);
+					this->processFlightplan(fpln, false);
 				}
+				// if only a rwy is detected set the SID based on that RWY
+				else if (this->processed[callsign].atcRWY && atcBlock.second != "")
+				{
+					this->processFlightplan(fpln, false, atcBlock.second);
+				}
+				// if nothing is detected set the default SID
 				else this->processFlightplan(fpln, false);
 			}
 		}		
