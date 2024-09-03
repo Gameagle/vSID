@@ -4,10 +4,6 @@
 #include "constants.h"
 #include "messageHandler.h"
 
-// DEV
-//LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-// END DEV
-
 vsid::Display::Display(int id, vsid::VSIDPlugin *plugin) : EuroScopePlugIn::CRadarScreen()
 { 
 	this->id = id;
@@ -24,15 +20,15 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 	for (auto &[title, mMenu] : this->menues)
 	{
-		if (mMenu.render)
+		if (mMenu->getRender())
 		{
-			HPEN borderPen = CreatePen(PS_SOLID, 1, mMenu.border);
-			HBRUSH bgBrush = CreateSolidBrush(mMenu.bg);
+			HPEN borderPen = CreatePen(PS_SOLID, 1, mMenu->getBorder());
+			HBRUSH bgBrush = CreateSolidBrush(mMenu->getBg());
 
 			dc.SelectObject(borderPen);
 			dc.SelectObject(bgBrush);
 
-			dc.Rectangle(mMenu.area);
+			dc.Rectangle(mMenu->getArea());
 
 			std::set<std::string> depRwys;
 
@@ -43,7 +39,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				if (rwy.find("18") != std::string::npos) depRwys.insert("18");
 			}
 
-			for (auto &[title, txt] : mMenu.texts)
+			for (auto &[title, txt] : mMenu->getTexts())
 			{
 				if (!txt.render) continue;
 
@@ -69,6 +65,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				lgfont.lfHeight = txt.height;
 				lgfont.lfWeight = txt.weight;
 				font.CreateFontIndirect(&lgfont);
+
 				dc.SelectObject(font);
 				dc.SetTextColor(txt.textColor);
 
@@ -93,7 +90,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 					}
 				}
 
-				if (txt.title == "toprwy") dc.DrawText(std::string(txt.txt + ": " + std::to_string(startup2507)).c_str(), &txt.area, DT_LEFT);
+				if (txt.title == "toprwy") dc.DrawText(std::string(txt.txt + ": " + std::to_string(startup2507)).c_str(), &txt.area, DT_LEFT);				
 				if (txt.title == "bottomrwy") dc.DrawText(std::string(txt.txt + ": " + std::to_string(startup18)).c_str(), &txt.area, DT_LEFT);
 
 				DeleteObject(font);
@@ -102,7 +99,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			DeleteObject(borderPen);
 			DeleteObject(bgBrush);
 
-			this->AddScreenObject(MENU, title.c_str(), mMenu.area, true, "");
+			this->AddScreenObject(MENU, title.c_str(), mMenu->getArea(), true, "");
 		}
 	}
 	dc.Detach();
@@ -112,17 +109,14 @@ void vsid::Display::OnMoveScreenObject(int ObjectType, const char* sObjectId, PO
 {
 	if (this->menues.contains(sObjectId))
 	{
-		int difLeft = Area.left - this->menues[sObjectId].area.left;
-		int difTop = Area.top - this->menues[sObjectId].area.top;
-		int difBot = Area.bottom - this->menues[sObjectId].area.bottom;
-		int difRight = Area.right - this->menues[sObjectId].area.right;
+		int difLeft = Area.left - this->menues[sObjectId]->getArea().left;
+		int difTop = Area.top - this->menues[sObjectId]->getArea().top;
+		int difBot = Area.bottom - this->menues[sObjectId]->getArea().bottom;
+		int difRight = Area.right - this->menues[sObjectId]->getArea().right;
 
-		this->menues[sObjectId].area.left = Area.left;
-		this->menues[sObjectId].area.right = Area.right;
-		this->menues[sObjectId].area.top = Area.top;
-		this->menues[sObjectId].area.bottom = Area.bottom;
+		this->menues[sObjectId]->resize(Area.top, Area.left, Area.right, Area.bottom);
 
-		for(auto &[title, txt] : this->menues[sObjectId].texts)
+		for(auto &[title, txt] : this->menues[sObjectId]->getTexts())
 		{
 			txt.area.left += difLeft;
 			txt.area.top += difTop;
@@ -136,112 +130,25 @@ void vsid::Display::OnMoveScreenObject(int ObjectType, const char* sObjectId, PO
 
 bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 {
-	messageHandler->writeMessage("DEBUG", "Display command: " + std::string(sCommandLine), vsid::MessageHandler::DebugArea::Dev);
 	if (std::string(sCommandLine) == ".vsid startup")
 	{
 		messageHandler->writeMessage("DEBUG", "Startup triggered.", vsid::MessageHandler::DebugArea::Dev);
-		
-		// test menu
+
 		if (!this->menues.contains("mainmenu"))
 		{
-			messageHandler->writeMessage("DEBUG", "Creating menu...", vsid::MessageHandler::DebugArea::Dev);
-
 			CRect rArea = this->GetRadarArea();
 
-			vsid::Display::menu newMenu = this->createMenu(MENU, "mainmenu", rArea.bottom - 100, rArea.right - 200, 50, 50, true);
-			this->addText(newMenu, MENU_TEXT, "toprwy", "", 10, 10, 40, 20, 400, true);
-			this->addText(newMenu, MENU_TEXT, "bottomrwy", "", 10, 0, 40, 20, 400, true, "toprwy");
+			vsid::Menu* newMenu = new vsid::Menu(MENU, "mainmenu", rArea.bottom - 100, rArea.right - 200, 50, 50, true);
+			newMenu->addText(MENU_TEXT, "toprwy", "", 10, 10, 40, 20, 400, true);
+			newMenu->addText(MENU_TEXT, "bottomrwy", "", 10, 0, 40, 20, 400, true, "toprwy");
 
-			this->updateMenu(newMenu);
+			newMenu->update();
 
-			this->menues.insert({ newMenu.title, newMenu });
+			this->menues.insert({ newMenu->getTitle(), newMenu });
 		}
-		else this->menues["mainmenu"].render = !this->menues["mainmenu"].render;
+		else this->menues["mainmenu"]->toggleRender();
 
 		return true;
 	}
 	return false;
-}
-
-vsid::Display::menu vsid::Display::createMenu(int type, std::string title, int top, int left, int minWidth, int minHeight, bool render,
-									COLORREF border, COLORREF bg)
-{
-	messageHandler->writeMessage("DEBUG", "Creating menu \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
-
-	vsid::Display::menu newMenu;
-
-	newMenu.title = title;
-	newMenu.type = type;
-
-	newMenu.area.top = top;
-	newMenu.area.left = left;
-	newMenu.area.right = left + minWidth;
-	newMenu.area.bottom = top + minHeight;
-
-	newMenu.border = border;
-	newMenu.bg = bg;
-
-	newMenu.render = render;
-
-	return newMenu;
-}
-
-void vsid::Display::addText(menu& menu, int type, std::string title, std::string txt, int topPad, int leftPad, int minWidth, int height, int weight, bool render,
-							std::string relElem, COLORREF txtColor, COLORREF bg)
-{
-	messageHandler->writeMessage("DEBUG", "Creating new text \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
-
-	vsid::Display::menuText newText;
-
-	newText.type = type;
-	newText.title = title;
-
-	if (menu.texts.contains(relElem))
-	{
-		(topPad == 0) ? newText.area.top = menu.texts[relElem].area.top : newText.area.top = menu.texts[relElem].area.bottom + topPad;
-		(leftPad == 0) ? newText.area.left = menu.texts[relElem].area.left : newText.area.left = menu.texts[relElem].area.right + leftPad;
-	}
-	else if (menu.buttons.contains(relElem))
-	{
-		newText.area.top = menu.buttons[relElem].area.bottom + topPad;
-		newText.area.left = menu.buttons[relElem].area.right + leftPad;
-	}
-	else
-	{
-		newText.area.top = menu.area.top + topPad;
-		newText.area.left = menu.area.left + leftPad;
-	}
-
-	(txt.size() >= minWidth) ? newText.area.right = newText.area.left + txt.size() : newText.area.right = newText.area.left + minWidth;
-	newText.area.bottom = newText.area.top + height;
-
-	newText.textColor = txtColor;
-	newText.bg = bg;
-
-	newText.txt = txt;
-	newText.height = height;
-	newText.weight = weight;
-
-	newText.render = render;
-
-	menu.texts.insert({ title, newText });
-}
-
-void vsid::Display::updateMenu(vsid::Display::menu& menu)
-{
-	messageHandler->writeMessage("DEBUG", "Menu width before update: " + std::to_string(menu.area.right - menu.area.left), vsid::MessageHandler::DebugArea::Menu);
-	messageHandler->writeMessage("DEBUG", "Menu heigth before update: " + std::to_string(menu.area.bottom - menu.area.top), vsid::MessageHandler::DebugArea::Menu);
-	for (auto &[title, txt] : menu.texts)
-	{
-		if (txt.area.right >= menu.area.right) menu.area.right = txt.area.right + 10;
-		if (txt.area.bottom >= menu.area.bottom) menu.area.bottom = txt.area.bottom + 10;
-	}
-
-	for (auto &[title, btn] : menu.buttons)
-	{
-		if (btn.area.right >= menu.area.right) menu.area.right = btn.area.right + 10;
-		if (btn.area.bottom >= menu.area.bottom) menu.area.bottom = btn.area.bottom + 10;
-	}
-	messageHandler->writeMessage("DEBUG", "Menu width after update: " + std::to_string(menu.area.right - menu.area.left), vsid::MessageHandler::DebugArea::Menu);
-	messageHandler->writeMessage("DEBUG", "Menu heigth after update: " + std::to_string(menu.area.bottom - menu.area.top), vsid::MessageHandler::DebugArea::Menu);
 }
