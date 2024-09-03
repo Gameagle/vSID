@@ -22,10 +22,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "include/es/EuroScopePlugIn.h"
+#include "es/EuroScopePlugIn.h"
 #include "vSIDPlugin.h" // needed to delete stored pointers
+#include "menu.h"
+
 #include <gdiplus.h>
 #include <map>
+
+
+
 
 namespace vsid
 {
@@ -36,6 +41,9 @@ namespace vsid
 		virtual ~Display();
 
 		inline void OnAsrContentToBeClosed() {
+			for (auto& [title, menu] : this->menues) delete menu;
+			this->menues.clear();
+
 			this->plugin->deleteScreen(this->id);
 			delete this; 
 		}
@@ -50,55 +58,6 @@ namespace vsid
 		const static COLORREF defaultBg = RGB(130, 150, 140);
 		const static COLORREF defaultTxt = RGB(255, 255, 255);
 
-		struct menuText
-		{
-			int type;
-			std::string title;
-			std::string txt;
-			int height;
-			int weight;
-			bool render = false;
-			CRect area;
-			COLORREF textColor;
-			COLORREF bg;
-		};
-
-		struct menuButton
-		{
-			int type;
-			std::string title;
-			std::string label;
-			CRect area;
-			bool render = false;
-			COLORREF textColor;
-			COLORREF border;
-			COLORREF bg;
-		};
-
-		struct menu
-		{
-			int type;
-			std::string title;
-			CRect area;
-			bool render = false;
-			COLORREF border;
-			COLORREF bg;
-			/**
-			 * first - title of text
-			 * second - menuText
-			 */
-			std::map<std::string, menuText> texts;
-			/**
-			 * first - title of button
-			 * second - menuButton
-			 */
-			std::map<std::string, menuButton> buttons;
-			/**
-			 * first - title of submenu
-			 * second - menu
-			 */
-			std::map<std::string, menu> submenues;
-		};
 
 		struct padding
 		{
@@ -108,24 +67,7 @@ namespace vsid
 			int bottom;
 		};
 
-		// Own Function
-		menu createMenu(int type, std::string title, int top, int left, int minWidth, int minHeight, bool render = false,
-						COLORREF border = defaultBorder, COLORREF bg = defaultBg);
-
-		void addText(menu& menu, int type, std::string title, std::string txt, int topPad, int leftPad, int minWidth, int height, int weight,
-			bool render = false, std::string relElem = "", COLORREF textColor = defaultTxt, COLORREF bg = defaultBg);
-
-		/**
-		 * @brief Check position of all elements and increases the menu with a default padding of 10 right and bottom
-		 * 
-		 * @param menu to be updated
-		 */
-		void updateMenu(menu& menu);
-		/**
-		 * first - name of the menu (ObjectID)
-		 * second - menu of struct menu
-		 */
-		std::map<std::string, menu> menues;
+		std::map<std::string, vsid::Menu*> menues;
 
 		int id;
 		vsid::VSIDPlugin* plugin;
