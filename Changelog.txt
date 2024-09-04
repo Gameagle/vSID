@@ -10,6 +10,8 @@
 *	Config - new config added with prominent RNAV capable acft due to many wrongly filed flightplans
 *	Screen - external functions or in-build (but not accessible) ES functions can now be called by fetching used radar screens (vSID needs to be allowed to draw on the screens)
 *	Screen - enabling ground state syncing with .vsid sync
+*	Screen - experimental implementation of own menu (for now tied to EDDF during testing)
+*	Requests - VFR request added for VFR flights that might be delayed due to traffic. Item is only shown for VFR flightplans
 
 [CHANGED]
 *	SID - tagItem - secondary value added. If an airborne acft has no SID set (SID/RWY) missing the first waypoint is displayed instead
@@ -22,6 +24,8 @@
 [FIXED]
 *	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
 *	Squawk - Default value 1234 is not displayed anymore
+*	SID - custom SID were not reset to default SID if the "auto function" (left click on SID item) was used
+*	SID - no error reporting for VFR flightplans if cleaning of the route would result in an empty route - cleaning is now stopped after a possible SID/RWY or ICAO/RWY block
 
 [Changelog v0.9.0]
 

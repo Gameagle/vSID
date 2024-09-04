@@ -38,3 +38,9 @@ const int TAG_ITEM_VSID_REQ = 644;
 const int TAG_FUNC_VSID_REQMENU = 744;
 
 const int TAG_ITEM_VSID_REQTIMER = 645;
+
+// menues
+
+const int MENU = 100;
+const int MENU_TEXT = 110;
+const int MENU_BUTTON = 120;

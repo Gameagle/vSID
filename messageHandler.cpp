@@ -25,6 +25,7 @@ void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, Deb
 			else if (debugArea == DebugArea::Req) area = "REQ";
 			else if (debugArea == DebugArea::Rwy) area = "RWY";
 			else if (debugArea == DebugArea::Sid) area = "SID";
+			else if (debugArea == DebugArea::Menu) area = "MENU";
 			else area = "N/A";
 
 			std::cout << "[" << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] [" << area << "] " << msg << '\n';
@@ -140,6 +141,11 @@ bool vsid::MessageHandler::setDebugArea(std::string debugArea)
 	else if (debugArea == "CONF")
 	{
 		this->debugArea = DebugArea::Conf;
+		return true;
+	}
+	else if (debugArea == "MENU")
+	{
+		this->debugArea = DebugArea::Menu;
 		return true;
 	}
 	else return false;
