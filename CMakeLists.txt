@@ -23,6 +23,7 @@ set(SOURCES
     configparser.cpp
     display.cpp
     flightplan.cpp
+    menu.cpp
     messageHandler.cpp
     pch.cpp
     sid.cpp
