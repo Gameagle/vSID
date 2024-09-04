@@ -22,8 +22,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "include/es/EuroScopePlugIn.h"
+#include "es/EuroScopePlugIn.h"
 #include "vSIDPlugin.h" // needed to delete stored pointers
+#include "menu.h"
+
+#include <gdiplus.h>
+#include <map>
+
+
 
 
 namespace vsid
@@ -35,11 +41,34 @@ namespace vsid
 		virtual ~Display();
 
 		inline void OnAsrContentToBeClosed() {
+			for (auto& [title, menu] : this->menues) delete menu;
+			this->menues.clear();
+
 			this->plugin->deleteScreen(this->id);
 			delete this; 
 		}
 
+		void OnRefresh(HDC hDC, int Phase);
+		void OnMoveScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, bool Released);
+		bool OnCompileCommand(const char* sCommandLine);
+
 	private:
+
+		const static COLORREF defaultBorder = RGB(50, 50, 40);
+		const static COLORREF defaultBg = RGB(130, 150, 140);
+		const static COLORREF defaultTxt = RGB(255, 255, 255);
+
+
+		struct padding
+		{
+			int top;
+			int left;
+			int right;
+			int bottom;
+		};
+
+		std::map<std::string, vsid::Menu*> menues;
+
 		int id;
 		vsid::VSIDPlugin* plugin;
 	};

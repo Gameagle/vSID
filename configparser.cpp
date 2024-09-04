@@ -143,6 +143,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.requests["pushback"] = {};
                         apt.second.requests["taxi"] = {};
                         apt.second.requests["departure"] = {};
+                        apt.second.requests["vfr"] = {};
 
                         // customRules
 

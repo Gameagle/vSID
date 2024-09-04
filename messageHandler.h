@@ -53,6 +53,7 @@ namespace vsid
 			Atc,
 			Req,
 			Conf,
+			Menu,
 			Dev
 		};
 

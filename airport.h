@@ -116,5 +116,13 @@ namespace vsid
 			}
 			else return true;
 		}
+
+		inline bool isSidWpt(const std::string& wpt)
+		{
+			return std::any_of(sids.begin(), sids.end(), [&](vsid::Sid sid)
+				{
+					return wpt == sid.waypoint;
+				});
+		}
 	};
 }
