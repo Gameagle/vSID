@@ -119,7 +119,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                 try
                 {
-                    //configTest = json::parse(testFile);
                     this->parsedConfig = json::parse(configFile);
 
                     if (!this->parsedConfig.contains(apt.first))
@@ -134,6 +133,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                         apt.second.icao = apt.first;
                         apt.second.elevation = this->parsedConfig.at(apt.first).value("elevation", 0);
+                        apt.second.equipCheck = this->parsedConfig.at(apt.first).value("equipCheck", true);
                         apt.second.allRwys = vsid::utils::split(this->parsedConfig.at(apt.first).value("runways", ""), ',');
                         apt.second.transAlt = this->parsedConfig.at(apt.first).value("transAlt", 0);
                         apt.second.maxInitialClimb = this->parsedConfig.at(apt.first).value("maxInitialClimb", 0);
@@ -143,6 +143,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.requests["pushback"] = {};
                         apt.second.requests["taxi"] = {};
                         apt.second.requests["departure"] = {};
+                        apt.second.requests["vfr"] = {};
 
                         // customRules
 
@@ -245,7 +246,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         // sids
                         for (auto &sid : this->parsedConfig.at(apt.first).at("sids").items())
                         {
-                            //std::string wpt = sid.key();
                             std::string base = sid.key();
 
                             for (auto& sidWpt : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).items())
@@ -253,10 +253,25 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 // defaults to SID base if no waypoint is configured
                                 std::string wpt = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wpt", base));
                                 std::string id = sidWpt.key();
-                                //std::string confDesig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
-                                //char desig = (confDesig.length() > 0 ? confDesig[0] : ' ');
                                 std::string desig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
                                 std::string rwys = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", "");
+                                std::map<std::string, bool> equip = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("equip", std::map<std::string, bool>{});
+                                
+                                // updating equipment codes to upper case if in lower case
+                                for (std::map<std::string, bool>::iterator it = equip.begin(); it != equip.end();)
+                                {
+                                    if (it->first != vsid::utils::toupper(it->first))
+                                    {
+                                        std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+                                        it = equip.erase(it);
+                                        equip.insert(it, cap);
+                                        continue;
+                                    }
+                                    ++it;
+                                }
+
+                                if (equip.empty()) equip["RNAV"] = true;
+
                                 int initial = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("initial", 0);
                                 bool via = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("climbvia", false);
                                 int prio = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("prio", 99);
@@ -278,17 +293,17 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::map<std::string, bool> acftType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("acftType", std::map<std::string, bool>{});
                                 int engineCount = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineCount", 0);
                                 int mtow = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("mtow", 0);
+                                std::map<std::string, bool> dest = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
-                                std::string equip = "";
                                 int lvp = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("lvp", -1);
                                 int timeFrom = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeFrom", -1);
                                 int timeTo = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("timeTo", -1);
                                 
-                                vsid::Sid newSid = { base, wpt, id, "", desig, rwys, initial, via, prio,
+                                vsid::Sid newSid = { base, wpt, id, "", desig, rwys, equip, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
-                                                    mtow, customRule, area, equip, lvp,
+                                                    mtow, dest, customRule, area, lvp,
                                                     timeFrom, timeTo };
                                 apt.second.sids.push_back(newSid);
                                 if (newSid.timeFrom != -1 && newSid.timeTo != -1) apt.second.timeSids.push_back(newSid);
@@ -326,9 +341,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
             }
         }
     }
-    /*savedCustomRules.clear(); // MONITOR - DROPPED ANYWAYS
-    savedAreas.clear();
-    savedSettings.clear();*/
 
     // airport health check - remove apt without config
 
@@ -375,13 +387,68 @@ void vsid::ConfigParser::loadGrpConfig()
             }
             catch (const json::parse_error& e)
             {
-                messageHandler->writeMessage("ERROR:", "Failed to load grp config : " + std::string(e.what()));
+                messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
             }
             catch (const json::type_error& e)
             {
-                messageHandler->writeMessage("ERROR:", "Failed to load grp config : " + std::string(e.what()));
+                messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
             }
         }
+    }
+}
+
+void vsid::ConfigParser::loadRnavList()
+{
+    // get the current path where plugins .dll is stored
+    char path[MAX_PATH + 1] = { 0 };
+    GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+    PathRemoveFileSpecA(path);
+    std::filesystem::path basePath = path;
+
+    if (!this->vSidConfig.empty())
+    {
+        basePath.append(this->vSidConfig.value("RNAV", "")).make_preferred();
+    }
+
+    if (!std::filesystem::exists(basePath))
+    {
+        messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
+        return;
+    }
+
+    for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+    {
+        if (entry.extension() != ".json") continue;
+        if (entry.filename().string() != "RNAV_List.json") continue;
+
+        std::ifstream configFile(entry.string());
+        json rnavConfigFile;
+
+        try
+        {
+            rnavConfigFile = json::parse(configFile);
+        }
+        catch (const json::parse_error& e)
+        {
+            messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+        }
+        catch (const json::type_error& e)
+        {
+            messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+        }
+
+        if (rnavConfigFile.empty()) return;
+
+        try
+        {
+            this->rnavList = rnavConfigFile.value("RNAV", std::set<std::string>{});
+        }
+        catch (json::type_error &e)
+        {
+            messageHandler->writeMessage("ERROR", "Failed to read rnav list: " + std::string(e.what()));
+        }
+
+        return;
     }
 }
 

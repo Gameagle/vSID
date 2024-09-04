@@ -41,12 +41,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.9.0";
+	const std::string pluginVersion = "0.10.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
-
-	class ConfigParser;
 
 	/**
 	 * @brief Main class communicating with ES
@@ -58,6 +56,18 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
+		// DEV
+		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
+		inline std::set<std::string> getDepRwy(std::string icao)
+		{
+			if (this->activeAirports.contains(icao))
+			{
+				return this->activeAirports[icao].depRwys;
+			}
+			else return {};
+		}
+		// END DEV
+
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
 		 * 
@@ -65,8 +75,11 @@ namespace vsid
 		 * @return
 		 */
 		std::string findSidWpt(EuroScopePlugIn::CFlightPlanData FlightPlanData);
-
-		//void detectPlugins();
+		/**
+		 * @brief Iterate over loaded .dll and check for topsky and ccams
+		 * 
+		 */
+		void detectPlugins();
 
 		/**
 		 * @brief Search for a matching SID depending on current RWYs in use, SID wpt
@@ -168,6 +181,57 @@ namespace vsid
 		 * @return * void 
 		 */
 		void OnTimer(int Counter);
+		/**
+		 * @brief Sync states and clearance flag to new controller
+		 * 
+		 * @param FlightPlan - ES flightplan object
+		 */
+		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
+		/**
+		 * @brief Radar Screen.
+		 */
+		EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);
+		/**
+		 * @brief Resets and deletes stored pointers to radar screens
+		 * 
+		 * @param id of the pointer
+		 */
+		inline void deleteScreen(int id) {
+			if (this->radarScreens.contains(id))
+			{
+				this->radarScreens.at(id) = nullptr;
+				this->radarScreens.erase(id);
+			}
+		}
+		/**
+		 * @brief Calling ES StartTagFunction with a reference to any of the stored (valid) screens
+		 * 
+		 * @param sCallsign - acft which TAG is clicked
+		 * @param sItemPlugInName - item provider plugin (for base ES use NULL)
+		 * @param ItemCode - the item code
+		 * @param sItemString - string of the selected item
+		 * @param sFunctionPlugInName - item provider plugin (for base ES use NULL)
+		 * @param FunctionId - id of the function
+		 * @param Pt - mouse position
+		 * @param Area - area covered by tag item
+		 */
+		inline void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
+								int FunctionId)
+			// POINT Pt, RECT Area
+		{
+			if (this->radarScreens.size() > 0)
+			{
+				// check all avbl screens and use the first valid one
+				for (const std::pair<const int, EuroScopePlugIn::CRadarScreen*> &radarScreen : this->radarScreens)
+				{
+					if (radarScreen.second != nullptr)
+					{
+						radarScreen.second->StartTagFunction(sCallsign, sItemPlugInName, ItemCode, sItemString, sFunctionPlugInName, FunctionId, POINT(), RECT());
+						break;
+					}
+				}
+			}
+		}
 		
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
@@ -187,9 +251,16 @@ namespace vsid
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;
 		std::set<std::string> ignoreAtc;
-		bool topskyLoaded;
-		bool ccamsLoaded;
-		EuroScopePlugIn::CRadarScreen* radarScreen; // needed to be able to call ES functions
+		bool preferTopsky = false;
+		bool topskyLoaded = false;
+		bool ccamsLoaded = false;
+		/**
+		 * @param key - id of the saved screen pointer (always increased during runtime)
+		 * @param value - derived class of CRadarScreens
+		 */
+		std::map<int, EuroScopePlugIn::CRadarScreen*> radarScreens = {};
+
+		int screenId = 0;
 		/**
 		 * @brief Loads and updates the active airports with available configs
 		 *

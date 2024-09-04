@@ -4,9 +4,13 @@
 #include "utils.h"
 #include "messageHandler.h"
 
-void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string origin, std::string filedSidWpt)
+std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
 {
-	std::pair<std::string, std::string> atcBlock = getAtcBlock(filedRoute, origin);
+	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
+	std::string callsign = FlightPlan.GetCallsign();
+	std::string origin = fplnData.GetOrigin();
+	std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
+	std::pair<std::string, std::string> atcBlock = getAtcBlock(FlightPlan);
 
 	if (filedRoute.size() > 0)
 	{
@@ -19,10 +23,15 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Error during cleaning of route at first entry. ADEP: " + origin +
-				" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcfe");
+			messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route at first entry. ADEP: " + origin +
+				" with route \"" + vsid::utils::join(filedRoute) + "\". #rcfe");
 		}
 	}
+
+	 /* stop cleaning if flightplan is VFR */
+
+	if (std::string(fplnData.GetPlanType()) == "V") return filedRoute;
+
 	/* if a possible SID block was found check the entire route until the sid waypoint is found*/
 	if (filedRoute.size() > 0 && filedSidWpt != "")
 	{
@@ -34,13 +43,14 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-											" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcer");
+				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
+											" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-1");
 			}
 			if (*it == filedSidWpt) break;
 			it = filedRoute.erase(it);
 		}
 	}
+
 	/* if the route has no sid waypoint clean up until the probably first waypoint*/
 	else if (filedRoute.size() > 0 && filedSidWpt == "")
 	{
@@ -52,19 +62,33 @@ void vsid::fpln::clean(std::vector<std::string> &filedRoute, const std::string o
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-					" with route \"" + vsid::utils::join(filedRoute) + "\". Callsign is unknown here. #rcer");
+				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
+					" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-2");
 			}
 			if (*it != origin) break;
 			it = filedRoute.erase(it);
 		}
 	}
+
+	if (filedRoute.size() == 0 && vsid::utils::split(fplnData.GetRoute(), ' ').size() != 0)
+	{
+
+		messageHandler->writeMessage("WARNING", "[" + callsign +
+									"] did not clean route as cleaning resulted in an empty route (possible error in the filed route). Returning original route.");
+		return vsid::utils::split(fplnData.GetRoute(), ' ');
+	}
+
+	return filedRoute;
 }
 
-std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const std::vector<std::string>& filedRoute, const std::string origin)
+std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
+	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');
+	std::string origin = FlightPlan.GetFlightPlanData().GetOrigin();
+	std::string callsign = FlightPlan.GetCallsign();
 	std::string atcRwy = "";
 	std::string atcSid = "";
+
 	if (filedRoute.size() > 0)
 	{
 		try
@@ -82,7 +106,7 @@ std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const std::vector<st
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to get ATC block. Callsign is unknown. #fpgb");
+			messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to get ATC block. First route entry: " + filedRoute.at(0) + ". #fpgb");
 		}
 	}
 	return { atcSid, atcRwy };
@@ -144,7 +168,7 @@ bool vsid::fpln::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const s
 	std::string scratch = cad.GetScratchPadString();
 	scratch += toAdd;
 
-	messageHandler->writeMessage("DEBUG", "[REQ] Setting scratch : " + scratch, vsid::MessageHandler::DebugArea::Req);
+	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] Setting scratch: " + scratch, vsid::MessageHandler::DebugArea::Req);
 
 	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 }
@@ -154,6 +178,7 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	if (!FlightPlan.IsValid()) return false;
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
+	std::string callsign = FlightPlan.GetCallsign();
 	std::string scratch = cad.GetScratchPadString();
 	size_t pos = scratch.find(vsid::utils::toupper(toRemove));
 
@@ -163,10 +188,101 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 
 		if (newScratch != scratch)
 		{
-			messageHandler->writeMessage("DEBUG", "[REQ] Removing request. New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
+										"\". New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
 
 			return cad.SetScratchPadString(vsid::utils::trim(newScratch).c_str());
 		}
 	}
 	return false; // default / fallback state
+}
+
+std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
+{
+
+	std::string equip = FlightPlan.GetFlightPlanData().GetAircraftInfo();
+	std::string callsign = FlightPlan.GetCallsign();
+	char cap = FlightPlan.GetFlightPlanData().GetCapibilities();
+	std::vector<std::string> vecEquip = {};
+
+	if (equip.find("-") != std::string::npos)
+	{
+		vecEquip = vsid::utils::split(equip, '-');
+	}
+	else vecEquip.clear(); // equipment not present
+
+	if (vecEquip.size() >= 2)
+	{
+		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
+
+		try
+		{
+			return vecEquip.at(0);
+		}
+		catch (std::out_of_range)
+		{
+			return "";
+		}
+	}
+	else if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+			"] failed to get equipment, but found in RNAV list. Reported equipment \"" +
+			equip + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+		return "SDE2E3FGIJ1RWY";
+	}
+	else if (cap != ' ')
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+									"] failed to get equipment, falling back to capability checking. Reported equipment \"" +
+									equip + "\". Reported capability \"" + cap + "\"", vsid::MessageHandler::DebugArea::Sid);
+
+		std::map<char, std::string> faaToIcao = {
+			// X disabled due to too many occurences with fplns that are RNAV capable
+			//{'X', "SF"},
+			{'T', "SF"}, {'U', "SF"},
+			{'D', "SDF"}, {'B', "SDF"}, {'A', "SDF"},
+			{'M', "DFILTUV"}, {'N', "DFILTUV"}, {'P', "DFILTUV"},
+			{'Y', "SDFIRY"}, {'C', "SDFIRY"}, {'I', "SDFIRY"},
+			{'V', "SDFGRY"}, {'S', "SDFGRY"}, {'G', "SDFGRY"},
+			{'W', "SDFWY"},
+			{'Z', "SDE2E3FIJ1RWY"},
+			{'L', "SDE2E3FGIJ1RWY"}
+		};
+
+		if (faaToIcao.contains(cap)) return faaToIcao[cap];
+		else return faaToIcao['L'];
+	}
+	else
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to get equipment or capabilities. Returning empty equipment",
+									vsid::MessageHandler::DebugArea::Sid);
+		return "";
+	}
+}
+
+std::string vsid::fpln::getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan)
+{
+	if (vsid::fpln::findRemarks(FlightPlan, "PBN/"))
+	{
+		std::string pbn;
+		std::vector<std::string> vecPbn = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRemarks(), ' ');
+
+		for (std::string &rem : vecPbn)
+		{
+			if (rem.find("PBN/") != std::string::npos)
+			{
+				try
+				{
+					return vsid::utils::split(rem, '/').at(1);
+				}
+				catch (std::out_of_range)
+				{
+					return "";
+				}
+			}
+		}
+	}
+	return "";
 }

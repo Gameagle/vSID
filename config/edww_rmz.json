@@ -230,35 +230,7 @@
         "maxInitialClimb": 7000,
         "appSI": "EIDE,ALR,EIDW,WC",
         "sids": {
-            "HAM": {
-                "1": {
-					"designator": "L",
-                    "rwy": "08",
-                    "initial": 4000,
-                    "prio": 1
-                },
-                "2": {
-					"designator": "N",
-                    "rwy": "26",
-                    "initial": 4000,
-                    "prio": 1
-                }
-			},
-			"LUGEG": {
-                "1": {
-					"designator": "L",
-                    "rwy": "08",
-                    "initial": 4000,
-                    "prio": 1
-                },
-                "2": {
-					"designator": "N",
-                    "rwy": "26",
-                    "initial": 4000,
-                    "prio": 1
-                }
-			},
-			"EKERN": {
+            "OTAHO": {
                 "1": {
 					"designator": "L",
                     "rwy": "08",

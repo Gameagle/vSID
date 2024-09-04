@@ -60,6 +60,7 @@ namespace vsid
 
 		std::string icao = "";
 		int elevation = 0;
+		bool equipCheck = true;
 		std::vector<std::string> allRwys = {};
 		std::set<std::string> depRwys = {};
 		std::set<std::string> arrRwys = {};
@@ -114,6 +115,14 @@ namespace vsid
 				return false;
 			}
 			else return true;
+		}
+
+		inline bool isSidWpt(const std::string& wpt)
+		{
+			return std::any_of(sids.begin(), sids.end(), [&](vsid::Sid sid)
+				{
+					return wpt == sid.waypoint;
+				});
 		}
 	};
 }

@@ -123,14 +123,16 @@
                     "rwy": "05",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 99
+					"equip": {"NON-RNAV": true},
+                    "prio": 1
                 },
                 "4": {
 					"designator": "V",
                     "rwy": "23",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 99
+                    "equip": {"NON-RNAV": true},
+					"prio": 1
                 }
 			}
         }

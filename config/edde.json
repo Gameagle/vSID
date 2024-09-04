@@ -3,19 +3,19 @@
         "elevation": 1034,
         "runways": "09,27",
         "transAlt": 5000,
-        "maxInitialClimb": 7000,
+        "maxInitialClimb": 8000,
 		"appSI": "TRS,GER,MEI,HAL,HOF,EDMM",
         "sids": {
             "ERSIL": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"D",
+                "2": {
+					"designator": "D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -23,15 +23,15 @@
                 }
 			},
 			"LASTO": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"D",
+                "2": {
+					"designator": "D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -39,15 +39,15 @@
                 }
 			},
 			"NEVKO": {
-                "1":{
-					"designator":"C",
+                "1": {
+					"designator": "C",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
                     "prio": 1
                 },
-                "2":{
-					"designator":"D",
+                "2": {
+					"designator": "D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
@@ -55,8 +55,8 @@
                 }
 			},
 			"PILAM": {
-                "1":{
-					"designator":"D",
+                "1": {
+					"designator": "D",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": false,
@@ -64,18 +64,20 @@
                 }
 			},
 			"ERF": {
-                "1":{
-					"designator":"A",
+                "1": {
+					"designator": "A",
                     "rwy": "09",
                     "initial": 7000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 1
                 },
-                "2":{
-					"designator":"B",
+                "2": {
+					"designator": "B",
                     "rwy": "27",
                     "initial": 7000,
                     "climbvia": true,
+					"equip": {"NON-RNAV": true},
                     "prio": 1
                 }
 			}
