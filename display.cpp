@@ -80,13 +80,16 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 						if (this->plugin->RadarTargetSelect(fp.first.c_str()).GetGS() >= 50) continue;
 						if (std::string(fpln.GetGroundState()) == "ARR") continue;
 
-						messageHandler->writeMessage("DEBUG", fp.first + " groundstate: \"" +
-							std::string(this->plugin->FlightPlanSelect(fp.first.c_str()).GetGroundState()) + "\"", vsid::MessageHandler::DebugArea::Menu);
-
 						std::string deprwy = fpln.GetFlightPlanData().GetDepartureRwy();
+
+						messageHandler->writeMessage("DEBUG", fp.first + " groundstate: \"" +
+							std::string(this->plugin->FlightPlanSelect(fp.first.c_str()).GetGroundState()) + "\"" + ", deprwy: " +
+							deprwy, vsid::MessageHandler::DebugArea::Menu);
+
 						if (deprwy.find("25") != std::string::npos && depRwys.contains("25")) startup2507++;
 						if (deprwy.find("07") != std::string::npos && depRwys.contains("07")) startup2507++;
 						if (deprwy.find("18") != std::string::npos && depRwys.contains("18")) startup18++;
+
 					}
 				}
 
@@ -138,9 +141,9 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 		{
 			CRect rArea = this->GetRadarArea();
 
-			vsid::Menu* newMenu = new vsid::Menu(MENU, "mainmenu", rArea.bottom - 100, rArea.right - 200, 50, 50, true);
-			newMenu->addText(MENU_TEXT, "toprwy", "", 10, 10, 40, 20, 400, true);
-			newMenu->addText(MENU_TEXT, "bottomrwy", "", 10, 0, 40, 20, 400, true, "toprwy");
+			vsid::Menu* newMenu = new vsid::Menu(MENU, "mainmenu", rArea.bottom - 100, rArea.right - 200, 60, 50, true);
+			newMenu->addText(MENU_TEXT, "toprwy", "", 10, 10, 50, 20, 400, true);
+			newMenu->addText(MENU_TEXT, "bottomrwy", "", 10, 0, 50, 20, 400, true, "toprwy");
 
 			newMenu->update();
 
