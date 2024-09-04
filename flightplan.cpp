@@ -28,6 +28,10 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 		}
 	}
 
+	 /* stop cleaning if flightplan is VFR */
+
+	if (std::string(fplnData.GetPlanType()) == "V") return filedRoute;
+
 	/* if a possible SID block was found check the entire route until the sid waypoint is found*/
 	if (filedRoute.size() > 0 && filedSidWpt != "")
 	{
@@ -68,6 +72,7 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 
 	if (filedRoute.size() == 0 && vsid::utils::split(fplnData.GetRoute(), ' ').size() != 0)
 	{
+
 		messageHandler->writeMessage("WARNING", "[" + callsign +
 									"] did not clean route as cleaning resulted in an empty route (possible error in the filed route). Returning original route.");
 		return vsid::utils::split(fplnData.GetRoute(), ' ');
