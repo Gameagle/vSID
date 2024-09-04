@@ -25,6 +25,7 @@
 *	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
 *	Squawk - Default value 1234 is not displayed anymore
 *	SID - custom SID were not reset to default SID if the "auto function" (left click on SID item) was used
+*	SID - no error reporting for VFR flightplans if cleaning of the route would result in an empty route - cleaning is now stopped after a possible SID/RWY or ICAO/RWY block
 
 [Changelog v0.9.0]
 
