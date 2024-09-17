@@ -412,7 +412,7 @@ void vsid::ConfigParser::loadRnavList()
 
     if (!std::filesystem::exists(basePath))
     {
-        messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
+        messageHandler->writeMessage("ERROR", "Path to check for RNAV List does not exist: " + basePath.string());
         return;
     }
 
@@ -436,8 +436,12 @@ void vsid::ConfigParser::loadRnavList()
         {
             messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
         }
-
-        if (rnavConfigFile.empty()) return;
+        
+        if (rnavConfigFile.empty())
+        {
+            messageHandler->writeMessage("ERROR", "RNAV List is empty. Is it present besides the plugin DLL file?");
+            return;
+        }
 
         try
         {
@@ -450,6 +454,7 @@ void vsid::ConfigParser::loadRnavList()
 
         return;
     }
+    messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
 COLORREF vsid::ConfigParser::getColor(std::string color)

@@ -28,6 +28,10 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 		}
 	}
 
+	 /* stop cleaning if flightplan is VFR */
+
+	if (std::string(fplnData.GetPlanType()) == "V") return filedRoute;
+
 	/* if a possible SID block was found check the entire route until the sid waypoint is found*/
 	if (filedRoute.size() > 0 && filedSidWpt != "")
 	{
@@ -68,6 +72,7 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 
 	if (filedRoute.size() == 0 && vsid::utils::split(fplnData.GetRoute(), ' ').size() != 0)
 	{
+
 		messageHandler->writeMessage("WARNING", "[" + callsign +
 									"] did not clean route as cleaning resulted in an empty route (possible error in the filed route). Returning original route.");
 		return vsid::utils::split(fplnData.GetRoute(), ' ');
@@ -206,7 +211,15 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 	}
 	else vecEquip.clear(); // equipment not present
 
-	if (vecEquip.size() >= 2)
+	/* default state - if an aircraft is known rnav capable skip checks */
+	if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+			"] found in RNAV list. Returning \"SDE2E3FGIJ1RWY\"", vsid::MessageHandler::DebugArea::Sid);
+
+		return "SDE2E3FGIJ1RWY";
+		}
+	else if (vecEquip.size() >= 2)
 	{
 		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
 
@@ -216,16 +229,11 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		}
 		catch (std::out_of_range)
 		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign +
+				"] failed to get equipment, Nothing will be returned.", vsid::MessageHandler::DebugArea::Sid);
+
 			return "";
 		}
-	}
-	else if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign +
-			"] failed to get equipment, but found in RNAV list. Reported equipment \"" +
-			equip + "\"", vsid::MessageHandler::DebugArea::Sid);
-
-		return "SDE2E3FGIJ1RWY";
 	}
 	else if (cap != ' ')
 	{

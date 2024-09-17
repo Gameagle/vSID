@@ -2629,6 +2629,14 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				vsid::fpln::removeScratchPad(FlightPlan, "LINEUP");
 				this->processed[callsign].gndState = "LINEUP";
 			}
+			/* the following states are internally saved by ES gnd state changes, we just remove here */
+			if (scratchpad.find(".VSID_REQ_") == std::string::npos)
+			{
+				if (scratchpad.find("STUP") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "STUP");
+				if (scratchpad.find("PUSH") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "PUSH");
+				if (scratchpad.find("TAXI") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "TAXI");
+				if (scratchpad.find("DEPA") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "DEPA");
+			}
 
 			if (scratchpad.find(".VSID_REQ_") != std::string::npos)
 			{
