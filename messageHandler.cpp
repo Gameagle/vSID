@@ -16,7 +16,7 @@ void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, Deb
 
 	try
 	{
-		if (this->currentLevel == Level::Debug && (this->debugArea ==  debugArea || this->debugArea == DebugArea::All) && sender == "DEBUG")
+		if (this->currentLevel == Level::Debug && (this->debugArea == debugArea || this->debugArea == DebugArea::All) && sender == "DEBUG")
 		{
 			std::string area;
 			if (debugArea == DebugArea::Atc) area = "ATC";
