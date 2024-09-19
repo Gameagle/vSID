@@ -244,7 +244,8 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		std::map<char, std::string> faaToIcao = {
 			// X disabled due to too many occurences with fplns that are RNAV capable
 			//{'X', "SF"},
-			{'T', "SF"}, {'U', "SF"},
+			// T and U also disabled and will default to L
+			// {'T', "SF"}, {'U', "SF"},
 			{'D', "SDF"}, {'B', "SDF"}, {'A', "SDF"},
 			{'M', "DFILTUV"}, {'N', "DFILTUV"}, {'P', "DFILTUV"},
 			{'Y', "SDFIRY"}, {'C', "SDFIRY"}, {'I', "SDFIRY"},
