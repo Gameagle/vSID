@@ -41,6 +41,7 @@ namespace vsid
 			bool remarkChecked = false;
 			vsid::Sid sid = {};
 			vsid::Sid customSid = {};
+			std::string sidWpt = "";
 			std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
 			int updateCounter = 0;
 			bool request = false;

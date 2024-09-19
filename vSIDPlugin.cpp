@@ -14,6 +14,8 @@
 #include "airport.h"
 // DEV
 #include <thread>
+
+#include <iostream> // for debugging in detectPlugins()
 // END DEV
 
 vsid::VSIDPlugin* vsidPlugin;
@@ -75,15 +77,27 @@ void vsid::VSIDPlugin::detectPlugins()
 			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
 			{
 				std::string modname = szModName;
-				if (modname.find("system32") != std::string::npos ||
-					modname.find("system32") != std::string::npos ||
+				
+				/*if (modname.find("SYSTEM32") != std::string::npos ||
+					modname.find("System32") != std::string::npos ||
 					modname.find("system32") != std::string::npos) continue;
+				
 				size_t pos = modname.find_last_of("\\");
 				if (pos == std::string::npos) continue;
-				modname = modname.substr(pos + 1);
+				modname = modname.substr(pos + 1);*/
 
-				if (modname == "CCAMS.dll") this->ccamsLoaded = true;
-				if (modname == "TopSky.dll") this->topskyLoaded = true;
+				//if (modname == "CCAMS.dll")
+				if (modname.find("CCAMS.dll") != std::string::npos)
+				{
+					messageHandler->writeMessage("INFO", "[TEMP] ccams plugin found.");
+					this->ccamsLoaded = true;
+				}
+				//if (modname == "TopSky.dll")
+				if (modname.find("TopSky.dll") != std::string::npos)
+				{
+					messageHandler->writeMessage("INFO", "[TEMP] topsky plugin found.");
+					this->topskyLoaded = true;
+				}
 			}
 		}
 	}
@@ -810,6 +824,9 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		fplnInfo.request = true;
 	}
 
+	// save the SID waypoint with each processing for later evaluation (e.g. SID tagItem)
+	fplnInfo.sidWpt = filedSidWpt;
+
 	/* if a sid has been set manually choose this */
 	if (std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V")
 	{
@@ -977,10 +994,14 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		}
 
 		std::string squawk = fpln.GetControllerAssignedData().GetSquawk();
-		if (squawk == "0000" || squawk == "1234")
+		if (squawk == "" || squawk == "0000" && !this->activeAirports[icao].settings["auto"])
 		{
 			if (this->ccamsLoaded && !this->preferTopsky)
 			{
+				// DEV - see OnTime for further usage
+				// this->sqwkQueue.insert(callsign);
+				// END DEV
+				
 				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871);
 			}
 			else if (this->topskyLoaded)
@@ -1051,33 +1072,69 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 	{
 		std::string filedSidWpt = this->findSidWpt(fplnData);
 		std::map<std::string, vsid::Sid> validDepartures;
-		std::string depRWY = fplnData.GetDepartureRwy();
+		// std::string depRWY = fplnData.GetDepartureRwy();
+		std::string depRWY = vsid::fpln::getAtcBlock(fpln).second;
 
-		for (vsid::Sid &sid : this->activeAirports[fplnData.GetOrigin()].sids)
+		// deprwy is set and known
+		if (depRWY != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY)
 		{
-			std::vector<std::string> sidRwys = vsid::utils::split(sid.rwy, ',');
+			for (vsid::Sid& sid : this->activeAirports[fplnData.GetOrigin()].sids)
+			{
+				std::vector<std::string> sidRwys = vsid::utils::split(sid.rwy, ',');
 
-			if ((sid.waypoint == filedSidWpt || sid.waypoint == "XXX") && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
-			{
-				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
-			}
-			else if (filedSidWpt == "" && depRWY == "" &&
+				if ((sid.waypoint == filedSidWpt || sid.waypoint == "XXX") && sid.rwy.find(depRWY) != std::string::npos)
+				{
+					validDepartures[sid.base + sid.number + sid.designator] = sid;
+					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
+				}
+				else if (filedSidWpt == "" && depRWY == "" &&
 					std::any_of(sidRwys.begin(), sidRwys.end(), [&](std::string sidRwy)
-					{
-						return this->activeAirports[fplnData.GetOrigin()].depRwys.contains(sidRwy);
-					}
+						{
+							return this->activeAirports[fplnData.GetOrigin()].depRwys.contains(sidRwy);
+						}
 					))
-			{
-				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
-			}
-			else if (filedSidWpt == "" && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
-			{
-				validDepartures[sid.base + sid.number + sid.designator] = sid;
-				validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
+				{
+					validDepartures[sid.base + sid.number + sid.designator] = sid;
+					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
+				}
+				else if (filedSidWpt == "" && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
+				{
+					validDepartures[sid.base + sid.number + sid.designator] = sid;
+					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
+				}
 			}
 		}
+		// deprwy is not set
+		else if (depRWY == "")
+		{
+			for (vsid::Sid& sid : this->activeAirports[fplnData.GetOrigin()].sids)
+			{
+				std::vector<std::string> sidRwys = vsid::utils::split(sid.rwy, ',');
+
+				if ((sid.waypoint == filedSidWpt || sid.waypoint == "XXX"))
+				{
+					for (const std::string& sidRwy : sidRwys)
+					{
+						if (!this->activeAirports[fplnData.GetOrigin()].depRwys.contains(sidRwy)) continue;
+						validDepartures[sid.base + sid.number + sid.designator + " - " + sidRwy] = sid;
+					}
+				}
+				else if (filedSidWpt == "")
+				{
+					for (const std::string& sidRwy : sidRwys)
+					{
+						if (!this->activeAirports[fplnData.GetOrigin()].depRwys.contains(sidRwy)) continue;
+						validDepartures[sid.base + sid.number + sid.designator + " - " + sidRwy] = sid;
+					}					
+				}
+				/*else if (filedSidWpt == "" && depRWY != "" && sid.rwy.find(depRWY) != std::string::npos)
+				{
+					validDepartures[sid.base + sid.number + sid.designator] = sid;
+					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", depRWY);
+				}*/
+			}
+		}
+		
 
 		if (strlen(sItemString) == 0)
 		{
@@ -1416,8 +1473,9 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					this->processed[callsign].customSid.empty())
 					)
 			{
-				if(this->processed[callsign].validEquip) strcpy_s(sItemString, 16, "MANUAL");
-				else strcpy_s(sItemString, 16, "EQUIP");
+				if (this->processed[callsign].validEquip && this->processed[callsign].sidWpt == "") strcpy_s(sItemString, 16, "MANUAL");
+				else if (this->processed[callsign].validEquip && this->processed[callsign].sidWpt != "") strcpy_s(sItemString, 16, this->processed[callsign].sidWpt.c_str());
+				else if (!this->processed[callsign].validEquip) strcpy_s(sItemString, 16, "EQUIP");
 			}
 			else if(sidName != "" && customSidName == "")
 			{
@@ -1724,10 +1782,12 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 							this->processed[callsign].sid.rwy);
 					}
 				}
-				if (sidRwy == "" && std::string(fplnData.GetDepartureRwy()) != "")
+				/*if (sidRwy == "" && std::string(fplnData.GetDepartureRwy()) != "")
 				{
 					sidRwy = fplnData.GetDepartureRwy();
-				}
+				}*/
+
+				if (sidRwy == "") sidRwy = "---";
 				strcpy_s(sItemString, 16, sidRwy.c_str());
 			}
 		}
@@ -2998,7 +3058,7 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 void vsid::VSIDPlugin::OnAirportRunwayActivityChanged()
 {
 	//dev only
-	//this->detectPlugins();
+	this->detectPlugins();
 	// end dev
 	this->UpdateActiveAirports();
 }
@@ -3249,6 +3309,23 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 void vsid::VSIDPlugin::OnTimer(int Counter)
 {
+
+	// DEV - disabled for further evaluation, CCAMS can't take in fast requests, delaying them can cause menus to be closed as ES "selects" a flightplan when triggered
+	//if (this->sqwkQueue.size() > 0)
+	//{
+	//	messageHandler->writeMessage("DEBUG", "Calling CCAMS to squawk.", vsid::MessageHandler::DebugArea::Dev);
+	//	try
+	//	{
+	//		std::string sqwkCallsign = *this->sqwkQueue.begin();
+	//		messageHandler->writeMessage("DEBUG", "Extracted callsign " + sqwkCallsign, vsid::MessageHandler::DebugArea::Dev);
+	//		this->callExtFunc(sqwkCallsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, sqwkCallsign.c_str(), "CCAMS", 871);
+	//		this->sqwkQueue.erase(sqwkCallsign);
+	//	}
+	//	catch (std::out_of_range) {} // no error reporting, we just do nothing
+	//}
+	// END DEV
+	
+	// get info msgs printed to the chat area of ES
 	std::pair<std::string, std::string> msg = messageHandler->getMessage();
 	if (msg.first != "" && msg.second != "")
 	{
