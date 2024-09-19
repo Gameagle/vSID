@@ -254,6 +254,9 @@ namespace vsid
 		bool preferTopsky = false;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
+		// dev - see .cpp OnTime for further information
+		//std::set<std::string> sqwkQueue = {};
+		// end dev
 		/**
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens
