@@ -2907,7 +2907,8 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 		// remove rwy remark if still present
 		if (vsid::fpln::findRemarks(RadarTarget.GetCorrelatedFlightPlan(), "VSID/RWY"))
 		{
-			vsid::fpln::removeRemark(RadarTarget.GetCorrelatedFlightPlan(), "VSID/RWY");
+			EuroScopePlugIn::CFlightPlan fpln = RadarTarget.GetCorrelatedFlightPlan();
+			vsid::fpln::removeRemark(fpln, "VSID/RWY");
 		}
 	}
 }
@@ -3335,16 +3336,17 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 	if (Counter % 10 == 0)
 	{
-		for (auto& [callsign, info] : this->processed)
+		for (std::map<std::string, vsid::fpln::Info>::iterator it = this->processed.begin(); it != this->processed.end();)
 		{
-			EuroScopePlugIn::CFlightPlan tstpln = FlightPlanSelect(callsign.c_str());
+			EuroScopePlugIn::CFlightPlan tstpln = FlightPlanSelect(it->first.c_str());
 
+			messageHandler->writeMessage("DEBUG", "Checking %10: " + it->first, vsid::MessageHandler::DebugArea::Dev);
 			if (!tstpln.IsValid())
 			{
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] is invalid", vsid::MessageHandler::DebugArea::Dev);
+				messageHandler->writeMessage("DEBUG", "[" + it->first + "] is invalid", vsid::MessageHandler::DebugArea::Dev);
 
 				auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
-				this->removeProcessed[callsign] = { now, true }; // assume fpln is disconnected for some reason, might come back
+				this->removeProcessed[it->first] = { now, true }; // assume fpln is disconnected for some reason, might come back
 				continue;
 			}
 
@@ -3355,13 +3357,15 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 				if (atcPos.DistanceTo(fplnPos) >= ControllerMyself().GetRange())
 				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] is further away than my range of NM " +
-												std::to_string(ControllerMyself().GetRange()), vsid::MessageHandler::DebugArea::Dev);
+					messageHandler->writeMessage("DEBUG", "[" + it->first + "] is further away than my range of NM " +
+						std::to_string(ControllerMyself().GetRange()), vsid::MessageHandler::DebugArea::Dev);
 
-					this->processed.erase(callsign);
-					if (this->removeProcessed.contains(callsign)) this->removeProcessed.erase(callsign);
+					if (this->removeProcessed.contains(it->first)) this->removeProcessed.erase(it->first);
+					it = this->processed.erase(it);
 				}
+				else ++it;
 			}
+			else ++it;
 		}
 	}
 	
