@@ -994,7 +994,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		}
 
 		std::string squawk = fpln.GetControllerAssignedData().GetSquawk();
-		if (squawk == "" || squawk == "0000" && !this->activeAirports[icao].settings["auto"])
+		if ((squawk == "" || squawk == "0000") && !this->activeAirports[icao].settings["auto"])
 		{
 			if (this->ccamsLoaded && !this->preferTopsky)
 			{
@@ -2390,7 +2390,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					}
 				}
 				
-				// sync states - DISABLED DUE TO UNKNOWN LOOP CAUSING ES TO STALL - REASON: Unlimited scratchpad entries and removals although not called
+				// sync states
 
 				if (fpln.GetClearenceFlag() || this->processed[fp.first].gndState != "")
 				{
@@ -2877,12 +2877,12 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 	if (this->processed.contains(callsign) &&
 		RadarTarget.GetGS() >= 50)
 	{
-		// check if a flightplan is not yet set to be removed after a timespan
-		if (!this->removeProcessed.contains(callsign))
+		// check if a flightplan is not yet set to be removed after a timespan - DISABLED, removed when out of vis range
+		/*if (!this->removeProcessed.contains(callsign))
 		{
 			auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 10 };
 			this->removeProcessed[callsign] = { now, false };
-		}
+		}*/
 
 		std::string icao = RadarTarget.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
 
@@ -2902,6 +2902,12 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 					jt = it->second.erase(jt);
 				}
 			}
+		}
+
+		// remove rwy remark if still present
+		if (vsid::fpln::findRemarks(RadarTarget.GetCorrelatedFlightPlan(), "VSID/RWY"))
+		{
+			vsid::fpln::removeRemark(RadarTarget.GetCorrelatedFlightPlan(), "VSID/RWY");
 		}
 	}
 }
@@ -3325,6 +3331,42 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 	//}
 	// END DEV
 	
+	// DEV
+
+	if (Counter % 10 == 0)
+	{
+		for (auto& [callsign, info] : this->processed)
+		{
+			EuroScopePlugIn::CFlightPlan tstpln = FlightPlanSelect(callsign.c_str());
+
+			if (!tstpln.IsValid())
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] is invalid", vsid::MessageHandler::DebugArea::Dev);
+
+				auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
+				this->removeProcessed[callsign] = { now, true }; // assume fpln is disconnected for some reason, might come back
+				continue;
+			}
+
+			if (tstpln.GetCorrelatedRadarTarget().GetGS() >= 50)
+			{
+				EuroScopePlugIn::CPosition atcPos = ControllerMyself().GetPosition();
+				EuroScopePlugIn::CPosition fplnPos = tstpln.GetCorrelatedRadarTarget().GetPosition().GetPosition();
+
+				if (atcPos.DistanceTo(fplnPos) >= ControllerMyself().GetRange())
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] is further away than my range of NM " +
+												std::to_string(ControllerMyself().GetRange()), vsid::MessageHandler::DebugArea::Dev);
+
+					this->processed.erase(callsign);
+					if (this->removeProcessed.contains(callsign)) this->removeProcessed.erase(callsign);
+				}
+			}
+		}
+	}
+	
+	// END DEV
+
 	// get info msgs printed to the chat area of ES
 	std::pair<std::string, std::string> msg = messageHandler->getMessage();
 	if (msg.first != "" && msg.second != "")
