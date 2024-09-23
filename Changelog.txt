@@ -4,8 +4,9 @@
 *	SID - list to manual select SID changed to show (and set) a rwy with the SID if no dep rwy has been set in the flightplan. If a dep rwy has been set only the SID avbl for that rwy are listed
 *	SID - ignoring equipment /T and /U (/L is assumed instead)
 *	SID - tagItem display change. EQUIP if the equipment check fails, WAYPOINT (the one which was found) if a manual selection is necessary, MANUAL if no SID could be found (e.g. no valid wpt in the flightplan)
-*	RWY - tagItem no displays "---" if a SID has to be manually selected
+*	RWY - tagItem now displays "---" if a SID has to be manually selected
 *	SQWK - squawk assignement together with setting a SID disabled in auto mode - CCAMS stalls with to fast requests
+*	GEN - internally stored infos are now removed after fpln is out of vis range (only lateral check possible, checked every 10 seconds). Was fixed after 10 mins before (no time based removal anymore)
 
 [Changelog v0.10.0]
 
