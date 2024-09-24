@@ -3345,8 +3345,12 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 			{
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] is invalid", vsid::MessageHandler::DebugArea::Dev);
 
-				auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
-				this->removeProcessed[it->first] = { now, true }; // assume fpln is disconnected for some reason, might come back
+				if (!this->removeProcessed.contains(it->first))
+				{
+					auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
+					this->removeProcessed[it->first] = { now, true }; // assume fpln is disconnected for some reason, might come back
+				}			
+				++it;
 				continue;
 			}
 
