@@ -52,7 +52,7 @@
 					"designator": "D",
                     "rwy": "24",
                     "initial": 5000,
-                    "climbvia": false,
+                    "climbvia": true,
                     "prio": 3
                 },
 				"7": {
