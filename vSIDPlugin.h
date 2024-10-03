@@ -41,7 +41,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.10.0";
+	const std::string pluginVersion = "0.10.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -254,6 +254,9 @@ namespace vsid
 		bool preferTopsky = false;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
+		// dev - see .cpp OnTime for further information
+		//std::set<std::string> sqwkQueue = {};
+		// end dev
 		/**
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens
