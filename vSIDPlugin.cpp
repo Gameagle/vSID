@@ -1350,12 +1350,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
 {
-	if (!FlightPlan.IsValid())
-	{
-		std::string callsign = FlightPlan.GetCallsign();
-		if (this->processed.contains(callsign)) this->processed.erase(callsign);
-		return;
-	}
+	if (!FlightPlan.IsValid()) return;
 
 	std::string callsign = FlightPlan.GetCallsign();
 	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
@@ -1546,12 +1541,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					}
 				}
 				if(!validWpt) strcpy_s(sItemString, 16, "");
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and atc.first is no SID: \"" + atcBlock.first + "\"", vsid::MessageHandler::DebugArea::Sid);
 			}
 			// processed flightplans are managed above - this is for already airborne flightplans after connecting
 			else if (!this->processed.contains(callsign) && atcBlock.first != "" && atcBlock.first != fplnData.GetOrigin())
 			{
 				*pRGB = this->configParser.getColor("customSidSuggestion");
 				strcpy_s(sItemString, 16, atcBlock.first.c_str());
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and unknown. SID: \"" + atcBlock.first + "\"", vsid::MessageHandler::DebugArea::Sid);
 			}
 		}
 	}
@@ -3338,15 +3335,13 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 	{
 		for (std::map<std::string, vsid::fpln::Info>::iterator it = this->processed.begin(); it != this->processed.end();)
 		{
-			EuroScopePlugIn::CFlightPlan tstpln = FlightPlanSelect(it->first.c_str());
+			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
 
-			messageHandler->writeMessage("DEBUG", "Checking %10: " + it->first, vsid::MessageHandler::DebugArea::Dev);
-			if (!tstpln.IsValid())
+			if (!fpln.IsValid())
 			{
-				messageHandler->writeMessage("DEBUG", "[" + it->first + "] is invalid", vsid::MessageHandler::DebugArea::Dev);
-
 				if (!this->removeProcessed.contains(it->first))
 				{
+					messageHandler->writeMessage("DEBUG", "[" + it->first + "] is invalid. Removal in 1 min.", vsid::MessageHandler::DebugArea::Dev);
 					auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
 					this->removeProcessed[it->first] = { now, true }; // assume fpln is disconnected for some reason, might come back
 				}			
@@ -3354,10 +3349,10 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				continue;
 			}
 
-			if (tstpln.GetCorrelatedRadarTarget().GetGS() >= 50)
+			if (fpln.GetCorrelatedRadarTarget().GetGS() >= 50)
 			{
 				EuroScopePlugIn::CPosition atcPos = ControllerMyself().GetPosition();
-				EuroScopePlugIn::CPosition fplnPos = tstpln.GetCorrelatedRadarTarget().GetPosition().GetPosition();
+				EuroScopePlugIn::CPosition fplnPos = fpln.GetCorrelatedRadarTarget().GetPosition().GetPosition();
 
 				if (atcPos.DistanceTo(fplnPos) >= ControllerMyself().GetRange())
 				{
@@ -3388,8 +3383,34 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 		for (auto it = this->removeProcessed.begin(); it != this->removeProcessed.end();)
 		{
+			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
+			if (it->second.second && fpln.IsValid())
+			{
+				messageHandler->writeMessage("DEBUG", "[" + it->first + "] valid again.", vsid::MessageHandler::DebugArea::Dev);
+				it = this->removeProcessed.erase(it);
+				continue;
+			}
+
 			if (now > it->second.first)
 			{
+				std::string icao = fpln.GetFlightPlanData().GetOrigin();
+				if (this->processed.contains(it->first) && this->processed[it->first].request && this->activeAirports.contains(icao))
+				{
+					for (auto it = this->activeAirports[icao].requests.begin(); it != this->activeAirports[icao].requests.end();++it)
+					{
+						for (auto jt = it->second.begin(); jt != it->second.end();)
+						{
+							if (jt->first == std::string(fpln.GetCallsign()))
+							{
+								messageHandler->writeMessage("DEBUG", "Erasing [" + jt->first + "] from request \"" + it->first + "\"", vsid::MessageHandler::Dev);
+								jt = it->second.erase(jt);
+								break;
+							}
+							else ++jt;
+						}
+					}
+				}
+				messageHandler->writeMessage("DEBUG", "[" + it->first + "] exceeded disconnection time. Dropping", vsid::MessageHandler::DebugArea::Dev);
 				std::erase_if(this->processed, [&](auto fpln) { return it->first == fpln.first; });
 				it = this->removeProcessed.erase(it);
 			}
