@@ -41,7 +41,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.10.0";
+	const std::string pluginVersion = "0.10.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -55,6 +55,18 @@ namespace vsid
 	public:
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
+
+		// DEV
+		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
+		inline std::set<std::string> getDepRwy(std::string icao)
+		{
+			if (this->activeAirports.contains(icao))
+			{
+				return this->activeAirports[icao].depRwys;
+			}
+			else return {};
+		}
+		// END DEV
 
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
@@ -174,7 +186,7 @@ namespace vsid
 		 * 
 		 * @param FlightPlan - ES flightplan object
 		 */
-		void syncStates(EuroScopePlugIn::CFlightPlan &FlightPlan);
+		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Radar Screen.
 		 */
@@ -242,6 +254,9 @@ namespace vsid
 		bool preferTopsky = false;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
+		// dev - see .cpp OnTime for further information
+		//std::set<std::string> sqwkQueue = {};
+		// end dev
 		/**
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens

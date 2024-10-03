@@ -1,3 +1,13 @@
+[Changelog v0.10.1]
+
+[CHANGED]
+*	SID - list to manual select SID changed to show (and set) a rwy with the SID if no dep rwy has been set in the flightplan. If a dep rwy has been set only the SID avbl for that rwy are listed
+*	SID - ignoring equipment /T and /U (/L is assumed instead)
+*	SID - tagItem display change. EQUIP if the equipment check fails, WAYPOINT (the one which was found) if a manual selection is necessary, MANUAL if no SID could be found (e.g. no valid wpt in the flightplan)
+*	RWY - tagItem now displays "---" if a SID has to be manually selected
+*	SQWK - squawk assignement together with setting a SID disabled in auto mode - CCAMS stalls with to fast requests
+*	GEN - internally stored infos are now removed after fpln is out of vis range (only lateral check possible, checked every 10 seconds). Was fixed at 10 mins before (no time based removal anymore unless invalid/disconnected)
+
 [Changelog v0.10.0]
 
 [NEW]
@@ -10,8 +20,11 @@
 *	Config - new config added with prominent RNAV capable acft due to many wrongly filed flightplans
 *	Screen - external functions or in-build (but not accessible) ES functions can now be called by fetching used radar screens (vSID needs to be allowed to draw on the screens)
 *	Screen - enabling ground state syncing with .vsid sync
+*	Screen - experimental implementation of own menu (for now tied to EDDF during testing)
+*	Requests - VFR request added for VFR flights that might be delayed due to traffic. Item is only shown for VFR flightplans
 
 [CHANGED]
+*	SID - tagItem - secondary value added. If an airborne acft has no SID set (SID/RWY) missing the first waypoint is displayed instead
 *	Debugging - Automatically prefexing debug area before debug message instead of individualizing each messsage
 *	Rules - Rules are now only skipped if a rule is active but not the one specified in the SID or if no rule is active at all
 *	Route cleaning - additionaly safety if a possibly wrongly filed flightplan would result in an empty route after cleaning. Now the original route is returned with a warning to the controller
@@ -21,6 +34,8 @@
 [FIXED]
 *	Rule - Rules where always ignored/skipped if a new flightplan came online. Fixed with the changes to the rule system
 *	Squawk - Default value 1234 is not displayed anymore
+*	SID - custom SID were not reset to default SID if the "auto function" (left click on SID item) was used
+*	SID - no error reporting for VFR flightplans if cleaning of the route would result in an empty route - cleaning is now stopped after a possible SID/RWY or ICAO/RWY block
 
 [Changelog v0.9.0]
 

@@ -74,7 +74,7 @@ jobs:
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path output
-        Compress-Archive -Path build\Release\vSID.dll, vSIDConfig.json -DestinationPath output/files.zip
+        Compress-Archive -Path build\Release\vSID.dll, vSIDConfig.json, RNAV_List.json -DestinationPath output/files.zip
 
     - name: Create second zip file (config folder)
       shell: pwsh
