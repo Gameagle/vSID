@@ -211,7 +211,15 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 	}
 	else vecEquip.clear(); // equipment not present
 
-	if (vecEquip.size() >= 2)
+	/* default state - if an aircraft is known rnav capable skip checks */
+	if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+			"] found in RNAV list. Returning \"SDE2E3FGIJ1RWY\"", vsid::MessageHandler::DebugArea::Sid);
+
+		return "SDE2E3FGIJ1RWY";
+		}
+	else if (vecEquip.size() >= 2)
 	{
 		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
 
@@ -221,16 +229,11 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		}
 		catch (std::out_of_range)
 		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign +
+				"] failed to get equipment, Nothing will be returned.", vsid::MessageHandler::DebugArea::Sid);
+
 			return "";
 		}
-	}
-	else if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign +
-			"] failed to get equipment, but found in RNAV list. Reported equipment \"" +
-			equip + "\"", vsid::MessageHandler::DebugArea::Sid);
-
-		return "SDE2E3FGIJ1RWY";
 	}
 	else if (cap != ' ')
 	{
@@ -241,7 +244,8 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		std::map<char, std::string> faaToIcao = {
 			// X disabled due to too many occurences with fplns that are RNAV capable
 			//{'X', "SF"},
-			{'T', "SF"}, {'U', "SF"},
+			// T and U also disabled and will default to L
+			// {'T', "SF"}, {'U', "SF"},
 			{'D', "SDF"}, {'B', "SDF"}, {'A', "SDF"},
 			{'M', "DFILTUV"}, {'N', "DFILTUV"}, {'P', "DFILTUV"},
 			{'Y', "SDFIRY"}, {'C', "SDFIRY"}, {'I', "SDFIRY"},
