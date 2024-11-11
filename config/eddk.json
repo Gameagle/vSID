@@ -53,14 +53,16 @@
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"7": {
 					"designator": "K",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"8": {
 					"designator": "E",
@@ -84,7 +86,8 @@
                     "rwy": "13R",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"11": {
 					"designator": "M",
@@ -108,7 +111,8 @@
                     "rwy": "31L",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 }
             },
             "KUMIK": {
@@ -165,14 +169,16 @@
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"8": {
 					"designator": "K",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"9": {
 					"designator": "E",
@@ -196,7 +202,8 @@
                     "rwy": "13R",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"12": {
 					"designator": "M",
@@ -220,7 +227,8 @@
                     "rwy": "31L",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 }
             },
 			"NVO": {
@@ -273,14 +281,16 @@
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+					"acftType": {"A388": false}
                 },
 				"8": {
 					"designator": "K",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+					"acftType": {"A388": false}
                 },
 				"9": {
 					"designator": "C",
@@ -318,7 +328,8 @@
                     "rwy": "13R",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"14": {
 					"designator": "M",
@@ -342,7 +353,8 @@
                     "rwy": "31L",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"17": {
 					"designator": "N",
@@ -365,7 +377,8 @@
                     "rwy": "24",
                     "initial": 5000,
 					"equip": {"NON-RNAV": true},
-                    "prio": 2
+                    "prio": 2,
+					"acftType": {"A388": false}
                 },
 				"20": {
 					"designator": "U",
@@ -373,7 +386,8 @@
                     "initial": 5000,
 					"climbvia": true,
 					"equip": {"NON-RNAV": true},
-                    "prio": 1
+                    "prio": 1,
+					"acftType": {"A388": false}
                 }
             },
 			"PODIP": {
@@ -430,14 +444,16 @@
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"8": {
 					"designator": "K",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"9": {
 					"designator": "E",
@@ -461,7 +477,8 @@
                     "rwy": "13R",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"12": {
 					"designator": "M",
@@ -485,7 +502,8 @@
                     "rwy": "31L",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 }
             },
 			"WYP": {
@@ -534,14 +552,16 @@
                     "rwy": "24",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"7": {
 					"designator": "K",
                     "rwy": "06",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 3
+                    "prio": 3,
+					"acftType": {"A388": false}
                 },
 				"8": {
 					"designator": "E",
@@ -565,7 +585,8 @@
                     "rwy": "13R",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"11": {
 					"designator": "M",
@@ -589,7 +610,8 @@
                     "rwy": "31L",
                     "initial": 5000,
                     "climbvia": true,
-                    "prio": 4
+                    "prio": 4,
+                    "wtc": "LM"
                 },
 				"14": {
 					"designator": "N",
@@ -612,14 +634,16 @@
                     "rwy": "24",
                     "initial": 5000,
 					"equip": {"NON-RNAV": true},
-                    "prio": 2
+                    "prio": 2,
+					"acftType": {"A388": false}
                 },
 				"17": {
 					"designator": "U",
                     "rwy": "06",
                     "initial": 5000,
 					"equip": {"NON-RNAV": true},
-                    "prio": 1
+                    "prio": 1,
+					"acftType": {"A388": false}
                 }
             }
         }

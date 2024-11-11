@@ -329,7 +329,7 @@
 					"designator": "T",
                     "rwy": "23L",
                     "initial": 5000,
-                    "climbvia": true,
+                    "climbvia": false,
                     "prio": 1
                 }
             },

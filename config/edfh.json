@@ -2,7 +2,7 @@
     "EDFH": {
         "elevation": 1649,
         "runways": "03,21",
-        "transAlt": 5000,
+        "transAlt": 6000,
         "maxInitialClimb": 7000,
         "appSI": "EIF,PFA,RUD,GIN,KTG",
         "sids": {
