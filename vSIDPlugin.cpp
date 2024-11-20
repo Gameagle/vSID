@@ -18,7 +18,7 @@
 #include <iostream> // for debugging in detectPlugins()
 // END DEV
 
-vsid::VSIDPlugin* vsidPlugin;
+vsid::VSIDPlugin* vsidPlugin; // pointer needed for ES
 
 vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, pluginName.c_str(), pluginVersion.c_str(), pluginAuthor.c_str(), pluginCopyright.c_str()) {
 
@@ -27,6 +27,9 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	this->configParser.loadGrpConfig();
 	this->configParser.loadRnavList();
 	this->gsList = "STUP,PUSH,TAXI,DEPA";
+
+	/* takes over pointer control of vsidPlugin - no deletion needed for unloading*/
+	this->shared = std::shared_ptr<vsid::VSIDPlugin>(this);
 
 	messageHandler->setLevel("INFO");
 	
@@ -52,7 +55,10 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
 }
 
-vsid::VSIDPlugin::~VSIDPlugin() {};
+vsid::VSIDPlugin::~VSIDPlugin()
+{
+	messageHandler->writeMessage("DEBUG", "VSIDPlugin destroyed.", vsid::MessageHandler::DebugArea::Menu);
+};
 
 /*
 * BEGIN OWN FUNCTIONS
@@ -77,25 +83,15 @@ void vsid::VSIDPlugin::detectPlugins()
 			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
 			{
 				std::string modname = szModName;
-				
-				/*if (modname.find("SYSTEM32") != std::string::npos ||
-					modname.find("System32") != std::string::npos ||
-					modname.find("system32") != std::string::npos) continue;
-				
-				size_t pos = modname.find_last_of("\\");
-				if (pos == std::string::npos) continue;
-				modname = modname.substr(pos + 1);*/
 
 				//if (modname == "CCAMS.dll")
 				if (modname.find("CCAMS.dll") != std::string::npos)
 				{
-					messageHandler->writeMessage("INFO", "[TEMP] ccams plugin found.");
 					this->ccamsLoaded = true;
 				}
 				//if (modname == "TopSky.dll")
 				if (modname.find("TopSky.dll") != std::string::npos)
 				{
-					messageHandler->writeMessage("INFO", "[TEMP] topsky plugin found.");
 					this->topskyLoaded = true;
 				}
 			}
@@ -132,6 +128,7 @@ std::string vsid::VSIDPlugin::findSidWpt(EuroScopePlugIn::CFlightPlanData Flight
 	}
 
 	// continue checks if esWpt hasn't been returned
+
 	std::set<std::string> sidWpts = {};
 
 	for (const vsid::Sid &sid : this->activeAirports[FlightPlanData.GetOrigin()].sids)
@@ -1035,9 +1032,27 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan FlightPlan)
 EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated)
 {
 	this->screenId++;
-	this->radarScreens.insert({ this->screenId, new vsid::Display(this->screenId, this) });
+	this->radarScreens.insert({ this->screenId, std::make_shared<vsid::Display>(this->screenId, this->shared) });
 
-	return this->radarScreens.at(this->screenId);
+	messageHandler->writeMessage("DEBUG", "Screen created with id: " + std::to_string(this->screenId), vsid::MessageHandler::DebugArea::Menu);
+	for (auto [id, screen] : this->radarScreens)
+	{
+		messageHandler->writeMessage("DEBUG", "radarScreens id: " + std::to_string(id) + " screen valid: " + 
+			((this->radarScreens.at(id)) ? "true" : "false"), vsid::MessageHandler::DebugArea::Menu);
+	}
+
+	try
+	{
+		if (this->radarScreens.at(this->screenId)) return this->radarScreens.at(this->screenId)->getRadarScreen();
+		else return nullptr;
+	}
+	catch (std::out_of_range)
+	{
+		messageHandler->writeMessage("ERROR", "Failed to return Radar Screen with id: " + std::to_string(this->screenId));
+		return nullptr;
+	}
+
+	return nullptr;
 }
 
 void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, POINT Pt, RECT Area) {
@@ -3061,10 +3076,16 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 
 void vsid::VSIDPlugin::OnAirportRunwayActivityChanged()
 {
-	//dev only
+	// dev
 	this->detectPlugins();
 	// end dev
+
 	this->UpdateActiveAirports();
+
+	for (auto& [id, screen] : this->radarScreens)
+	{
+		screen->OnAirportRunwayActivityChanged();
+	}
 }
 
 void vsid::VSIDPlugin::UpdateActiveAirports()
@@ -3384,7 +3405,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		for (auto it = this->removeProcessed.begin(); it != this->removeProcessed.end();)
 		{
 			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
-			if (it->second.second && fpln.IsValid())
+			if (it->second.second && fpln.IsValid()) /////////// idea: add check if in range as fpln would be dropped anyways if outside
 			{
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] valid again.", vsid::MessageHandler::DebugArea::Dev);
 				it = this->removeProcessed.erase(it);
@@ -3419,15 +3440,69 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 	}
 }
 
+void vsid::VSIDPlugin::deleteScreen(int id)
+{
+	messageHandler->writeMessage("DEBUG", "(deleteScreen) size: " + std::to_string(this->radarScreens.size()), vsid::MessageHandler::DebugArea::Menu);
+	for (auto [id, screen] : this->radarScreens)
+	{
+		messageHandler->writeMessage("DEBUG", "(deleteScreen) present id: " + std::to_string(id) + " is valid: " +
+			((this->radarScreens.at(id) ? "true" : "false")), vsid::MessageHandler::DebugArea::Menu);
+	}
+
+	if (this->radarScreens.contains(id))
+	{
+		messageHandler->writeMessage("DEBUG", "(deleteScreen) Removing id: " + std::to_string(id) + " use count: " +
+			std::to_string(this->radarScreens.at(id).use_count()), vsid::MessageHandler::DebugArea::Menu);
+		this->radarScreens.erase(id);
+	}
+	else
+	{
+		messageHandler->writeMessage("DEBUG", "(deleteScreen) id: " + std::to_string(id) + " is unknown.", vsid::MessageHandler::DebugArea::Menu);
+	}
+
+	messageHandler->writeMessage("DEBUG", "(deleteScreen) size after deletion: " + std::to_string(this->radarScreens.size()), vsid::MessageHandler::DebugArea::Menu);
+}
+
+void vsid::VSIDPlugin::callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
+	int FunctionId)
+	// POINT Pt, RECT Area
+{
+	if (this->radarScreens.size() > 0)
+	{
+		// check all avbl screens and use the first valid one
+
+		/*for (const std::pair<const int, std::shared_ptr<vsid::Display>>& radarScreen : this->radarScreens)*/
+		for (const auto &[id, screen] : this->radarScreens)
+		{
+			/*if (radarScreen.second)*/
+			if (screen)
+			{
+				screen->StartTagFunction(sCallsign, sItemPlugInName, ItemCode, sItemString, sFunctionPlugInName, FunctionId, POINT(), RECT());
+				break;
+			}
+			else messageHandler->writeMessage("ERROR", "Couldn't call ext func for [" + std::string(sCallsign) + "] as the screen (id: " +
+											std::to_string(id) + ") couldn't be called.");
+		}
+	}
+}
+
 /*
 * END ES FUNCTIONS
 */
 
+// DEV
+void vsid::VSIDPlugin::exit()
+{
+	this->radarScreens.clear();
+	this->shared.reset();
+}
+// END DEV
+
 void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
 {
 	// create the instance
+
 	*ppPlugInInstance = vsidPlugin = new vsid::VSIDPlugin();
-	//*ppPlugInInstance = vsidApp.vsidPlugin = new vsid::VSIDPlugin();
 }
 
 
@@ -3435,7 +3510,7 @@ void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlu
 
 void __declspec (dllexport) EuroScopePlugInExit(void)
 {
-	// delete the instance
-	delete vsidPlugin;
-	//delete vsidApp.vsidPlugin;
+	/* no deletion of vsidPlugin needed - ownership taken over by this->shared */
+
+	vsidPlugin->exit();
 }

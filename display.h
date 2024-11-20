@@ -23,34 +23,73 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "es/EuroScopePlugIn.h"
-#include "vSIDPlugin.h" // needed to delete stored pointers
 #include "menu.h"
 
 #include <gdiplus.h>
 #include <map>
-
-
-
+#include <memory>
 
 namespace vsid
 {
+	class VSIDPlugin; // forward declaration
+
 	class Display : public EuroScopePlugIn::CRadarScreen
 	{
 	public:
-		Display(int id, vsid::VSIDPlugin* plugin);
+		//Display(int id, vsid::VSIDPlugin* plugin);
+
+		/**
+		 * @brief standard constructor
+		 * 
+		 * @param id - internal id to distinguish multiple displays
+		 * @param plugin - reference to the "main" plugin
+		 */
+		Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin);
+
+		/**
+		 * @brief copy constructor
+		 * 
+		 * @param other - object to copy from
+		 */
+		Display(vsid::Display& other) noexcept : id(other.id), plugin(other.plugin) {};
+
+		/**
+		 * @brief move constructor
+		 * 
+		 * @param other - object to move
+		 */
+		Display(vsid::Display&& other) noexcept : id(other.id), plugin(other.plugin) {};
 		virtual ~Display();
 
-		inline void OnAsrContentToBeClosed() {
-			for (auto& [title, menu] : this->menues) delete menu;
-			this->menues.clear();
+		/* ES Functions*/
 
-			this->plugin->deleteScreen(this->id);
-			delete this; 
-		}
-
+		void OnAsrContentToBeClosed();
 		void OnRefresh(HDC hDC, int Phase);
 		void OnMoveScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, bool Released);
+		void OnClickScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, int Button);
 		bool OnCompileCommand(const char* sCommandLine);
+
+		/* Own Functions*/
+
+		/**
+		 * @brief will be called from main plugin whenever the same function there is called
+		 */
+		void OnAirportRunwayActivityChanged();
+
+		/**
+		 * @brief opens main menu or creates it if it doesn't exist
+		 * 
+		 * @param top - initial top position
+		 * @param left - initial left position
+		 */
+		void openMainMenu(int top = -1, int left = -1);
+		void openStartupMenu(const std::string &apt, const std::string parent);
+
+		void closeMenu(const std::string& title);
+		void removeMenu(const std::string& title);
+
+		inline EuroScopePlugIn::CRadarScreen* getRadarScreen() { return this; };
+		
 
 	private:
 
@@ -58,18 +97,16 @@ namespace vsid
 		const static COLORREF defaultBg = RGB(130, 150, 140);
 		const static COLORREF defaultTxt = RGB(255, 255, 255);
 
-
 		struct padding
 		{
 			int top;
-			int left;
 			int right;
 			int bottom;
+			int left;
 		};
 
-		std::map<std::string, vsid::Menu*> menues;
-
+		std::map<std::string, vsid::Menu> menues;;
 		int id;
-		vsid::VSIDPlugin* plugin;
+		std::weak_ptr<vsid::VSIDPlugin> plugin;
 	};
 }
