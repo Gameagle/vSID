@@ -486,7 +486,9 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 					validEquip = false;
 					continue;
 				}
-				if ((equip.find_first_of("GRI") != std::string::npos || equip == "") && pbn != "")
+
+				/*if (equip.find_first_of("GRI") != std::string::npos || equip == "" || pbn != "")*/
+				if (equip.find_first_of("GRI") != std::string::npos || pbn != "")
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 						"\" because only NON-RNAV is allowed, but RNAV ('G', 'R' or 'I') was found in equipment \"" + equip +

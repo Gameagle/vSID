@@ -2,9 +2,14 @@
 
 [NEW]
 *	MENU - menu is now opened with command .vsid menu
+*	MENU - left click on a "submenu" opens in the same window (window before is hidden). right click opens in a new window (window before remains)
+*	GEN - data exchange between information from ES classes that do not have access to the same information
 
 [CHANGED]
 *	MENU - extensive rewrite of menu. New menu is self adjusting and self adapting. Startup counter for all active dep rwys for all act apts. More features coming later
+
+[FIXED]
+*	SID - RNAV aircraft wouldn't skip NON-RNAV sids if PBN wasn't filled. Now NON-RNAV sids are skipped with presence of G, R or I in the equipment or if PBN isn't empty
 
 [REMOVED]
 *	MENU - .vsid startup command removed
