@@ -44,3 +44,6 @@ const int TAG_ITEM_VSID_REQTIMER = 645;
 const int MENU = 100;
 const int MENU_TEXT = 110;
 const int MENU_BUTTON = 120;
+const int MENU_BUTTON_CLOSE = 121;
+const int MENU_TOP_BAR = 111;
+const int MENU_BOTTOM_BAR = 112;
