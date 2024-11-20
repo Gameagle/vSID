@@ -1,3 +1,14 @@
+[Changelog v0.11.0]
+
+[NEW]
+*	MENU - menu is now opened with command .vsid menu
+
+[CHANGED]
+*	MENU - extensive rewrite of menu. New menu is self adjusting and self adapting. Startup counter for all active dep rwys for all act apts. More features coming later
+
+[REMOVED]
+*	MENU - .vsid startup command removed
+
 [Changelog v0.10.1]
 
 [CHANGED]
