@@ -10,6 +10,7 @@
 
 [FIXED]
 *	SID - RNAV aircraft wouldn't skip NON-RNAV sids if PBN wasn't filled. Now NON-RNAV sids are skipped with presence of G, R or I in the equipment or if PBN isn't empty
+*	SID - multiple runways are considered now and checked if active, before the first found runway was chosen although possibly not active (no problem before as only single runway configs present)
 
 [REMOVED]
 *	MENU - .vsid startup command removed

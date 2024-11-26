@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <string>
 #include <map>
+#include <vector>
 
 namespace vsid
 {
@@ -32,12 +33,12 @@ namespace vsid
 	public:
 
 		Sid(std::string base = "", std::string waypoint = "", std::string id = "", std::string number = "", std::string designator = "",
-			std::string rwy = "", std::map<std::string, bool> equip = {}, int initialClimb = 0, bool climbvia = false, int prio = 99,
+			std::vector<std::string> rwys = {}, std::map<std::string, bool> equip = {}, int initialClimb = 0, bool climbvia = false, int prio = 99,
 			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
 			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0, std::map<std::string, bool> dest = {},
 			std::string customRule = "", std::string area = "", int lvp = -1,
 			int timeFrom = -1, int timeTo = -1) : base(base), waypoint(waypoint), id(id), number(number), designator(designator),
-			rwy(rwy), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
+			rwys(rwys), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
 			pilotfiled(pilotfiled), actArrRwy(actArrRwy), actDepRwy(actDepRwy), wtc(wtc), engineType(engineType),
 			acftType(acftType), engineCount(engineCount), mtow(mtow), dest(dest),
 			customRule(customRule), area(area), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo) {};
@@ -47,7 +48,7 @@ namespace vsid
 		std::string id;
 		std::string number;
 		std::string designator;
-		std::string rwy;
+		std::vector<std::string> rwys;
 		/**
 		first - std::string - equipment code
 		second - bool - mandatory (true) or forbidden (false)
@@ -81,12 +82,15 @@ namespace vsid
 		 * 
 		 */
 		std::string idName() const;
-		/**
-		 * @brief Gets the runway associated with a sid
-		 *
-		 * @return runway if single or first runway if multiple
-		 */
-		std::string getRwy() const;
+
+		//************************************
+		// Method:    getRwys
+		// FullName:  vsid::Sid::getRwys
+		// Access:    public 
+		// Returns:   std::vector<std::string> - might be an empty vector for no rwys or single element for one rwy
+		// Qualifier: const
+		//************************************
+		std::vector<std::string> getRwys() const;
 		/**
 		 * @brief Checks if a SID object is empty (base is checked)
 		 *

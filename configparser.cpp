@@ -254,7 +254,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::string wpt = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wpt", base));
                                 std::string id = sidWpt.key();
                                 std::string desig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
-                                std::string rwys = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", "");
+                                std::vector<std::string> rwys = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", ""), ',');
                                 std::map<std::string, bool> equip = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("equip", std::map<std::string, bool>{});
                                 
                                 // updating equipment codes to upper case if in lower case
