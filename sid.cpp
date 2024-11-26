@@ -12,9 +12,9 @@ std::string vsid::Sid::idName() const
 	return (this->empty()) ? "" : this->base + this->number + this->designator + " (ID: " + this->id + ")";
 }
 
-std::string vsid::Sid::getRwy() const
+std::vector<std::string> vsid::Sid::getRwys() const
 {
-	return vsid::utils::split(this->rwy, ',').at(0);
+	return this->rwys;
 }
 
 bool vsid::Sid::empty() const
