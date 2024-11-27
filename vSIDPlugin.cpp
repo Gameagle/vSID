@@ -704,7 +704,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 			else restriction = true;
 		}
 
-		// skip if destination restrictions present and flightplan doesn't match
+		// skip if destination restrictions present and flight plan doesn't match
 
 		if (!currSid.dest.empty())
 		{
@@ -726,6 +726,199 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan FlightPlan, 
 				continue;
 			}
 
+		}
+
+		// skip if route restrictions present and flight plan doesn't match
+
+		if (!currSid.route.empty())
+		{
+			if (currSid.route.contains("allow"))
+			{
+				bool validRoute = false;
+				for (const auto& [_, route] : currSid.route["allow"])
+				{
+					std::vector<std::string>::iterator startPos;
+
+					try
+					{
+						startPos = std::find(filedRoute.begin(), filedRoute.end(), route.at(0));
+
+						if (startPos == filedRoute.end()) messageHandler->writeMessage("DEBUG", "[" + callsign + "] skipping SID \"" +
+															currSid.idName() + "\" route checking for " + vsid::utils::join(route, ' ') +
+															" because first mandatory wpt " + route.at(0) +
+															" was not found in route", vsid::MessageHandler::DebugArea::Sid);
+					}
+					catch (std::out_of_range)
+					{
+						messageHandler->writeMessage("ERROR", "Failed to get first position for allowed route in SID " +
+							currSid.idName() + " checking SID route \"" + vsid::utils::join(route, ' ') + "\"");
+					}
+
+					bool lastMatch = false;
+					bool allowSkip = false;
+					bool stopRoute = false;
+
+					for (const std::string& wpt : route)
+					{
+						if (stopRoute) break;
+
+						if (wpt == std::string("..."))
+						{
+							allowSkip = true;
+							continue;
+						}
+
+						for (std::vector<std::string>::iterator it = startPos; it != filedRoute.end();)
+						{
+							if (*it == std::string("DCT"))
+							{
+								startPos++;
+								it++;
+								continue;
+							}
+
+							messageHandler->writeMessage("DEBUG", "[" + callsign + "] checking mand. wpt " + wpt +
+								" vs. " + *it, vsid::MessageHandler::DebugArea::Sid);
+							if (wpt == *it)
+							{
+								allowSkip = false;
+								lastMatch = true;
+								startPos++;
+								break;
+							}
+							else if (allowSkip)
+							{
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] skipping wpt " + *it +
+									" as skipping is allowed", vsid::MessageHandler::DebugArea::Sid);
+								lastMatch = false;
+								it++;
+								startPos++;
+								continue;
+							}
+							else
+							{
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] mismatch between mand. wpt " +
+									wpt + " vs. " + *it + ". Aborting", vsid::MessageHandler::DebugArea::Sid);
+								lastMatch = false;
+								stopRoute = true;
+								break;
+							}
+						}
+					}
+
+					if (lastMatch)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] mand. route in " + currSid.idName() +
+							" was found. Accepting.", vsid::MessageHandler::DebugArea::Sid);
+						validRoute = true;
+						break;
+					}
+				}
+				if (!validRoute)
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] skipping SID \"" +
+						currSid.idName() + "\" because none of the allowed routes matched", vsid::MessageHandler::DebugArea::Sid);
+
+					continue;
+				}
+			}
+
+			if (currSid.route.contains("deny"))
+			{
+				bool invalidRoute = false;
+
+				for (const auto& [_, route] : currSid.route["deny"])
+				{
+					std::vector<std::string>::iterator startPos;
+
+					try
+					{
+						startPos = std::find(filedRoute.begin(), filedRoute.end(), route.at(0));
+
+						if (startPos == filedRoute.end())
+						{
+							messageHandler->writeMessage("DEBUG", "[" + callsign + "] accepting SID " +
+								currSid.idName() + " because first waypoint of denied route wasn't found", vsid::MessageHandler::DebugArea::Sid);
+
+							break;
+						}
+					}
+					catch (std::out_of_range)
+					{
+						messageHandler->writeMessage("ERROR", "Failed to get first position for denied route in SID " +
+							currSid.idName() + " checking SID route \"" + vsid::utils::join(route, ' ') + "\"");
+					}
+
+					bool lastMatch = false;
+					bool allowSkip = false;
+					bool stopRoute = false;
+
+					for (const std::string& wpt : route)
+					{
+						if (stopRoute) break;
+
+						if (wpt == std::string("..."))
+						{
+							allowSkip = true;
+							continue;
+						}
+
+						for (std::vector<std::string>::iterator it = startPos; it != filedRoute.end();)
+						{
+							if (*it == std::string("DCT"))
+							{
+								startPos++;
+								it++;
+								continue;
+							}
+
+							messageHandler->writeMessage("DEBUG", "[" + callsign + "] checking forb. wpt " + wpt +
+								" vs. " + *it, vsid::MessageHandler::DebugArea::Sid);
+							if (wpt == *it)
+							{
+								allowSkip = false;
+								lastMatch = true;
+								startPos++;
+								break;
+							}
+							else if (allowSkip)
+							{
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] skipping wpt " + *it +
+									" as it is allowed", vsid::MessageHandler::DebugArea::Sid);
+
+								lastMatch = false;
+								it++;
+								startPos++;
+								continue;
+							}
+							else
+							{
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] mismatch between forb. wpt " +
+									wpt + " vs. " + *it + ". Aborting", vsid::MessageHandler::DebugArea::Sid);
+								lastMatch = false;
+								stopRoute = true;
+								break;
+							}
+						}
+					}
+
+					if (lastMatch)
+					{
+						invalidRoute = true;
+						break;
+					}
+				}
+
+				if (invalidRoute)
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] skipping SID \"" +
+						currSid.idName() + "\" because a denied route matched", vsid::MessageHandler::DebugArea::Sid);
+
+					continue;
+				}
+				else messageHandler->writeMessage("DEBUG", "[" + callsign + "] accepting SID \"" +
+					currSid.idName() + "\" because no denied route matched", vsid::MessageHandler::DebugArea::Sid);
+			}
 		}
 
 		// skip if sid has night times set but they're not active
@@ -876,7 +1069,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 		sidCustomSuggestion.base = "";
 	}
 
-	// determine dep rwy base on suggested SIDs
+	// determine dep rwy based on suggested SIDs
 	if (sidSuggestion.base != "" && sidCustomSuggestion.base == "")
 	{
 		try
