@@ -4,6 +4,7 @@
 *	MENU - menu is now opened with command .vsid menu
 *	MENU - left click on a "submenu" opens in the same window (window before is hidden). right click opens in a new window (window before remains)
 *	GEN - data exchange between information from ES classes that do not have access to the same information
+*	SID - routing restriction option added. Skipping of route parts is possible if a start and an end point should be checked. "allow" route refers to mandatory route and "deny" to forbidden route.
 
 [CHANGED]
 *	MENU - extensive rewrite of menu. New menu is self adjusting and self adapting. Startup counter for all active dep rwys for all act apts. More features coming later
