@@ -263,6 +263,8 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 {
 	messageHandler->writeMessage("DEBUG", "[MENU] Activity Changed()", vsid::MessageHandler::DebugArea::Menu);
 
+	if (this->menues.empty()) return;
+
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
 	{
 		messageHandler->writeMessage("DEBUG", "[MENU] Shared Ptr valid.", vsid::MessageHandler::DebugArea::Menu);
@@ -310,6 +312,9 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 				{
 					messageHandler->writeMessage("DEBUG", "[" + title + "] reopening startup menu", vsid::MessageHandler::DebugArea::Menu);
 					std::string apt = vsid::utils::split(title, '_').at(1);
+
+					if (!sharedPlugin->getActiveApts().contains(apt)) continue;
+
 					this->openStartupMenu(apt, config.parent, config.render, config.topLeft.y, config.topLeft.x);
 				}
 				catch (std::out_of_range)
