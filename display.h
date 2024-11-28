@@ -1,7 +1,7 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
 The aim auf vSID is to ease the work of any controller that edits and assigns
-SIDs to flightplans.
+SIDs to flight plans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
 Repo @ https://github.com/Gameagle/vSID
@@ -82,12 +82,38 @@ namespace vsid
 		 * @param top - initial top position
 		 * @param left - initial left position
 		 */
-		void openMainMenu(int top = -1, int left = -1);
-		void openStartupMenu(const std::string &apt, const std::string parent);
+		void openMainMenu(int top = -1, int left = -1, bool render = true);
 
+		/**
+		 * @brief opens startup menu or creates it if it doesn't exist
+		 * 
+		 * @param apt - upper string ICAO
+		 * @param parent - title of parent menu
+		 * @note test
+		 */
+		void openStartupMenu(const std::string &apt, const std::string parent, bool render = true);
+
+		/**
+		 * @brief closes specified menu
+		 * 
+		 * @param title of menu to close
+		 */
 		void closeMenu(const std::string& title);
+
+		/**
+		 * @brief deletes (destroys) the specified menu
+		 * 
+		 * @param title of menu to remove
+		 */
 		void removeMenu(const std::string& title);
 
+		
+		//************************************
+		// Method:    getRadarScreen
+		// FullName:  vsid::Display::getRadarScreen
+		// Access:    public 
+		// Returns:   EuroScopePlugIn::CRadarScreen* - Display deprived from CRadarScreen
+		//************************************
 		inline EuroScopePlugIn::CRadarScreen* getRadarScreen() { return this; };
 		
 
