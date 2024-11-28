@@ -307,9 +307,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                             std::vector<std::string> configRoute =
                                                 vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("allow").value(routeId, ""), ',');
 
-                                            route["allow"].insert({ routeId, configRoute });
+                                            if(!configRoute.empty()) route["allow"].insert({ routeId, configRoute });
                                         }
-                                        //route["allow"] = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("allow", ""), ',');
                                     }
                                    
 									if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").contains("deny"))
@@ -320,22 +319,30 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											std::vector<std::string> configRoute =
 												vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("deny").value(routeId, ""), ',');
 
-											route["deny"].insert({ routeId, configRoute });
+                                            if(!configRoute.empty()) route["deny"].insert({ routeId, configRoute });
 										}
-										//route["allow"] = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("allow", ""), ',');
 									}
+                                    // DEV
                                     messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] route found.", vsid::MessageHandler::DebugArea::Dev);
-                                    for (auto const& [id, allowRoute] : route["allow"])
+
+                                    if (route.contains("allow"))
                                     {
-                                        messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] allow (ID: " +
-                                            id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
+										for (auto const& [id, allowRoute] : route["allow"])
+										{
+											messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] allow (ID: " +
+												id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
+										}
                                     }
 
-									for (auto const& [id, denyRoute] : route["deny"])
-									{
-										messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] deny (ID: " +
-											id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-									}
+                                    if (route.contains("deny"))
+                                    {
+										for (auto const& [id, denyRoute] : route["deny"])
+										{
+											messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] deny (ID: " +
+												id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
+										}
+                                    }
+                                    // END DEV
                                 }
                                 /*std::map<std::string, std::vector<std::string>> route =
                                     this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("route", std::map<std::string, std::vector<std::string>>{});*/
