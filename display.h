@@ -91,7 +91,7 @@ namespace vsid
 		 * @param parent - title of parent menu
 		 * @note test
 		 */
-		void openStartupMenu(const std::string &apt, const std::string parent, bool render = true);
+		void openStartupMenu(const std::string apt, const std::string parent, bool render = true, int top = 0, int left = 0);
 
 		/**
 		 * @brief closes specified menu
@@ -131,7 +131,29 @@ namespace vsid
 			int left;
 		};
 
-		std::map<std::string, vsid::Menu> menues;;
+		struct storedStartup
+		{
+			CPoint topLeft;
+			std::string parent;
+			bool render;
+		};
+
+		// ************************************
+		// Stores menues
+		// 
+		// Access:   private
+		// Parameter std::string - title of menu
+		// Parameter vsid::Menu - menu object
+		// ************************************
+		std::map<std::string, vsid::Menu> menues;
+		// ************************************
+		// Stores old render states of startup menu to re-enable them after rwy change
+		// 
+		// Access:    private
+		// Parameter std::string - name of startup menu
+		// Parameter bool - render state of menu
+		// ************************************
+		std::map<std::string, vsid::Display::storedStartup> reopenStartup;
 		int id;
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
 	};

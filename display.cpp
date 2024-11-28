@@ -273,17 +273,54 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 		int left = -1;
 		bool render = false;
 
-		if (this->menues.contains("mainmenu"))
+		for (const auto&[title,menu] : this->menues)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + title + "] is checked on runway change", vsid::MessageHandler::DebugArea::Menu);
+			if (title == std::string("mainmenu"))
+			{
+				CPoint topLeft = this->menues["mainmenu"].topLeft();
+				top = topLeft.y;
+				left = topLeft.x;
+				render = this->menues["mainmenu"].getRender();
+			}
+			else if (title.find("startupmenu_") != std::string::npos)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + title + "] storing startup menu", vsid::MessageHandler::DebugArea::Menu);
+				this->reopenStartup.insert({title, { menu.topLeft(), menu.getParent(), menu.getRender() }});
+			}
+		}
+
+		/*if (this->menues.contains("mainmenu"))
 		{
 			CPoint topLeft = this->menues["mainmenu"].topLeft();
 			top = topLeft.y;
 			left = topLeft.x;
 			render = this->menues["mainmenu"].getRender();
-		}
+		}*/
 
 		this->removeMenu("mainmenu");
 
 		this->openMainMenu(top, left, render);
+
+		if (!this->reopenStartup.empty())
+		{
+			for (const auto& [title, config] : this->reopenStartup)
+			{
+				try
+				{
+					messageHandler->writeMessage("DEBUG", "[" + title + "] reopening startup menu", vsid::MessageHandler::DebugArea::Menu);
+					std::string apt = vsid::utils::split(title, '_').at(1);
+					this->openStartupMenu(apt, config.parent, config.render, config.topLeft.y, config.topLeft.x);
+				}
+				catch (std::out_of_range)
+				{
+					messageHandler->writeMessage("ERROR", "Failed to get apt ICAO while re-opening startup menu \"" + title + "\"");
+				}
+				
+			}
+
+			this->reopenStartup.clear();
+		}
 	}
 	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed.");
 }
@@ -328,7 +365,7 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
 }
 
-void vsid::Display::openStartupMenu(const std::string& apt, const std::string parent, bool render)
+void vsid::Display::openStartupMenu(const std::string apt, const std::string parent, bool render, int top, int left)
 {
 	std::string title = "startupmenu_" + apt;
 
@@ -340,16 +377,16 @@ void vsid::Display::openStartupMenu(const std::string& apt, const std::string pa
 
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
 	{
-		int top = 0;
-		int left = 0;
+		/*int top = 0;
+		int left = 0;*/
 
-		if (this->menues.contains(parent))
+		if (this->menues.contains(parent) && top == 0 && left == 0)
 		{
 			top = this->menues[parent].topLeft().y;
 			left = this->menues[parent].topLeft().x;
 		}
 
-		vsid::Menu newMenu = { MENU, title, parent, top, left, 60, 50, true, 2 };
+		vsid::Menu newMenu = { MENU, title, parent, top, left, 60, 50, render, 2 };
 
 		newMenu.addText(MENU_TOP_BAR, title, newMenu.getTopBar(), "Startup", 20, 20, 400, { 5,5,5,5 });
 
