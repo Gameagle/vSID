@@ -271,22 +271,24 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 
 		int top = -1;
 		int left = -1;
+		bool render = false;
 
 		if (this->menues.contains("mainmenu"))
 		{
 			CPoint topLeft = this->menues["mainmenu"].topLeft();
 			top = topLeft.y;
 			left = topLeft.x;
+			render = this->menues["mainmenu"].getRender();
 		}
 
 		this->removeMenu("mainmenu");
 
-		this->openMainMenu(top, left);
+		this->openMainMenu(top, left, render);
 	}
 	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed.");
 }
 
-void vsid::Display::openMainMenu(int top, int left)
+void vsid::Display::openMainMenu(int top, int left, bool render)
 {
 	if (this->menues.contains("mainmenu"))
 	{
@@ -311,7 +313,7 @@ void vsid::Display::openMainMenu(int top, int left)
 	}
 	
 
-	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, true, 1};
+	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
 
 	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
 
@@ -326,7 +328,7 @@ void vsid::Display::openMainMenu(int top, int left)
 	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
 }
 
-void vsid::Display::openStartupMenu(const std::string& apt, const std::string parent)
+void vsid::Display::openStartupMenu(const std::string& apt, const std::string parent, bool render)
 {
 	std::string title = "startupmenu_" + apt;
 
