@@ -38,13 +38,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "configparser.h"
 #include "utils.h"
 
+
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.10.1";
+	const std::string pluginVersion = "0.11.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
+
+	class Display; // forward declaration
 
 	/**
 	 * @brief Main class communicating with ES
@@ -56,7 +59,6 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
-		// DEV
 		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
 		inline std::set<std::string> getDepRwy(std::string icao)
 		{
@@ -66,7 +68,8 @@ namespace vsid
 			}
 			else return {};
 		}
-		// END DEV
+		
+		inline std::map<std::string, vsid::Airport> getActiveApts() { return this->activeAirports; };
 
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
@@ -196,13 +199,14 @@ namespace vsid
 		 * 
 		 * @param id of the pointer
 		 */
-		inline void deleteScreen(int id) {
-			if (this->radarScreens.contains(id))
-			{
-				this->radarScreens.at(id) = nullptr;
-				this->radarScreens.erase(id);
-			}
-		}
+		void deleteScreen(int id);
+
+		/**
+		 * @brief missing explanation
+		 * 
+		 */
+		void exit();
+
 		/**
 		 * @brief Calling ES StartTagFunction with a reference to any of the stored (valid) screens
 		 * 
@@ -215,23 +219,8 @@ namespace vsid
 		 * @param Pt - mouse position
 		 * @param Area - area covered by tag item
 		 */
-		inline void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
-								int FunctionId)
-			// POINT Pt, RECT Area
-		{
-			if (this->radarScreens.size() > 0)
-			{
-				// check all avbl screens and use the first valid one
-				for (const std::pair<const int, EuroScopePlugIn::CRadarScreen*> &radarScreen : this->radarScreens)
-				{
-					if (radarScreen.second != nullptr)
-					{
-						radarScreen.second->StartTagFunction(sCallsign, sItemPlugInName, ItemCode, sItemString, sFunctionPlugInName, FunctionId, POINT(), RECT());
-						break;
-					}
-				}
-			}
-		}
+		void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
+			int FunctionId);
 		
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
@@ -254,16 +243,18 @@ namespace vsid
 		bool preferTopsky = false;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
-		// dev - see .cpp OnTime for further information
-		//std::set<std::string> sqwkQueue = {};
-		// end dev
 		/**
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens
 		 */
-		std::map<int, EuroScopePlugIn::CRadarScreen*> radarScreens = {};
 
+		std::map<int, std::shared_ptr<vsid::Display>> radarScreens = {};
 		int screenId = 0;
+		/**
+		 * @brief pointer to plugin itself for data exchange and control of loading/unloading
+		 */
+		std::shared_ptr<vsid::VSIDPlugin> shared;
+
 		/**
 		 * @brief Loads and updates the active airports with available configs
 		 *

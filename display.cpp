@@ -1,15 +1,35 @@
 #include "pch.h"
 
 #include "display.h"
+#include "vSIDPlugin.h" // forward declaration
 #include "constants.h"
 #include "messageHandler.h"
+#include "utils.h"
 
-vsid::Display::Display(int id, vsid::VSIDPlugin *plugin) : EuroScopePlugIn::CRadarScreen()
+#include <utility>
+
+vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin) : EuroScopePlugIn::CRadarScreen()
 { 
 	this->id = id;
 	this->plugin = plugin;
 }
-vsid::Display::~Display() {}
+vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed display with id: " + std::to_string(this->id), vsid::MessageHandler::DebugArea::Menu); }
+
+ void vsid::Display::OnAsrContentToBeClosed()
+{
+	// for (auto& [title, menu] : this->menues) delete menu; // re-evaluate
+	this->menues.clear();
+
+	if (std::shared_ptr sharedPlugin = this->plugin.lock())
+	{
+		messageHandler->writeMessage("DEBUG", "Removing display with id: " + std::to_string(this->id) + " from saved displays.", vsid::MessageHandler::DebugArea::Menu);
+		sharedPlugin->deleteScreen(this->id);
+	}
+	else messageHandler->writeMessage("ERROR", "Could not remove display id: " + std::to_string(this->id) +
+		" from vSID as vSID is already destroyed.");
+	
+	//delete this;
+}
 
 void vsid::Display::OnRefresh(HDC hDC, int Phase)
 {
@@ -20,89 +40,137 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 	for (auto &[title, mMenu] : this->menues)
 	{
-		if (mMenu->getRender())
+		if (mMenu.getRender())
 		{
-			HPEN borderPen = CreatePen(PS_SOLID, 1, mMenu->getBorder());
-			HBRUSH bgBrush = CreateSolidBrush(mMenu->getBg());
+			CPen borderPen = { PS_SOLID, 1, mMenu.getBorder() };
+			CBrush bgBrush = { mMenu.getBg() };
 
-			dc.SelectObject(borderPen);
-			dc.SelectObject(bgBrush);
+			CPen* oldPen = dc.SelectObject(&borderPen);
+			CBrush* oldBgBrush = dc.SelectObject(&bgBrush);
 
-			dc.Rectangle(mMenu->getArea());
+			dc.Rectangle(mMenu.getTopBar());
+			dc.FillRect(mMenu.getArea(), &bgBrush);
+			dc.MoveTo(mMenu.getArea().left, mMenu.getArea().top);
+			dc.LineTo(mMenu.getArea().left, mMenu.getArea().bottom);
+			dc.MoveTo(mMenu.getArea().right - 1, mMenu.getArea().top);
+			dc.LineTo(mMenu.getArea().right - 1, mMenu.getArea().bottom);
+			dc.Rectangle(mMenu.getBotBar());
 
-			std::set<std::string> depRwys;
+			dc.SelectObject(oldPen);
+			dc.SelectObject(oldBgBrush);
 
-			for (const std::string& rwy : this->plugin->getDepRwy("EDDF"))
-			{
-				if (rwy.find("25") != std::string::npos) depRwys.insert("25");
-				if (rwy.find("07") != std::string::npos) depRwys.insert("07");
-				if (rwy.find("18") != std::string::npos) depRwys.insert("18");
-			}
+			this->AddScreenObject(MENU_TOP_BAR, title.c_str(), mMenu.getTopBar(), true, "");
 
-			for (auto &[title, txt] : mMenu->getTexts())
+			CFont font;
+			LOGFONT lgfont;
+			memset(&lgfont, 0, sizeof(LOGFONT));
+
+			CFont* oldFont = dc.SelectObject(&font);
+			
+			// dev - for test rect around txt
+			/*CBrush borderBrush = { RGB(255,0,0) };
+			CBrush* oldBorderBrush = dc.SelectObject(&borderBrush);*/
+			// end dev
+
+			for (auto &[title, txt] : mMenu.getTexts())
 			{
 				if (!txt.render) continue;
 
-				messageHandler->writeMessage("DEBUG", "Text work on " + txt.title, vsid::MessageHandler::DebugArea::Menu);
-
-				CFont font;
-				LOGFONT lgfont;
-
-				memset(&lgfont, 0, sizeof(LOGFONT));
-
-				if (txt.title == "toprwy")
+				if (lgfont.lfHeight != txt.height || lgfont.lfWeight != txt.weight)
 				{
-					if (depRwys.contains("25")) txt.txt = "25";
-					else if (depRwys.contains("07")) txt.txt = "07";
-					else txt.txt = "";
-				}
-				if (txt.title == "bottomrwy")
-				{
-					if (depRwys.contains("18")) txt.txt = "18";
-					else txt.txt = "";
-				}
+					font.DeleteObject();
 
-				lgfont.lfHeight = txt.height;
-				lgfont.lfWeight = txt.weight;
-				font.CreateFontIndirect(&lgfont);
+					lgfont.lfHeight = txt.height;
+					lgfont.lfWeight = txt.weight;
 
-				dc.SelectObject(font);
+					font.CreateFontIndirectA(&lgfont);
+
+					dc.SelectObject(&font);
+				}
+				
 				dc.SetTextColor(txt.textColor);
 
-				int startup2507 = 0;
-				int startup18 = 0;
-				for (std::pair<const std::string, vsid::fpln::Info>& fp : this->plugin->getProcessed())
+				if (txt.title.find("depcount_") != std::string::npos)
 				{
-
-					EuroScopePlugIn::CFlightPlan fpln = this->plugin->FlightPlanSelect(fp.first.c_str());
-					if (std::string(fpln.GetGroundState()) != "")
+					int depCount = 0;
+					try
 					{
-						if (this->plugin->RadarTargetSelect(fp.first.c_str()).GetGS() >= 50) continue;
-						if (std::string(fpln.GetGroundState()) == "ARR") continue;
+						std::string depRwy = vsid::utils::split(txt.title, '_').at(1);
 
-						std::string deprwy = fpln.GetFlightPlanData().GetDepartureRwy();
+						if (std::shared_ptr sharedPlugin = this->plugin.lock())
+						{
+							for (auto &[callsign, info] : sharedPlugin->getProcessed())
+							{
+								EuroScopePlugIn::CFlightPlan fpln = sharedPlugin->FlightPlanSelect(callsign.c_str());
 
-						messageHandler->writeMessage("DEBUG", fp.first + " groundstate: \"" +
-							std::string(this->plugin->FlightPlanSelect(fp.first.c_str()).GetGroundState()) + "\"" + ", deprwy: " +
-							deprwy, vsid::MessageHandler::DebugArea::Menu);
+								if (std::string(fpln.GetGroundState()) != "")
+								{
+									if (sharedPlugin->RadarTargetSelect(callsign.c_str()).GetGS() >= 50) continue;
+									if (std::string(fpln.GetGroundState()) == "ARR") continue;
 
-						if (deprwy.find("25") != std::string::npos && depRwys.contains("25")) startup2507++;
-						if (deprwy.find("07") != std::string::npos && depRwys.contains("07")) startup2507++;
-						if (deprwy.find("18") != std::string::npos && depRwys.contains("18")) startup18++;
+									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
 
+									if (depRwy == fplnRwy) depCount++;
+								}
+							}
+						}
+
+						txt.txt = std::to_string(depCount);
+					}
+					catch (std::out_of_range)
+					{
+						txt.txt = "N/A";
 					}
 				}
 
-				if (txt.title == "toprwy") dc.DrawText(std::string(txt.txt + ": " + std::to_string(startup2507)).c_str(), &txt.area, DT_LEFT);				
-				if (txt.title == "bottomrwy") dc.DrawText(std::string(txt.txt + ": " + std::to_string(startup18)).c_str(), &txt.area, DT_LEFT);
+				dc.DrawText(txt.txt.c_str(), &txt.area, DT_CENTER);
 
-				DeleteObject(font);
+				// dev - test rect around txt
+				/*dc.FrameRect(&txt.area, &borderBrush);*/
+				// end dev
 			}
-			
-			DeleteObject(borderPen);
-			DeleteObject(bgBrush);
 
-			this->AddScreenObject(MENU, title.c_str(), mMenu->getArea(), true, "");
+			for (auto& [title, btn] : mMenu.getBtns())
+			{
+				if (!btn.render) continue;
+
+				if (lgfont.lfHeight != btn.height || lgfont.lfWeight != btn.weight)
+				{
+					font.DeleteObject();
+
+					lgfont.lfHeight = btn.height;
+					lgfont.lfWeight = btn.weight;
+
+					font.CreateFontIndirectA(&lgfont);
+
+					dc.SelectObject(&font);
+				}
+
+				dc.SetTextColor(btn.textColor);
+
+				dc.DrawText(btn.label.c_str(), &btn.area, DT_CENTER);
+
+				// dev - test rect around txt
+				/*dc.FrameRect(&btn.area, &borderBrush);*/
+				// end dev
+
+				if (btn.type == MENU_BUTTON_CLOSE)
+				{
+					CBrush btnBg = { RGB(0, 0, 0) };
+					CBrush* oldBtnBg = dc.SelectObject(&btnBg);
+
+					dc.FillRect(btn.area, &btnBg);
+
+					dc.SelectObject(oldBtnBg);
+				}
+
+				this->AddScreenObject(btn.type, title.c_str(), btn.area, false, "");
+			}
+			dc.SelectObject(oldFont);
+
+			// dev - remove test rect around txt
+			/*dc.SelectObject(oldBorderBrush);*/
+			// end dev
 		}
 	}
 	dc.Detach();
@@ -110,48 +178,250 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 void vsid::Display::OnMoveScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, bool Released)
 {
-	if (this->menues.contains(sObjectId))
-	{
-		int difLeft = Area.left - this->menues[sObjectId]->getArea().left;
-		int difTop = Area.top - this->menues[sObjectId]->getArea().top;
-		int difBot = Area.bottom - this->menues[sObjectId]->getArea().bottom;
-		int difRight = Area.right - this->menues[sObjectId]->getArea().right;
-
-		this->menues[sObjectId]->resize(Area.top, Area.left, Area.right, Area.bottom);
-
-		for(auto &[title, txt] : this->menues[sObjectId]->getTexts())
-		{
-			txt.area.left += difLeft;
-			txt.area.top += difTop;
-			txt.area.right += difRight;
-			txt.area.bottom += difBot;
-		}
-	}
+	if (this->menues.contains(sObjectId)) this->menues[sObjectId].move(ObjectType, Area);
 
 	this->RequestRefresh();
 }
 
+void vsid::Display::OnClickScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, int Button)
+{
+	if (ObjectType == MENU_BUTTON)
+	{
+		bool newWindow = (Button == EuroScopePlugIn::BUTTON_RIGHT) ? true : false;
+		
+		if (std::string(sObjectId).find("apt") != std::string::npos)
+		{
+			try
+			{
+				std::string icao = vsid::utils::split(sObjectId, '_').at(1);
+
+				/*if (this->menues.contains(sObjectId)) -------- IMPLEMENT BACK LATER WHEN AIRPORT MENUS ARE ACTIVE - MAINMENU FOR NOW*/ 
+				if(this->menues.contains("mainmenu"))
+				{
+					/*this->openStartupMenu(icao, this->menues[sObjectId].getTitle()); 
+					*if (!newWindow) this->menues[this->menues[sObjectId].getTitle()].toggleRender();
+					*-------- SEE ABOVE*/
+
+					if (!newWindow) this->menues["mainmenu"].toggleRender();
+					this->openStartupMenu(icao, "mainmenu");
+				}
+				else
+				{
+					messageHandler->writeMessage("DEBUG", "menus doesn't contain " + std::string(sObjectId) + " elems are:", vsid::MessageHandler::DebugArea::Menu);
+					for (auto &[title, _] : this->menues)
+					{
+						messageHandler->writeMessage("DEBUG", "menu title: " + title, vsid::MessageHandler::DebugArea::Menu);
+					}
+				}
+				
+
+				//if (!this->menues.contains("startupmenu_" + icao))
+				//{
+
+				//	/// - NO VALIDATION YET
+				//	/// - IMPLEMENT CHECK FOR PARENT MENU
+				//	/// - IMPLEMENT CHECK FOR PARENT MENU FOR SUBMENU
+
+				//	CPoint topLeft = this->menues["mainmenu"].topLeft(); 
+				//	
+				//}
+			}
+			catch (std::out_of_range) {}
+		}
+	}
+	else if (ObjectType == MENU_BUTTON_CLOSE)
+	{
+		try
+		{
+			std::string objectId = sObjectId;
+
+			if (std::size_t pos = objectId.find("_close"); pos != std::string::npos)
+			{
+				this->closeMenu(objectId.erase(pos, objectId.length() - 1));
+			}			
+		}
+		catch (std::out_of_range)
+		{
+			messageHandler->writeMessage("ERROR", "Couldn't close menu, because menu title couldn't be extracted from button " + std::string(sObjectId));
+		}
+		
+	}
+}
+
 bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 {
-	if (std::string(sCommandLine) == ".vsid startup")
+	if (std::string(sCommandLine) == ".vsid menu")
 	{
-		messageHandler->writeMessage("DEBUG", "Startup triggered.", vsid::MessageHandler::DebugArea::Dev);
-
-		if (!this->menues.contains("mainmenu"))
-		{
-			CRect rArea = this->GetRadarArea();
-
-			vsid::Menu* newMenu = new vsid::Menu(MENU, "mainmenu", rArea.bottom - 100, rArea.right - 200, 60, 50, true);
-			newMenu->addText(MENU_TEXT, "toprwy", "", 10, 10, 50, 20, 400, true);
-			newMenu->addText(MENU_TEXT, "bottomrwy", "", 10, 0, 50, 20, 400, true, "toprwy");
-
-			newMenu->update();
-
-			this->menues.insert({ newMenu->getTitle(), newMenu });
-		}
-		else this->menues["mainmenu"]->toggleRender();
+		this->openMainMenu();
 
 		return true;
 	}
 	return false;
+}
+
+void vsid::Display::OnAirportRunwayActivityChanged()
+{
+	messageHandler->writeMessage("DEBUG", "[MENU] Activity Changed()", vsid::MessageHandler::DebugArea::Menu);
+
+	if (std::shared_ptr sharedPlugin = this->plugin.lock())
+	{
+		messageHandler->writeMessage("DEBUG", "[MENU] Shared Ptr valid.", vsid::MessageHandler::DebugArea::Menu);
+
+		// re-create mainmenu
+
+		int top = -1;
+		int left = -1;
+		bool render = false;
+
+		for (const auto&[title,menu] : this->menues)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + title + "] is checked on runway change", vsid::MessageHandler::DebugArea::Menu);
+			if (title == std::string("mainmenu"))
+			{
+				CPoint topLeft = this->menues["mainmenu"].topLeft();
+				top = topLeft.y;
+				left = topLeft.x;
+				render = this->menues["mainmenu"].getRender();
+			}
+			else if (title.find("startupmenu_") != std::string::npos)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + title + "] storing startup menu", vsid::MessageHandler::DebugArea::Menu);
+				this->reopenStartup.insert({title, { menu.topLeft(), menu.getParent(), menu.getRender() }});
+			}
+		}
+
+		/*if (this->menues.contains("mainmenu"))
+		{
+			CPoint topLeft = this->menues["mainmenu"].topLeft();
+			top = topLeft.y;
+			left = topLeft.x;
+			render = this->menues["mainmenu"].getRender();
+		}*/
+
+		this->removeMenu("mainmenu");
+
+		this->openMainMenu(top, left, render);
+
+		if (!this->reopenStartup.empty())
+		{
+			for (const auto& [title, config] : this->reopenStartup)
+			{
+				try
+				{
+					messageHandler->writeMessage("DEBUG", "[" + title + "] reopening startup menu", vsid::MessageHandler::DebugArea::Menu);
+					std::string apt = vsid::utils::split(title, '_').at(1);
+					this->openStartupMenu(apt, config.parent, config.render, config.topLeft.y, config.topLeft.x);
+				}
+				catch (std::out_of_range)
+				{
+					messageHandler->writeMessage("ERROR", "Failed to get apt ICAO while re-opening startup menu \"" + title + "\"");
+				}
+				
+			}
+
+			this->reopenStartup.clear();
+		}
+	}
+	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed.");
+}
+
+void vsid::Display::openMainMenu(int top, int left, bool render)
+{
+	if (this->menues.contains("mainmenu"))
+	{
+		this->menues["mainmenu"].toggleRender();
+		return;
+	}
+
+	int initTop = 0;
+	int initLeft = 0;
+
+	if (top == -1 || left == -1)
+	{
+		CRect rArea = this->GetRadarArea();
+
+		initTop = rArea.bottom - 100;
+		initLeft = rArea.right - 200;
+	}
+	else
+	{
+		initTop = top;
+		initLeft = left;
+	}
+	
+
+	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
+
+	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
+
+	for (auto& [title, apt] : this->plugin.lock()->getActiveApts())
+	{
+		messageHandler->writeMessage("DEBUG", "Button add for apt: " + title);
+		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
+	}
+
+	newMenu.update();
+
+	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
+}
+
+void vsid::Display::openStartupMenu(const std::string apt, const std::string parent, bool render, int top, int left)
+{
+	std::string title = "startupmenu_" + apt;
+
+	if (this->menues.contains(title))
+	{
+		this->menues[title].toggleRender();
+		return;
+	}
+
+	if (std::shared_ptr sharedPlugin = this->plugin.lock())
+	{
+		/*int top = 0;
+		int left = 0;*/
+
+		if (this->menues.contains(parent) && top == 0 && left == 0)
+		{
+			top = this->menues[parent].topLeft().y;
+			left = this->menues[parent].topLeft().x;
+		}
+
+		vsid::Menu newMenu = { MENU, title, parent, top, left, 60, 50, render, 2 };
+
+		newMenu.addText(MENU_TOP_BAR, title, newMenu.getTopBar(), "Startup", 20, 20, 400, { 5,5,5,5 });
+
+		for (const std::string& depRwy : sharedPlugin->getDepRwy(apt))
+		{
+			newMenu.addText(MENU_TEXT, "dep_" + depRwy, newMenu.getArea(), depRwy, 20, 20, 400, { 5,5,5,5, });
+			newMenu.addText(MENU_TEXT, "depcount_" + depRwy, newMenu.getArea(), "", 20, 20, 400, { 5,5,5,5 }, "dep_" + depRwy);
+		}
+
+		newMenu.addText(MENU_BOTTOM_BAR, "startupicao", newMenu.getBotBar(), apt, 20, 20, 400, { 5,5,5,5 });
+
+		newMenu.update();
+
+		if (this->menues.contains(parent)) this->menues[parent].addSubmenu(title);
+
+		this->menues.insert({ title, std::move(newMenu) });
+	}
+	else messageHandler->writeMessage("ERROR", "Tried to create startup menu for [" + apt + "] but plugin couldn't be accessed.");
+}
+
+void vsid::Display::removeMenu(const std::string &title)
+{
+	if (this->menues.contains(title))
+	{
+		for (const std::string& subTitle : this->menues[title].getSubmenues())
+		{
+			if (this->menues.contains(subTitle)) this->removeMenu(subTitle);
+		}
+		this->menues.erase(title);
+	}
+	else messageHandler->writeMessage("ERROR", "Called to remove menu [" + title + "] but it wasn't found in the menues list.");
+}
+
+void vsid::Display::closeMenu(const std::string &title)
+{
+	if (this->menues.contains(title)) this->menues[title].toggleRender();
+	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title + " because it is not in the menu list.");
 }
