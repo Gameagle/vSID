@@ -254,7 +254,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::string wpt = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wpt", base));
                                 std::string id = sidWpt.key();
                                 std::string desig = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("designator", "");
-                                std::string rwys = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", "");
+                                std::vector<std::string> rwys = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("rwy", ""), ',');
                                 std::map<std::string, bool> equip = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("equip", std::map<std::string, bool>{});
                                 
                                 // updating equipment codes to upper case if in lower case
@@ -290,10 +290,55 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 }
                                 std::string wtc = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wtc", "");
                                 std::string engineType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineType", "");
-                                std::map<std::string, bool> acftType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("acftType", std::map<std::string, bool>{});
+                                std::map<std::string, bool> acftType =
+                                    this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("acftType", std::map<std::string, bool>{});
                                 int engineCount = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineCount", 0);
                                 int mtow = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("mtow", 0);
-                                std::map<std::string, bool> dest = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
+                                std::map<std::string, bool> dest =
+                                    this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
+                                std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
+                                if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("route"))
+                                {
+                                    if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").contains("allow"))
+                                    {
+                                        for (const auto& id : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("allow").items())
+                                        {
+                                            std::string routeId = id.key();
+                                            std::vector<std::string> configRoute =
+                                                vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("allow").value(routeId, ""), ',');
+
+                                            route["allow"].insert({ routeId, configRoute });
+                                        }
+                                        //route["allow"] = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("allow", ""), ',');
+                                    }
+                                   
+									if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").contains("deny"))
+									{
+										for (const auto& id : this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("deny").items())
+										{
+											std::string routeId = id.key();
+											std::vector<std::string> configRoute =
+												vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").at("deny").value(routeId, ""), ',');
+
+											route["deny"].insert({ routeId, configRoute });
+										}
+										//route["allow"] = vsid::utils::split(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("allow", ""), ',');
+									}
+                                    messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] route found.", vsid::MessageHandler::DebugArea::Dev);
+                                    for (auto const& [id, allowRoute] : route["allow"])
+                                    {
+                                        messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] allow (ID: " +
+                                            id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
+                                    }
+
+									for (auto const& [id, denyRoute] : route["deny"])
+									{
+										messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] deny (ID: " +
+											id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
+									}
+                                }
+                                /*std::map<std::string, std::vector<std::string>> route =
+                                    this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("route", std::map<std::string, std::vector<std::string>>{});*/
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
@@ -303,7 +348,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 
                                 vsid::Sid newSid = { base, wpt, id, "", desig, rwys, equip, initial, via, prio,
                                                     pilotfiled, actArrRwy, actDepRwy, wtc, engineType, acftType, engineCount,
-                                                    mtow, dest, customRule, area, lvp,
+                                                    mtow, dest, route, customRule, area, lvp,
                                                     timeFrom, timeTo };
                                 apt.second.sids.push_back(newSid);
                                 if (newSid.timeFrom != -1 && newSid.timeTo != -1) apt.second.timeSids.push_back(newSid);

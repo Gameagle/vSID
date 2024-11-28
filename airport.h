@@ -124,5 +124,21 @@ namespace vsid
 					return wpt == sid.waypoint;
 				});
 		}
+
+		//************************************
+		// Method:    isDepRwy
+		// FullName:  vsid::Airport::isDepRwy
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier: const
+		// Parameter: const std::string & rwy - the runway to check
+		// Parameter: bool arrAsDep - if arr runways should count as dep rwy
+		//************************************
+		inline bool isDepRwy(const std::string& rwy, bool arrAsDep = false) const
+		{
+			if (depRwys.contains(rwy)) return true;
+			else if (arrAsDep == true && arrRwys.contains(rwy)) return true;
+			else return false;
+		}
 	};
 }
