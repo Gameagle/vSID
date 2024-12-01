@@ -1,3 +1,9 @@
+[Changelog v0.11.1]
+
+[FIXED]
+
+*	SID - if a flightplan was amended it was saved that the rwy was set by atc, although there might not be a rwy in the flight plan. Might fix automode not setting SID/IC when areas are active
+
 [Changelog v0.11.0]
 
 [NEW]
