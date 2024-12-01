@@ -265,6 +265,7 @@ namespace vsid {
 		 */
 		void move(int type, RECT& Area);
 		inline std::string getTitle() const { return this->title; };
+		inline std::string getParent() const { return this->parent; };
 		inline bool getRender() const { return this->render; };
 		inline COLORREF getBg() const { return this->bg; };
 		inline COLORREF getBorder() const { return this->border; };
