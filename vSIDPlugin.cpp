@@ -2695,7 +2695,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		}
 		else if (vsid::utils::tolower(command[1]) == "req")
 		{
-			if (command.size() == 3)
+			if (command.size() >= 3)
 			{
 				std::string icao = vsid::utils::toupper(command[2]);
 
@@ -2707,20 +2707,53 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				std::ostringstream ss;
 
-				for (auto& req : this->activeAirports[icao].requests)
+				if (command.size() == 3)
 				{
-					for (std::set<std::pair<std::string, long long>>::iterator it = req.second.begin(); it != req.second.end();)
+					for (auto& req : this->activeAirports[icao].requests)
 					{
-						ss << it->first;
-						++it;
-						if (it != req.second.end()) ss << ", ";
+						for (std::set<std::pair<std::string, long long>>::iterator it = req.second.begin(); it != req.second.end();)
+						{
+							ss << it->first;
+							++it;
+							if (it != req.second.end()) ss << ", ";
+						}
+						if (ss.str().size() == 0) ss << "No requests.";
+						messageHandler->writeMessage("INFO", "[" + icao + "] " + req.first + " requests: " + ss.str());
+						ss.str("");
+						ss.clear();
 					}
-					if (ss.str().size() == 0) ss << "No requests.";
-					messageHandler->writeMessage("INFO", "[" + icao + "] " + req.first + " requests: " + ss.str());
-					ss.str("");
-					ss.clear();
+				}
+				else if (command.size() == 4)
+				{
+					bool failedReset = false;
+					for (auto& [_, reqList] : this->activeAirports[icao].requests)
+					{
+						reqList.clear();
+
+						if (reqList.size() != 0) failedReset = true;
+					}
+
+					if (!failedReset) messageHandler->writeMessage("INFO", icao +
+						" all requests have been cleared.");
+					else messageHandler->writeMessage("INFO", icao + " failed to reset requests.");
+				}
+				else if (command.size() == 5)
+				{
+					std::string req = vsid::utils::tolower(command[4]);
+
+					if (!this->activeAirports[icao].requests.contains(req))
+					{
+						messageHandler->writeMessage("INFO", "Unknown request queue \"" + req + "\"");
+						return true;
+					}
+					else this->activeAirports[icao].requests[req].clear();
+
+					if (this->activeAirports[icao].requests[req].size() == 0) messageHandler->writeMessage("INFO", icao +
+						" request queue \"" + req + "\" reset");
+					else messageHandler->writeMessage("INFO", icao + " request queue \"" + req + "\" failed to reset");
 				}
 			}
+			else messageHandler->writeMessage("INFO", "Missing parameters for request command");
 
 			return true;
 		}
