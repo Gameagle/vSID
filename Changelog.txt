@@ -1,5 +1,8 @@
 [Changelog v0.11.1]
 
+[NEW]
+*	REQ - added a reset function for the airport (.vsid req ICAO reset) or for single queues (.vsid req ICAO reset startup) (#222)
+
 [FIXED]
 
 *	SID - if a flight plan was amended it was saved that the rwy was set by atc, although there might not be a rwy in the flight plan. Might fix automode not setting SID/IC when areas are active (#241)
