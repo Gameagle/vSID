@@ -2,7 +2,8 @@
 
 [FIXED]
 
-*	SID - if a flightplan was amended it was saved that the rwy was set by atc, although there might not be a rwy in the flight plan. Might fix automode not setting SID/IC when areas are active
+*	SID - if a flight plan was amended it was saved that the rwy was set by atc, although there might not be a rwy in the flight plan. Might fix automode not setting SID/IC when areas are active (#241)
+*	SID - remarks were not deleted in LFXX package. Turns out with EDXX package scratchpad entries are received in uppercase, which doesn't seem to be the default. Fixed to work in both scenarios (#244)
 
 [Changelog v0.11.0]
 

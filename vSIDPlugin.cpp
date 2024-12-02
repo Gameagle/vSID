@@ -2928,14 +2928,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	if (!this->activeAirports.contains(icao)) return;
 
-	std::string scratchpad = cad.GetScratchPadString();
-
-	// DEV
-	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] scratchpad: \"" + scratchpad + "\"", vsid::MessageHandler::DebugArea::Dev);
-	}
-	// END DEV
+	std::string scratchpad = vsid::utils::toupper(cad.GetScratchPadString());
 
 	if (this->processed.contains(callsign) && scratchpad.size() > 0)
 	{
@@ -2983,6 +2976,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				this->processed[callsign].gndState = "LINEUP";
 			}
 			/* the following states are internally saved by ES gnd state changes, we just remove here */
+
 			if (scratchpad.find(".VSID_REQ_") == std::string::npos)
 			{
 				if (scratchpad.find("STUP") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "STUP");
@@ -3005,6 +2999,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					long long reqTime = std::stoll(req.at(1));
 
 					// clear all possible requests before setting a new one
+
 					for (auto it = this->activeAirports[icao].requests.begin(); it != this->activeAirports[icao].requests.end();++it)
 					{
 						for (std::set<std::pair<std::string, long long>>::iterator jt = it->second.begin(); jt != it->second.end();)
@@ -3039,11 +3034,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				size_t pos = scratchpad.find(toFind);
 
 				bool clrf = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
-
-				// DEV
-				std::string sclrf = clrf ? "TRUE" : "FALSE";
-				vsid::messageHandler->writeMessage("DEBUG", "Scratchpad clrf: " + sclrf, vsid::MessageHandler::DebugArea::Dev);
-				// END DEV
 
 				if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
 																			callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG);

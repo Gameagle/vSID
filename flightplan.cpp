@@ -180,21 +180,18 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 	std::string callsign = FlightPlan.GetCallsign();
 	std::string scratch = cad.GetScratchPadString();
-	size_t pos = scratch.find(vsid::utils::toupper(toRemove));
+	size_t pos = vsid::utils::toupper(scratch).find(vsid::utils::toupper(toRemove));
 
 	if (pos != std::string::npos)
 	{
-		std::string newScratch = scratch.substr(0, pos);
+		vsid::utils::trim(scratch.erase(pos, toRemove.length()));
 
-		if (newScratch != scratch)
-		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
-										"\". New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
+			"\". New scratch : \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Req);
 
-			return cad.SetScratchPadString(vsid::utils::trim(newScratch).c_str());
-		}
+		return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 	}
-	return false; // default / fallback state
+	return false; // default / fall back state
 }
 
 std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
