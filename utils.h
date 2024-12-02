@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <ranges>
 
 namespace vsid
 {
@@ -54,7 +55,7 @@ namespace vsid
 		 */
 		std::string trim(const std::string& string);
 		/**
-		 * @brief Splits a string based on a given delimeter
+		 * @brief Splits a string based on a given delimiter
 		 *
 		 * @param string
 		 * @param del - delimiter
@@ -78,7 +79,7 @@ namespace vsid
 		 */
 		std::string join(const std::set<std::string>& toJoin, const char del = ' ');
 		/**
-		 * @brief Splits a string based on spaces - splits again for '/' delimeter. Used to vectorize the filed route - WILL BE DELETED
+		 * @brief Splits a string based on spaces - splits again for '/' delimiter. Used to vectorize the filed route - WILL BE DELETED
 		 *
 		 * @param string
 		 * @return std::vector<std::string>
@@ -126,5 +127,20 @@ namespace vsid
 		 * @return uppercase input
 		 */
 		std::string toupper(std::string input);
+
+		//************************************
+		// Method:    contains
+		// FullName:  vsid::utils::contains
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: const R & range - object container, e.g. std::vector
+		// Parameter: const T & value - value to search for
+		//************************************
+		template<std::ranges::range R, typename T>
+		bool contains(const R& range, const T& value)
+		{
+			return std::ranges::find(range, value) != std::ranges::end(range);
+		}
 	}
 }

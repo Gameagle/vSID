@@ -180,21 +180,18 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 	std::string callsign = FlightPlan.GetCallsign();
 	std::string scratch = cad.GetScratchPadString();
-	size_t pos = scratch.find(vsid::utils::toupper(toRemove));
+	size_t pos = vsid::utils::toupper(scratch).find(vsid::utils::toupper(toRemove));
 
 	if (pos != std::string::npos)
 	{
-		std::string newScratch = scratch.substr(0, pos);
+		vsid::utils::trim(scratch.erase(pos, toRemove.length()));
 
-		if (newScratch != scratch)
-		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
-										"\". New scratch : \"" + newScratch + "\"", vsid::MessageHandler::DebugArea::Req);
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
+			"\". New scratch : \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Req);
 
-			return cad.SetScratchPadString(vsid::utils::trim(newScratch).c_str());
-		}
+		return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 	}
-	return false; // default / fallback state
+	return false; // default / fall back state
 }
 
 std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
@@ -211,7 +208,15 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 	}
 	else vecEquip.clear(); // equipment not present
 
-	if (vecEquip.size() >= 2)
+	/* default state - if an aircraft is known rnav capable skip checks */
+	if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign +
+			"] found in RNAV list. Returning \"SDE2E3FGIJ1RWY\"", vsid::MessageHandler::DebugArea::Sid);
+
+		return "SDE2E3FGIJ1RWY";
+		}
+	else if (vecEquip.size() >= 2)
 	{
 		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
 
@@ -221,16 +226,11 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		}
 		catch (std::out_of_range)
 		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign +
+				"] failed to get equipment, Nothing will be returned.", vsid::MessageHandler::DebugArea::Sid);
+
 			return "";
 		}
-	}
-	else if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign +
-			"] failed to get equipment, but found in RNAV list. Reported equipment \"" +
-			equip + "\"", vsid::MessageHandler::DebugArea::Sid);
-
-		return "SDE2E3FGIJ1RWY";
 	}
 	else if (cap != ' ')
 	{
@@ -241,7 +241,8 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 		std::map<char, std::string> faaToIcao = {
 			// X disabled due to too many occurences with fplns that are RNAV capable
 			//{'X', "SF"},
-			{'T', "SF"}, {'U', "SF"},
+			// T and U also disabled and will default to L
+			// {'T', "SF"}, {'U', "SF"},
 			{'D', "SDF"}, {'B', "SDF"}, {'A', "SDF"},
 			{'M', "DFILTUV"}, {'N', "DFILTUV"}, {'P', "DFILTUV"},
 			{'Y', "SDFIRY"}, {'C', "SDFIRY"}, {'I', "SDFIRY"},

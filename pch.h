@@ -7,6 +7,8 @@
 #ifndef PCH_H
 #define PCH_H
 
+#define NOMINMAX // disable max from windows.h for std::max
+
 // Fügen Sie hier Header hinzu, die vorkompiliert werden sollen.
 #include "framework.h"
 
