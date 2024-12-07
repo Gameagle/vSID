@@ -13,6 +13,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -20,6 +21,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -27,6 +29,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -35,6 +38,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -43,6 +47,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -51,6 +56,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -59,6 +65,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -68,6 +75,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -84,6 +92,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"11": {
@@ -91,6 +100,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -99,6 +109,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -107,6 +118,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -114,6 +126,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -121,6 +134,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -129,6 +143,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -137,6 +152,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -145,6 +161,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -153,6 +170,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -162,6 +180,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -171,6 +190,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -178,6 +198,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -185,6 +206,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -193,6 +215,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }
@@ -203,6 +226,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -210,6 +234,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -217,6 +242,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -225,6 +251,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -233,6 +260,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -241,6 +269,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -249,6 +278,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -258,6 +288,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -267,6 +298,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"10": {
@@ -274,6 +306,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"11": {
@@ -281,6 +314,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -289,6 +323,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -297,6 +332,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -304,6 +340,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -311,6 +348,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -319,6 +357,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -327,6 +366,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -335,6 +375,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -343,6 +384,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -352,6 +394,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -361,6 +404,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -368,6 +412,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -375,6 +420,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -383,6 +429,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }
@@ -393,6 +440,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -400,6 +448,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -407,6 +456,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -415,6 +465,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -423,6 +474,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -431,6 +483,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -439,6 +492,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -448,6 +502,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -457,6 +512,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"10": {
@@ -464,6 +520,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"11": {
@@ -471,6 +528,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -479,6 +537,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -487,6 +546,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -494,6 +554,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -501,6 +562,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -509,6 +571,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -517,6 +580,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -525,6 +589,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -533,6 +598,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -542,6 +608,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -551,6 +618,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -558,6 +626,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -565,6 +634,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -573,6 +643,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }
@@ -583,6 +654,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -590,6 +662,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -597,6 +670,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -605,6 +679,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -613,6 +688,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -621,6 +697,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -629,6 +706,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -638,6 +716,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -647,12 +726,14 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"10": {
 					"designator": "G",
                     "rwy": "09R,09L",
                     "initial": 5000,
+					"climbvia": true,
 					"engineType": "PT",
                     "prio": 11
                 },
@@ -661,6 +742,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -669,6 +751,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -677,6 +760,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -684,6 +768,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -691,6 +776,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -699,6 +785,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -707,6 +794,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -715,6 +803,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -723,6 +812,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -732,6 +822,7 @@
                     "rwy": "26R,26L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -741,6 +832,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -748,6 +840,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -755,6 +848,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -763,6 +857,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }
@@ -773,6 +868,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -780,6 +876,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -787,6 +884,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -795,6 +893,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -803,6 +902,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -811,6 +911,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -819,6 +920,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -828,6 +930,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -837,6 +940,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"10": {
@@ -844,6 +948,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"11": {
@@ -851,6 +956,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -859,6 +965,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -867,6 +974,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -874,6 +982,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -881,6 +990,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -889,6 +999,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -897,6 +1008,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -905,6 +1017,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -913,6 +1026,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -922,6 +1036,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -931,6 +1046,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -938,6 +1054,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -945,6 +1062,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -953,6 +1071,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }
@@ -963,6 +1082,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"2": {
@@ -970,6 +1090,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"3": {
@@ -977,6 +1098,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -985,6 +1107,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -993,6 +1116,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -1001,6 +1125,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -1009,6 +1134,7 @@
                     "rwy": "08L,08R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -1018,6 +1144,7 @@
                     "rwy": "08L,08R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -1027,6 +1154,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"10": {
@@ -1034,6 +1162,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"11": {
@@ -1041,6 +1170,7 @@
                     "rwy": "09R,09L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -1049,6 +1179,7 @@
                     "rwy": "09R,09L",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -1057,6 +1188,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 21
                 },
 				"14": {
@@ -1064,6 +1196,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 21
                 },
 				"15": {
@@ -1071,6 +1204,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -1079,6 +1213,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 20
                 },
@@ -1087,6 +1222,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -1095,6 +1231,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 2,
 					"area": "south"
                 },
@@ -1103,6 +1240,7 @@
                     "rwy": "26R,26L",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -1112,6 +1250,7 @@
                     "rwy": "26R,26L",
                     "initial": 9000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 1,
 					"area": "south"
@@ -1121,6 +1260,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
                     "prio": 11
                 },
 				"22": {
@@ -1128,6 +1268,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
                     "prio": 11
                 },
 				"23": {
@@ -1135,6 +1276,7 @@
                     "rwy": "27L,27R",
                     "initial": 10000,
 					"engineType": "J",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 },
@@ -1143,6 +1285,7 @@
                     "rwy": "27L,27R",
                     "initial": 5000,
 					"engineType": "PT",
+					"climbvia": true,
 					"customRule": "opposing",
                     "prio": 10
                 }

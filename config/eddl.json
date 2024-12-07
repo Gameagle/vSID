@@ -245,27 +245,79 @@
                     "rwy": "05L",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 2
+                    "prio": 3
                 },
                 "2": {
 					"designator": "Z",
                     "rwy": "05R",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 1
+                    "prio": 2
                 },
 			    "3": {
 					"designator": "H",
                     "rwy": "23R",
                     "initial": 5000,
                     "climbvia": false,
-                    "prio": 2
+                    "prio": 3
                 },
 			    "4": {
 					"designator": "T",
                     "rwy": "23L",
                     "initial": 5000,
                     "climbvia": false,
+                    "prio": 2
+                },
+				"5": {
+					"designator": "U",
+                    "rwy": "05L",
+                    "initial": 5000,
+                    "climbvia": true,
+                    "route": {
+                        "allow": {
+                            "1": "NETEX,RASCA",
+							"2": "NETEX,DELOM"
+                        }
+                    },
+                    "prio": 1
+                },
+				"6": {
+					"designator": "X",
+                    "rwy": "05R",
+                    "initial": 5000,
+                    "climbvia": false,
+                    "route": {
+                        "allow": {
+                            "1": "NETEX,RASCA",
+							"2": "NETEX,DELOM"
+                        }
+                    },
+                    "prio": 2
+                },
+				"7": {
+					"designator": "Y",
+                    "rwy": "23R",
+                    "initial": 5000,
+                    "climbvia": false,
+                    "route": {
+                        "allow": {
+                            "1": "NETEX,RASCA",
+							"2": "NETEX,DELOM"
+                        }
+                    },
+                    "prio": 2
+                },
+				"8": {
+					"designator": "K",
+                    "rwy": "23L",
+                    "initial": 5000,
+                    "climbvia": true,
+                    "route": {
+                        "allow": {
+                            "1": "NETEX,RASCA",
+							"2": "NETEX,DELOM"
+                        }
+                    },
                     "prio": 1
                 }
             },
