@@ -2439,21 +2439,27 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					messageHandler->writeMessage("INFO", ss.str());
 
-					// remove processed flightplans if they're not cleared or if the set rwy is not part of depRwys anymore
+					// remove processed flight plans if they're not cleared or if the set rwy is not part of depRwys anymore
 					std::erase_if(this->processed, [&](std::pair<std::string, vsid::fpln::Info> pFpln)
 						{
 							EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(pFpln.first.c_str());
 							EuroScopePlugIn::CFlightPlanData fplnData = fpln.GetFlightPlanData();
 							std::string icao = fplnData.GetOrigin();
+
+							messageHandler->writeMessage("DEBUG", "[" + std::string(fpln.GetCallsign()) + "] for erase on auto mode activation", vsid::MessageHandler::DebugArea::Dev);
 							
 							if (this->activeAirports.contains(fplnData.GetOrigin()) &&
 								this->activeAirports[icao].settings["auto"] &&
 								!fpln.GetClearenceFlag() && !pFpln.second.atcRWY
 								)
 							{
+								messageHandler->writeMessage("DEBUG", "[" + std::string(fpln.GetCallsign()) + "] erased on auto mode activation", vsid::MessageHandler::DebugArea::Dev);
 								return true;
 							}
-							else return false;
+							else
+							{
+								return false;
+							}
 						}
 					);
 				}
@@ -2691,7 +2697,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		}
 		else if (vsid::utils::tolower(command[1]) == "req")
 		{
-			if (command.size() == 3)
+			if (command.size() >= 3)
 			{
 				std::string icao = vsid::utils::toupper(command[2]);
 
@@ -2703,20 +2709,53 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				std::ostringstream ss;
 
-				for (auto& req : this->activeAirports[icao].requests)
+				if (command.size() == 3)
 				{
-					for (std::set<std::pair<std::string, long long>>::iterator it = req.second.begin(); it != req.second.end();)
+					for (auto& req : this->activeAirports[icao].requests)
 					{
-						ss << it->first;
-						++it;
-						if (it != req.second.end()) ss << ", ";
+						for (std::set<std::pair<std::string, long long>>::iterator it = req.second.begin(); it != req.second.end();)
+						{
+							ss << it->first;
+							++it;
+							if (it != req.second.end()) ss << ", ";
+						}
+						if (ss.str().size() == 0) ss << "No requests.";
+						messageHandler->writeMessage("INFO", "[" + icao + "] " + req.first + " requests: " + ss.str());
+						ss.str("");
+						ss.clear();
 					}
-					if (ss.str().size() == 0) ss << "No requests.";
-					messageHandler->writeMessage("INFO", "[" + icao + "] " + req.first + " requests: " + ss.str());
-					ss.str("");
-					ss.clear();
+				}
+				else if (command.size() == 4)
+				{
+					bool failedReset = false;
+					for (auto& [_, reqList] : this->activeAirports[icao].requests)
+					{
+						reqList.clear();
+
+						if (reqList.size() != 0) failedReset = true;
+					}
+
+					if (!failedReset) messageHandler->writeMessage("INFO", icao +
+						" all requests have been cleared.");
+					else messageHandler->writeMessage("INFO", icao + " failed to reset requests.");
+				}
+				else if (command.size() == 5)
+				{
+					std::string req = vsid::utils::tolower(command[4]);
+
+					if (!this->activeAirports[icao].requests.contains(req))
+					{
+						messageHandler->writeMessage("INFO", "Unknown request queue \"" + req + "\"");
+						return true;
+					}
+					else this->activeAirports[icao].requests[req].clear();
+
+					if (this->activeAirports[icao].requests[req].size() == 0) messageHandler->writeMessage("INFO", icao +
+						" request queue \"" + req + "\" reset");
+					else messageHandler->writeMessage("INFO", icao + " request queue \"" + req + "\" failed to reset");
 				}
 			}
+			else messageHandler->writeMessage("INFO", "Missing parameters for request command");
 
 			return true;
 		}
@@ -2831,7 +2870,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 				return;
 			}
 
-			if (!this->processed[callsign].atcRWY &&
+			if (!this->processed[callsign].atcRWY && atcBlock.second != "" &&
 				(fplnData.IsAmended() || FlightPlan.GetClearenceFlag() ||
 				atcBlock.first != fplnData.GetOrigin() ||
 				//(atcBlock.first == fplnData.GetOrigin() && vsid::fpln::findRemarks(fplnData, "VSID/RWY")))
@@ -2924,14 +2963,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	if (!this->activeAirports.contains(icao)) return;
 
-	std::string scratchpad = cad.GetScratchPadString();
-
-	// DEV
-	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] scratchpad: \"" + scratchpad + "\"", vsid::MessageHandler::DebugArea::Dev);
-	}
-	// END DEV
+	std::string scratchpad = vsid::utils::toupper(cad.GetScratchPadString());
 
 	if (this->processed.contains(callsign) && scratchpad.size() > 0)
 	{
@@ -2979,6 +3011,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				this->processed[callsign].gndState = "LINEUP";
 			}
 			/* the following states are internally saved by ES gnd state changes, we just remove here */
+
 			if (scratchpad.find(".VSID_REQ_") == std::string::npos)
 			{
 				if (scratchpad.find("STUP") != std::string::npos) vsid::fpln::removeScratchPad(FlightPlan, "STUP");
@@ -3001,6 +3034,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					long long reqTime = std::stoll(req.at(1));
 
 					// clear all possible requests before setting a new one
+
 					for (auto it = this->activeAirports[icao].requests.begin(); it != this->activeAirports[icao].requests.end();++it)
 					{
 						for (std::set<std::pair<std::string, long long>>::iterator jt = it->second.begin(); jt != it->second.end();)
@@ -3035,11 +3069,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				size_t pos = scratchpad.find(toFind);
 
 				bool clrf = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
-
-				// DEV
-				std::string sclrf = clrf ? "TRUE" : "FALSE";
-				vsid::messageHandler->writeMessage("DEBUG", "Scratchpad clrf: " + sclrf, vsid::MessageHandler::DebugArea::Dev);
-				// END DEV
 
 				if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
 																			callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG);
