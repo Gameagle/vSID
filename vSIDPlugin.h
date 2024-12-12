@@ -247,7 +247,6 @@ namespace vsid
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens
 		 */
-
 		std::map<int, std::shared_ptr<vsid::Display>> radarScreens = {};
 		int screenId = 0;
 		/**

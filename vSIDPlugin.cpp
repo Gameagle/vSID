@@ -2190,6 +2190,8 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				"rule [icao] [rulename] - toggle rule for icao / "
 				"night [icao] - toggle night mode for icao /"
 				"lvp [icao] - toggle lvp ops for icao / "
+				"req icao - lists request list entries /"
+				"req icao reset [listname] - resets all request lists or specified list"
 				"Debug - toggle debug mode");
 			return true;
 		}
@@ -3354,6 +3356,7 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 {
 	std::string atcCallsign = Controller.GetCallsign();
 	std::string atcSI = Controller.GetPositionId();
+
 	if (this->actAtc.contains(atcSI) && this->activeAirports.contains(this->actAtc[atcSI]))
 	{
 		if (this->activeAirports[this->actAtc[atcSI]].controllers.contains(atcSI))
@@ -3639,7 +3642,8 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 void vsid::VSIDPlugin::OnTimer(int Counter)
 {
 
-	// DEV - disabled for further evaluation, CCAMS can't take in fast requests, delaying them can cause menus to be closed as ES "selects" a flightplan when triggered
+	// #DEV
+	// - disabled for further evaluation, CCAMS can't take in fast requests, delaying them can cause menus to be closed as ES "selects" a flightplan when triggered
 	//if (this->sqwkQueue.size() > 0)
 	//{
 	//	messageHandler->writeMessage("DEBUG", "Calling CCAMS to squawk.", vsid::MessageHandler::DebugArea::Dev);
@@ -3653,8 +3657,16 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 	//	catch (std::out_of_range) {} // no error reporting, we just do nothing
 	//}
 	// END DEV
-	
-	// DEV
+
+	// get info msgs printed to the chat area of ES
+
+	std::pair<std::string, std::string> msg = messageHandler->getMessage();
+	/*auto [sender, msg] = messageHandler->getMessage();*/
+	if (msg.first != "" && msg.second != "")
+	{
+		bool flash = (msg.first != "INFO") ? true : false;
+		DisplayUserMessage("vSID", msg.first.c_str(), msg.second.c_str(), true, true, false, flash, false);
+	}
 
 	if (Counter % 10 == 0)
 	{
@@ -3692,24 +3704,19 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 			else ++it;
 		}
 	}
-	
-	// END DEV
 
-	// get info msgs printed to the chat area of ES
-	std::pair<std::string, std::string> msg = messageHandler->getMessage();
-	if (msg.first != "" && msg.second != "")
-	{
-		DisplayUserMessage("vSID", msg.first.c_str(), msg.second.c_str(), true, true, false, true, false);
-	}
+	// check internally removed flight plans every 20 seconds if they re-connected
 
-	if (this->removeProcessed.size() > 0)
+	if (this->removeProcessed.size() > 0 && Counter % 20 == 0)
 	{
 		auto now = std::chrono::utc_clock::now();
 
 		for (auto it = this->removeProcessed.begin(); it != this->removeProcessed.end();)
 		{
 			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
-			if (it->second.second && fpln.IsValid()) /////////// idea: add check if in range as fpln would be dropped anyways if outside
+			if (it->second.second && fpln.IsValid() &&
+				ControllerMyself().GetPosition().DistanceTo(fpln.GetCorrelatedRadarTarget().GetPosition().GetPosition()) <
+				ControllerMyself().GetRange()) // #monitor - range added
 			{
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] valid again.", vsid::MessageHandler::DebugArea::Dev);
 				it = this->removeProcessed.erase(it);
@@ -3740,6 +3747,17 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				it = this->removeProcessed.erase(it);
 			}
 			else ++it;
+		}
+	}
+
+	// check once a minute if we're still connected and clean up all flight plans if not
+
+	if (Counter % 60 == 0) // #monitor
+	{
+		if (!this->GetConnectionType())
+		{
+			if (this->processed.size() > 0) this->processed.clear();
+			if (this->removeProcessed.size() > 0) this->removeProcessed.clear();
 		}
 	}
 }
