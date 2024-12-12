@@ -1219,16 +1219,19 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 			}
 			this->processed[callsign].atcRWY = true;
 		}
+
 		if (sidSuggestion.base != "" && sidCustomSuggestion.base == "" && sidSuggestion.initialClimb)
 		{
-			if (!cad.SetClearedAltitude(sidSuggestion.initialClimb))
+			int initialClimb = (sidSuggestion.initialClimb > fplnData.GetFinalAltitude()) ? fplnData.GetFinalAltitude() : sidSuggestion.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
 			{
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude - #PFP");
 			}
 		}
 		else if (sidCustomSuggestion.base != "" && sidCustomSuggestion.initialClimb)
 		{
-			if (!cad.SetClearedAltitude(sidCustomSuggestion.initialClimb))
+			int initialClimb = (sidCustomSuggestion.initialClimb > fplnData.GetFinalAltitude()) ? fplnData.GetFinalAltitude() : sidCustomSuggestion.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
 			{
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude - #PFP");
 			}
@@ -1655,16 +1658,20 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					atcBlock.first == this->processed[callsign].customSid.name())
 					)
 				{
-					if (!this->processed[callsign].customSid.empty())
+					if (!this->processed[callsign].customSid.empty()) // #monitor
 					{
-						if (!cad.SetClearedAltitude(this->processed[callsign].customSid.initialClimb))
+						int initialClimb = (this->processed[callsign].customSid.initialClimb > fplnData.GetFinalAltitude()) ?
+											fplnData.GetFinalAltitude() : this->processed[callsign].customSid.initialClimb;
+						if (!cad.SetClearedAltitude(initialClimb))
 						{
 							messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude #RICS");
 						}
 					}
-					else if (!this->processed[callsign].sid.empty())
+					else if (!this->processed[callsign].sid.empty()) // #monitor
 					{
-						if (!cad.SetClearedAltitude(this->processed[callsign].sid.initialClimb))
+						int initialClimb = (this->processed[callsign].sid.initialClimb > fplnData.GetFinalAltitude()) ?
+											fplnData.GetFinalAltitude() : this->processed[callsign].sid.initialClimb;
+						if (!cad.SetClearedAltitude(initialClimb))
 						{
 							messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude #RICS");
 						}
@@ -1879,25 +1886,38 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 			// determine initial climb depending on customSid
 
+			bool rflBelowInitial = false; // additional check for suggestion coloring
+
 			if (this->processed[callsign].sid.initialClimb != 0 &&
 				this->processed[callsign].customSid.empty() &&
 				(atcSid == sidName || atcSid == "" || atcSid == fplnData.GetOrigin())
 				)
 			{
-				tempAlt = this->processed[callsign].sid.initialClimb;
+				if (fpln.GetFinalAltitude() < this->processed[callsign].sid.initialClimb)
+				{
+					tempAlt = fpln.GetFinalAltitude();
+					rflBelowInitial = true;
+				}
+				else tempAlt = this->processed[callsign].sid.initialClimb;
 			}
 			else if (this->processed[callsign].customSid.initialClimb != 0 &&
 					(atcSid == customSidName || atcSid == "" || atcSid == fplnData.GetOrigin())
 					)
 			{
-				tempAlt = this->processed[callsign].customSid.initialClimb;
+				if (fpln.GetFinalAltitude() < this->processed[callsign].customSid.initialClimb)
+				{
+					tempAlt = fpln.GetFinalAltitude();
+					rflBelowInitial = true;
+				}
+				else tempAlt = this->processed[callsign].customSid.initialClimb;
 			}
 
-			if (fpln.GetClearedAltitude() == fpln.GetFinalAltitude())
+			if (fpln.GetClearedAltitude() == fpln.GetFinalAltitude() && !rflBelowInitial && tempAlt != fpln.GetFinalAltitude())
 			{
 				*pRGB = this->configParser.getColor("suggestedClmb"); // white
 			}
-			else if (fpln.GetClearedAltitude() != fpln.GetFinalAltitude() &&
+			else if ((fpln.GetClearedAltitude() != fpln.GetFinalAltitude() || tempAlt == this->processed[callsign].sid.initialClimb ||
+					tempAlt == this->processed[callsign].customSid.initialClimb) &&
 					fpln.GetClearedAltitude() == tempAlt
 					)
 			{
@@ -3812,13 +3832,11 @@ void vsid::VSIDPlugin::callExtFunc(const char* sCallsign, const char* sItemPlugI
 * END ES FUNCTIONS
 */
 
-// DEV
-void vsid::VSIDPlugin::exit()
+void vsid::VSIDPlugin::exit() // #monitor
 {
 	this->radarScreens.clear();
 	this->shared.reset();
 }
-// END DEV
 
 void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
 {
