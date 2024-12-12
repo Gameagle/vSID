@@ -277,17 +277,21 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 int prio = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("prio", 99);
                                 bool pilotfiled = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("pilotfiled", false);
                                 std::map<std::string, std::string> actArrRwy;
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("actArrRwy"))
                                 {
                                     actArrRwy["all"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actArrRwy").value("all", "");
                                     actArrRwy["any"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actArrRwy").value("any", "");
                                 }
+
                                 std::map<std::string, std::string> actDepRwy;
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("actDepRwy"))
                                 {
                                     actDepRwy["all"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("all", "");
                                     actDepRwy["any"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("any", "");
                                 }
+
                                 std::string wtc = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wtc", "");
                                 std::string engineType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineType", "");
                                 std::map<std::string, bool> acftType =
@@ -297,6 +301,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::map<std::string, bool> dest =
                                     this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
                                 std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("route"))
                                 {
                                     if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").contains("allow"))
@@ -322,7 +327,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                             if(!configRoute.empty()) route["deny"].insert({ routeId, configRoute });
 										}
 									}
-                                    // DEV
+                                    // #DEV
                                     messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] route found.", vsid::MessageHandler::DebugArea::Dev);
 
                                     if (route.contains("allow"))
@@ -344,8 +349,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                     }
                                     // END DEV
                                 }
-                                /*std::map<std::string, std::vector<std::string>> route =
-                                    this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("route", std::map<std::string, std::vector<std::string>>{});*/
+
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
