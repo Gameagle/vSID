@@ -44,6 +44,15 @@ namespace vsid
 		int facility = 0;
 		double freq = 0.0;
 	};
+
+	struct Clrf
+	{
+		double distWarning = 0.0;
+		double distCaution = 0.0;
+		int altWarning = 0;
+		int altCaution = 0;
+	};
+
 	struct Airport
 	{
 		/**
@@ -77,6 +86,7 @@ namespace vsid
 		std::map<std::string, vsid::Controller> controllers = {};
 		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
 		bool forceAuto = false;
+		Clrf clrf = {};
 
 		/**
 		 * @brief Checks if another controller with a lower facility is online
