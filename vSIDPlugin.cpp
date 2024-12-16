@@ -2217,19 +2217,20 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		double dtg = FlightPlan.GetDistanceToDestination();
 		int alt = RadarTarget.GetPosition().GetPressureAltitude();
+		vsid::Clrf &clrf = this->configParser.getClrfMinimums();
 
 		if (!this->processed.contains(callsign))
 		{
 			if (std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)) return;
 
-			if (dtg > this->activeAirports[ades].clrf.distWarning && dtg <= this->activeAirports[ades].clrf.distCaution &&
-				alt <= this->activeAirports[ades].elevation + this->activeAirports[ades].clrf.altCaution)
+			if (dtg > clrf.distWarning && dtg <= clrf.distCaution &&
+				alt <= this->activeAirports[ades].elevation + clrf.altCaution)
 			{
 				*pRGB = this->configParser.getColor("clrfCaution");
 				strcpy_s(sItemString, 16, "CLR");
 			}
-			else if (dtg <= this->activeAirports[ades].clrf.distWarning &&
-				alt <= this->activeAirports[ades].elevation + this->activeAirports[ades].clrf.altWarning)
+			else if (dtg <= clrf.distWarning &&
+				alt <= this->activeAirports[ades].elevation + clrf.altWarning)
 			{
 				*pRGB = this->configParser.getColor("clrfWarning");
 				strcpy_s(sItemString, 16, "CLR!");
@@ -2246,14 +2247,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			{
 				if (std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)) return;
 
-				if (dtg > this->activeAirports[ades].clrf.distWarning && dtg <= this->activeAirports[ades].clrf.distCaution &&
-					alt <= this->activeAirports[ades].elevation + this->activeAirports[ades].clrf.altCaution)
+				if (dtg > clrf.distWarning && dtg <= clrf.distCaution &&
+					alt <= this->activeAirports[ades].elevation + clrf.altCaution)
 				{
 					*pRGB = this->configParser.getColor("clrfCaution");
 					strcpy_s(sItemString, 16, "CLR");
 				}
-				else if (dtg <= this->activeAirports[ades].clrf.distWarning &&
-					alt <= this->activeAirports[ades].elevation + this->activeAirports[ades].clrf.altWarning)
+				else if (dtg <= clrf.distWarning &&
+					alt <= this->activeAirports[ades].elevation + clrf.altWarning)
 				{
 					*pRGB = this->configParser.getColor("clrfWarning");
 					strcpy_s(sItemString, 16, "CLR!");

@@ -68,6 +68,20 @@ void vsid::ConfigParser::loadMainConfig()
     {
         messageHandler->writeMessage("ERROR", "Failed to get request timers: " + std::string(e.what()));
     }
+
+    // get clrf min values
+
+    try
+    {
+        this->clrf.altCaution = this->vSidConfig.at("clrf").value("altCaution", 1500);
+        this->clrf.altWarning = this->vSidConfig.at("clrf").value("altWarning", 500);
+        this->clrf.distCaution = this->vSidConfig.at("clrf").value("distCaution", 10.0);
+        this->clrf.distWarning = this->vSidConfig.at("clrf").value("distWarning", 2.0);
+    }
+    catch (json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
+    }
 }
 
 void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
@@ -142,11 +156,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.requests["pushback"] = {};
                         apt.second.requests["taxi"] = {};
                         apt.second.requests["departure"] = {};
-                        apt.second.requests["vfr"] = {};
-                        apt.second.clrf.distCaution = this->parsedConfig.at(apt.first).at("clrf").value("distCaution", 10.0);
-                        apt.second.clrf.distWarning = this->parsedConfig.at(apt.first).at("clrf").value("distWarning", 2.0);
-                        apt.second.clrf.altCaution = this->parsedConfig.at(apt.first).at("clrf").value("altCaution", 1500);
-                        apt.second.clrf.altWarning = this->parsedConfig.at(apt.first).at("clrf").value("altWarning", 500);                        
+                        apt.second.requests["vfr"] = {};                     
 
                         // customRules
 
