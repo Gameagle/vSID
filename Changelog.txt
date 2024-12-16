@@ -3,6 +3,12 @@
 [NEW]
 *	REQ - added a reset function for the airport (.vsid req ICAO reset) or for single queues (.vsid req ICAO reset startup) (#222)
 *	GEN - connection type is checked once a minute. If the connection is disconnected all processed flight plans and those marked for removal are deleted (#261)
+*	CTL - cleared to land flag added. The function (VSID CTL) toggles the cleared to land flag. The tag item (VSID CLRF) shows if the acft is cleared or a two step warning if it is close to the airport and not cleared. Value is synced between controllers (#221)
+*	CTL - color config options for main config
+*	CTL - mandatory section for warning and caution values (distance and altitude) in main config ("clrf") - not providing the section will cause an error but ES and vSID will still work
+
+[CHANGED]
+*	SID - if the RFL is below the initial climb don't show and clear up to the initial climb but show the RFL instead (due to ES limitations color-codes the climb even if not set if RFL is below inital climb). If the SID is clicked (manual or auto selection) the RFL is actively set as cleared altitude for the flight plan (meaning sending the info to the servers)
 
 [FIXED]
 
