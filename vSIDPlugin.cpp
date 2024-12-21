@@ -2213,6 +2213,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 	if (ItemCode == TAG_ITEM_VSID_CLRF)
 	{
+		if (RadarTarget.GetGS() < 50) return;
+
 		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 
 		double dtg = FlightPlan.GetDistanceToDestination();
@@ -2223,41 +2225,51 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		{
 			if (std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)) return;
 
-			if (dtg > clrf.distWarning && dtg <= clrf.distCaution &&
-				alt <= this->activeAirports[ades].elevation + clrf.altCaution)
-			{
-				*pRGB = this->configParser.getColor("clrfCaution");
-				strcpy_s(sItemString, 16, "CLR");
-			}
-			else if (dtg <= clrf.distWarning &&
-				alt <= this->activeAirports[ades].elevation + clrf.altWarning)
+			if (dtg <= clrf.distWarning && alt <= this->activeAirports[ades].elevation + clrf.altWarning)
 			{
 				*pRGB = this->configParser.getColor("clrfWarning");
 				strcpy_s(sItemString, 16, "CLR!");
 			}
+			else if (dtg <= clrf.distCaution && alt <= this->activeAirports[ades].elevation + clrf.altCaution)
+			{
+				// creates an entry
+				this->processed[callsign].ldgAlt = alt;
+				*pRGB = this->configParser.getColor("clrfCaution");
+				strcpy_s(sItemString, 16, "CLR");
+			}
 		}
 		else
 		{
+			if (this->processed[callsign].mapp && ((this->activeAirports.contains(ades) &&
+				alt > this->activeAirports[ades].elevation + clrf.altCaution + 200) || alt > clrf.altCaution + 200))
+			{
+				this->processed.erase(callsign);
+				return;
+			}
+
 			if (this->processed[callsign].ctl)
 			{
+				if (this->processed[callsign].ldgAlt == 0) this->processed[callsign].ldgAlt = alt;
+
 				*pRGB = this->configParser.getColor("clrfSet");
 				strcpy_s(sItemString, 16, "CTL");
 			}
 			else
 			{
 				if (std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)) return;
+				if (this->processed[callsign].mapp) return;
 
-				if (dtg > clrf.distWarning && dtg <= clrf.distCaution &&
-					alt <= this->activeAirports[ades].elevation + clrf.altCaution)
-				{
-					*pRGB = this->configParser.getColor("clrfCaution");
-					strcpy_s(sItemString, 16, "CLR");
-				}
-				else if (dtg <= clrf.distWarning &&
-					alt <= this->activeAirports[ades].elevation + clrf.altWarning)
+				if (dtg <= clrf.distWarning && alt <= this->activeAirports[ades].elevation + clrf.altWarning)
 				{
 					*pRGB = this->configParser.getColor("clrfWarning");
 					strcpy_s(sItemString, 16, "CLR!");
+				}
+				else if (dtg <= clrf.distCaution && alt <= this->activeAirports[ades].elevation + clrf.altCaution)
+				{
+					if (this->processed[callsign].ldgAlt == 0) this->processed[callsign].ldgAlt = alt;
+
+					*pRGB = this->configParser.getColor("clrfCaution");
+					strcpy_s(sItemString, 16, "CLR");
 				}
 			}
 		}
@@ -3066,6 +3078,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 	{
 		std::string scratchpad = vsid::utils::toupper(cad.GetScratchPadString());
 
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Scratchpad entry : " + scratchpad, vsid::MessageHandler::DebugArea::Dev);
+
 		// set clearance flag
 
 		if (scratchpad.find(".VSID_CTL_") != std::string::npos)
@@ -3119,6 +3133,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				vsid::fpln::removeScratchPad(FlightPlan, "LINEUP");
 				this->processed[callsign].gndState = "LINEUP";
 			}
+
 			/* the following states are internally saved by ES gnd state changes, we just remove here */
 
 			if (scratchpad.find(".VSID_REQ_") == std::string::npos)
@@ -3303,6 +3318,18 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 	std::string callsign = RadarTarget.GetCallsign();
 	std::string adep = RadarTarget.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
 	std::string ades = RadarTarget.GetCorrelatedFlightPlan().GetFlightPlanData().GetDestination();
+	
+	if (this->processed.contains(callsign) && this->processed[callsign].ldgAlt != 0 && this->activeAirports.contains(ades))
+	{
+		int alt = RadarTarget.GetPosition().GetPressureAltitude();
+
+		if (alt <= std::abs(this->processed[callsign].ldgAlt - 200)) this->processed[callsign].ldgAlt = alt;
+		else if (alt >= this->processed[callsign].ldgAlt + 200)
+		{
+			this->processed[callsign].mapp = true;
+			this->processed[callsign].ctl = false;
+		}
+	}
 
 	// trigger when speed is >= 50 knots
 

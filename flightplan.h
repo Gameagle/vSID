@@ -48,6 +48,9 @@ namespace vsid
 			bool validEquip = true;
 			std::string gndState = "";
 			bool ctl = false;
+			bool mapp = false;
+			// altitude tracking during acft landing phase
+			int ldgAlt = 0;
 		};
 
 		/**
