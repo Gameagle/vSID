@@ -1353,12 +1353,18 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				if ((sid.waypoint == filedSidWpt || sid.waypoint == "XXX") && vsid::utils::contains(sid.rwys, depRWY))
 				{
 					validDepartures[sid.base + sid.number + sid.designator] = sid;
-					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", {depRWY});
+					if (this->activeAirports[icao].enableRVSids)
+					{
+						validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", { depRWY });
+					}		
 				}
 				else if (filedSidWpt == "" && vsid::utils::contains(sid.rwys, depRWY))
 				{
 					validDepartures[sid.base + sid.number + sid.designator] = sid;
-					validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", {depRWY});
+					if (this->activeAirports[icao].enableRVSids)
+					{
+						validDepartures[sid.base + 'R' + 'V'] = vsid::Sid(sid.base, sid.waypoint, "", "R", "V", { depRWY });
+					}					
 				}
 			}
 		}
