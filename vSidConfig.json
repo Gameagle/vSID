@@ -1,94 +1,115 @@
 {
-    "airportConfigs": "../vSID Airportconfig",
-    "colors": {
-        "sidSuggestion": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-        },
-        "suggestedSidSet": {
-            "r": 15,
-            "g": 170,
-            "b": 40
-        },
-        "customSidSuggestion": {
-            "r": 230,
-            "g": 230,
-            "b": 60
-        },
-        "customSidSet": {
-            "r": 255,
-            "g": 120,
-            "b": 30
-        },
-        "noSid": {
-            "r": 220,
-            "g": 30,
-            "b": 20
-        },
-        "suggestedClmb": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-        },
-        "customClmbSet": {
-            "r": 255,
-            "g": 120,
-            "b": 30
-        },
-        "clmbSet": {
-            "r": 50,
-            "g": 240,
-            "b": 210
-        },
-        "clmbViaSet": {
-            "r": 15,
-            "g": 170,
-            "b": 40
-        },
-        "rwyNotSet": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-        },
-        "rwySet": {
-            "r": 15,
-            "g": 170,
-            "b": 40
-        },
-        "notDepRwySet": {
-            "r": 230,
-            "g": 230,
-            "b": 60
-        },
-        "squawkSet": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-        },
-        "squawkNotSet": {
-            "r": 230,
-            "g": 230,
-            "b": 60
-        },
-        "requestNeutral": {
-            "r": 128,
-            "g": 128,
-            "b": 128
-        },
-        "requestCaution":  {
-            "r": 230,
-            "g": 230,
-            "b": 60
-        },
-        "requestWarning": {
-            "r": 220,
-            "g": 30,
-            "b": 20
-        }
+  "airportConfigs": "../vSID Airportconfig",
+  "colors": {
+    "sidSuggestion": {
+      "r": 255,
+      "g": 255,
+      "b": 255
     },
-    "requests": {
-        "caution": 2,
-        "warning": 5
+    "suggestedSidSet": {
+      "r": 15,
+      "g": 170,
+      "b": 40
+    },
+    "customSidSuggestion": {
+      "r": 230,
+      "g": 230,
+      "b": 60
+    },
+    "customSidSet": {
+      "r": 255,
+      "g": 120,
+      "b": 30
+    },
+    "noSid": {
+      "r": 220,
+      "g": 30,
+      "b": 20
+    },
+    "suggestedClmb": {
+      "r": 255,
+      "g": 255,
+      "b": 255
+    },
+    "customClmbSet": {
+      "r": 255,
+      "g": 120,
+      "b": 30
+    },
+    "clmbSet": {
+      "r": 50,
+      "g": 240,
+      "b": 210
+    },
+    "clmbViaSet": {
+      "r": 15,
+      "g": 170,
+      "b": 40
+    },
+    "rwyNotSet": {
+      "r": 255,
+      "g": 255,
+      "b": 255
+    },
+    "rwySet": {
+      "r": 15,
+      "g": 170,
+      "b": 40
+    },
+    "notDepRwySet": {
+      "r": 230,
+      "g": 230,
+      "b": 60
+    },
+    "squawkSet": {
+      "r": 255,
+      "g": 255,
+      "b": 255
+    },
+    "squawkNotSet": {
+      "r": 230,
+      "g": 230,
+      "b": 60
+    },
+    "requestNeutral": {
+      "r": 128,
+      "g": 128,
+      "b": 128
+    },
+    "requestCaution": {
+      "r": 230,
+      "g": 230,
+      "b": 60
+    },
+    "requestWarning": {
+      "r": 220,
+      "g": 30,
+      "b": 20
+    },
+    "clrfSet": {
+      "r": 0,
+      "g": 160,
+      "b": 30
+    },
+    "clrfCaution": {
+      "r": 250,
+      "g": 160,
+      "b": 0
+    },
+    "clrfWarning": {
+      "r": 200,
+      "g": 10,
+      "b": 10
     }
+  },
+  "requests": {
+    "caution": 2,
+    "warning": 5
+  },
+  "clrf": {
+    "distCaution": 10.0,
+    "distWarning": 2.0,
+    "altCaution": 1500,
+    "altWarning": 500
+  }
 }

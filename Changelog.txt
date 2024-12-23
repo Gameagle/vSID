@@ -1,3 +1,22 @@
+[Changelog v0.11.1]
+
+[NEW]
+*	REQ - added a reset function for the airport (.vsid req ICAO reset) or for single queues (.vsid req ICAO reset startup) (#222)
+*	GEN - connection type is checked once a minute. If the connection is disconnected all processed flight plans and those marked for removal are deleted (#261)
+*	CTL - cleared to land flag added. The function (VSID CTL) toggles the cleared to land flag. The tag item (VSID CLRF) shows if the acft is cleared or a two step warning if it is close to the airport and not cleared. Value is synced between controllers (#221)
+*	CTL - automatic MAPP detection to remove item display (if the acft climbs again MAPP is assumed to remove CTL flag and warnings)
+*	CTL - color config options for main config
+*	CTL - mandatory section for warning and caution values (distance and altitude) in main config ("clrf") - not providing the section will cause an error but ES and vSID will still work
+*	SID - added "enableRVSids" option to airport configuration as bool to enable/disable the generation of radar vectored SIDs in the manual selection menu
+
+[CHANGED]
+*	SID - if the RFL is below the initial climb don't show and clear up to the initial climb but show the RFL instead (due to ES limitations color-codes the climb even if not set if RFL is below inital climb). If the SID is clicked (manual or auto selection) the RFL is actively set as cleared altitude for the flight plan (meaning sending the info to the servers)
+
+[FIXED]
+
+*	SID - if a flight plan was amended it was saved that the rwy was set by atc, although there might not be a rwy in the flight plan. Might fix automode not setting SID/IC when areas are active (#241)
+*	SID - remarks were not deleted in LFXX package. Turns out with EDXX package scratchpad entries are received in uppercase, which doesn't seem to be the default. Fixed to work in both scenarios (#244)
+
 [Changelog v0.11.0]
 
 [NEW]

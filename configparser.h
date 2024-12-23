@@ -33,6 +33,14 @@ using json = nlohmann::ordered_json;
 
 namespace vsid
 {
+	struct Clrf
+	{
+		double distWarning = 0.0;
+		double distCaution = 0.0;
+		int altWarning = 0;
+		int altCaution = 0;
+	};
+
 	class ConfigParser
 	{
 	public:
@@ -43,9 +51,9 @@ namespace vsid
 		 * @brief Loads the configs for active airports
 		 * 
 		 * @param activeAirports 
-		 * @param savedCustomRules - customRules that are transferred inbetween rwy change updates
-		 * @param savedSettings - settings that are transferred inbetween rwy change updates
-		 * @param savedAreas - area settings that are transferred inbetween rwy change updates
+		 * @param savedCustomRules - customRules that are transferred in between rwy change updates
+		 * @param savedSettings - settings that are transferred in between rwy change updates
+		 * @param savedAreas - area settings that are transferred in between rwy change updates
 		 */
 		void loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
 							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
@@ -75,6 +83,15 @@ namespace vsid
 		 */
 		COLORREF getColor(std::string color);
 
+		//************************************
+		// Method:    getClrfMinimums
+		// FullName:  vsid::ConfigParser::getClrfMinimums
+		// Access:    public 
+		// Returns:   vsid::Clrf&
+		// Qualifier:
+		//************************************
+		inline Clrf& getClrfMinimums() { return this->clrf; };
+
 		int getReqTime(std::string time);
 		json grpConfig;
 		std::set<std::string> rnavList;
@@ -83,6 +100,7 @@ namespace vsid
 		std::set<std::filesystem::path> configPaths;
 		std::map<std::string, COLORREF> colors;
 		std::map<std::string, int> reqTimes;
+		Clrf clrf;
 		json parsedConfig;
 		json vSidConfig;
 	};

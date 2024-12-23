@@ -40,7 +40,7 @@ void vsid::ConfigParser::loadMainConfig()
     {
         for (auto &elem : this->vSidConfig.at("colors").items())
         {
-            // default values are blue to signal if the import went wront
+            // default values are blue to signal if the import went wrong
             COLORREF rgbColor = RGB(
                 this->vSidConfig.at("colors").at(elem.key()).value("r", 60),
                 this->vSidConfig.at("colors").at(elem.key()).value("g", 80),
@@ -57,6 +57,8 @@ void vsid::ConfigParser::loadMainConfig()
         messageHandler->writeMessage("ERROR", "Failed to import colors: " + e.message());
     }
 
+    // get request times
+
     try
     {
         this->reqTimes.insert({ "caution", this->vSidConfig.at("requests").value("caution", 2) });
@@ -65,6 +67,20 @@ void vsid::ConfigParser::loadMainConfig()
     catch (json::parse_error& e)
     {
         messageHandler->writeMessage("ERROR", "Failed to get request timers: " + std::string(e.what()));
+    }
+
+    // get clrf min values
+
+    try
+    {
+        this->clrf.altCaution = this->vSidConfig.at("clrf").value("altCaution", 1500);
+        this->clrf.altWarning = this->vSidConfig.at("clrf").value("altWarning", 500);
+        this->clrf.distCaution = this->vSidConfig.at("clrf").value("distCaution", 10.0);
+        this->clrf.distWarning = this->vSidConfig.at("clrf").value("distWarning", 2.0);
+    }
+    catch (json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
     }
 }
 
@@ -121,10 +137,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                 {
                     this->parsedConfig = json::parse(configFile);
 
-                    if (!this->parsedConfig.contains(apt.first))
-                    {
-                        continue;
-                    }
+                    if (!this->parsedConfig.contains(apt.first)) continue;
                     else
                     {
                         aptConfig.insert(apt.first);
@@ -134,6 +147,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.icao = apt.first;
                         apt.second.elevation = this->parsedConfig.at(apt.first).value("elevation", 0);
                         apt.second.equipCheck = this->parsedConfig.at(apt.first).value("equipCheck", true);
+                        apt.second.enableRVSids = this->parsedConfig.at(apt.first).value("enableRVSids", true);
                         apt.second.allRwys = vsid::utils::split(this->parsedConfig.at(apt.first).value("runways", ""), ',');
                         apt.second.transAlt = this->parsedConfig.at(apt.first).value("transAlt", 0);
                         apt.second.maxInitialClimb = this->parsedConfig.at(apt.first).value("maxInitialClimb", 0);
@@ -143,7 +157,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         apt.second.requests["pushback"] = {};
                         apt.second.requests["taxi"] = {};
                         apt.second.requests["departure"] = {};
-                        apt.second.requests["vfr"] = {};
+                        apt.second.requests["vfr"] = {};                     
 
                         // customRules
 
@@ -277,17 +291,21 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 int prio = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("prio", 99);
                                 bool pilotfiled = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("pilotfiled", false);
                                 std::map<std::string, std::string> actArrRwy;
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("actArrRwy"))
                                 {
                                     actArrRwy["all"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actArrRwy").value("all", "");
                                     actArrRwy["any"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actArrRwy").value("any", "");
                                 }
+
                                 std::map<std::string, std::string> actDepRwy;
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("actDepRwy"))
                                 {
                                     actDepRwy["all"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("all", "");
                                     actDepRwy["any"] = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("actDepRwy").value("any", "");
                                 }
+
                                 std::string wtc = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("wtc", "");
                                 std::string engineType = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("engineType", "");
                                 std::map<std::string, bool> acftType =
@@ -297,6 +315,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 std::map<std::string, bool> dest =
                                     this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("dest", std::map<std::string, bool>{});
                                 std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
+
                                 if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).contains("route"))
                                 {
                                     if (this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).at("route").contains("allow"))
@@ -322,7 +341,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                             if(!configRoute.empty()) route["deny"].insert({ routeId, configRoute });
 										}
 									}
-                                    // DEV
+                                    // #DEV
                                     messageHandler->writeMessage("DEBUG", "[" + wpt + "?" + desig + "] route found.", vsid::MessageHandler::DebugArea::Dev);
 
                                     if (route.contains("allow"))
@@ -344,8 +363,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                     }
                                     // END DEV
                                 }
-                                /*std::map<std::string, std::vector<std::string>> route =
-                                    this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("route", std::map<std::string, std::vector<std::string>>{});*/
+
                                 std::string customRule = this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("customRule", "");
                                 customRule = vsid::utils::toupper(customRule);
                                 std::string area = vsid::utils::toupper(this->parsedConfig.at(apt.first).at("sids").at(sid.key()).at(sidWpt.key()).value("area", ""));
@@ -518,7 +536,7 @@ COLORREF vsid::ConfigParser::getColor(std::string color)
     else
     {
         messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\"");
-        // return if color could not be found is purple to signal error
+        // return purple if color could not be found to signal error
         COLORREF rgbColor = RGB(190, 30, 190);
         return rgbColor;
     }

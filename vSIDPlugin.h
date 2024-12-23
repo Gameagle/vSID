@@ -42,7 +42,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.11.0";
+	const std::string pluginVersion = "0.11.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -125,7 +125,7 @@ namespace vsid
 		 */
 		void OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize);
 		/**
-		 * @brief Called when a dot commmand is used and ES couldn't resolve it.
+		 * @brief Called when a dot command is used and ES couldn't resolve it.
 		 * ES then checks this functions to evaluate the command
 		 *
 		 * @param sCommandLine
@@ -136,7 +136,7 @@ namespace vsid
 		/*EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);*/
 
 		/**
-		 * @brief Called when something is changed in the flightplan (used for route updates)
+		 * @brief Called when something is changed in the flight plan (used for route updates)
 		 * 
 		 * @param FlightPlan 
 		 */
@@ -149,7 +149,7 @@ namespace vsid
 		 */
 		void OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan, int DataType);
 		/**
-		 * @brief Called when a flightplan disconnects from the network
+		 * @brief Called when a flight plan disconnects from the network
 		 * 
 		 * @param FlightPlan 
 		 */
@@ -187,7 +187,7 @@ namespace vsid
 		/**
 		 * @brief Sync states and clearance flag to new controller
 		 * 
-		 * @param FlightPlan - ES flightplan object
+		 * @param FlightPlan - ES flight plan object
 		 */
 		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
@@ -247,7 +247,6 @@ namespace vsid
 		 * @param key - id of the saved screen pointer (always increased during runtime)
 		 * @param value - derived class of CRadarScreens
 		 */
-
 		std::map<int, std::shared_ptr<vsid::Display>> radarScreens = {};
 		int screenId = 0;
 		/**

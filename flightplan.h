@@ -47,6 +47,10 @@ namespace vsid
 			bool request = false;
 			bool validEquip = true;
 			std::string gndState = "";
+			bool ctl = false;
+			bool mapp = false;
+			// altitude tracking during acft landing phase
+			int ldgAlt = 0;
 		};
 
 		/**
@@ -60,7 +64,7 @@ namespace vsid
 		std::vector<std::string> clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt = "");
 
 		/**
-		 * @brief Get only the assigned rwy extracted from the flightplan
+		 * @brief Get only the assigned rwy extracted from the flight plan
 		 * 
 		 * @param CFlightPlan - FlightPlan as stored by Euroscope
 		 * @return pair if ICAO/RWY or SID/RWY was found (split by '/')
@@ -68,9 +72,9 @@ namespace vsid
 		std::pair<std::string, std::string> getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan);
 
 		/** 
-		 * @brief Searches the flightplan remarks for the given string
+		 * @brief Searches the flight plan remarks for the given string
 		 * 
-		 * @param fplnData - flightplan data to get the remarks from
+		 * @param fplnData - flight plan data to get the remarks from
 		 * @param searchStr - which string to search for
 		 * @return true - if the string was found
 		 * @return false - if the string was not found
@@ -78,17 +82,17 @@ namespace vsid
 		bool findRemarks(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& searchStr));
 
 		/**
-		 * @brief Removes the given string from the flightplan remarks if present
+		 * @brief Removes the given string from the flight plan remarks if present
 		 * 
-		 * @param fplnData - flightplan data to remove the remarks from
+		 * @param fplnData - flight plan data to remove the remarks from
 		 * @param searchStr - which string to remove
 		 */
 		bool removeRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toRemove));
 
 		/**
-		 * @brief Adds the given string to the flightplan remarks
+		 * @brief Adds the given string to the flight plan remarks
 		 * 
-		 * @param fplnData - flightplan data to edit the remarks for
+		 * @param fplnData - flight plan data to edit the remarks for
 		 * @param searchStr - which string to add
 		 */
 		bool addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& toAdd));
