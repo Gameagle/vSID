@@ -1,0 +1,2520 @@
+{
+    "LFPG": {
+        "elevation": 392,
+        "runways": "08L,08R,09R,09L,26L,26R,27L,27R",
+        "transAlt": 5000,
+        "maxInitialClimb": 13000,
+		"customRules": {"opposing": false},
+        "appSI": "PGN,FF",
+        "sids": {
+            "ELCOB": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"OPALE": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"ATREX": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"NURMO": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"climbvia": true,
+					"engineType": "PT",
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"DIKOL": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"RANUX": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"6": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"7": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"8": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 21
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"17": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"18": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 2,
+					"area": "south"
+                },
+				"19": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"20": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "south"
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+                    "prio": 11
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"climbvia": true,
+					"customRule": "opposing",
+                    "prio": 10
+                }
+			},
+			"LANVI": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"BUBLI": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 11
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"6": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 21
+                },
+				"7": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"8": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 2,
+					"area": "north"
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+                    "prio": 11
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 9000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"17": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"18": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 21
+                },
+				"19": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"20": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 2,
+					"area": "north"
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"PILUL": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"DORDI": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"OKASI": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"LATRA": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"MONOT": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"OLZOM": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 3000,
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"ERIXU": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"AGOPA": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"3": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"4": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"6": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"7": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"8": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"9": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"10": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"11": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"12": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 12000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			},
+			"LGL": {
+                "1": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"2": {
+					"designator": "H",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 11
+                },
+				"3": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"4": {
+					"designator": "L",
+                    "rwy": "08L,08R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"5": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"6": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 21
+                },
+				"7": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"8": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"9": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"10": {
+					"designator": "G",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 2,
+					"area": "north"
+                },
+				"11": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"12": {
+					"designator": "K",
+                    "rwy": "09R,09L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"13": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 11
+                },
+				"14": {
+					"designator": "B",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 11
+                },
+				"15": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"16": {
+					"designator": "E",
+                    "rwy": "26R,26L",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 10
+                },
+				"17": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 21
+                },
+				"18": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 21
+                },
+				"19": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"20": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 20
+                },
+				"21": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+                    "prio": 2,
+					"area": "north"
+                },
+				"22": {
+					"designator": "A",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+                    "prio": 2,
+					"area": "north"
+                },
+				"23": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 10000,
+					"engineType": "J",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                },
+				"24": {
+					"designator": "D",
+                    "rwy": "27L,27R",
+                    "initial": 5000,
+					"engineType": "PT",
+					"customRule": "opposing",
+                    "prio": 1,
+					"area": "north"
+                }
+			}
+        },
+		"areas": {
+			"south": {
+                "active": true,
+				"p1": {"lat": "N049.00.26.119", "lon": "E002.31.27.453"},
+				"p2": {"lat": "N049.00.44.510", "lon": "E002.37.06.250"},
+				"p3": {"lat": "N048.59.23.638", "lon": "E002.37.16.331"},
+				"p4": {"lat": "N048.59.09.525", "lon": "E002.31.37.686"}
+            },
+			"north": {
+                "active": true,
+				"p1": {"lat": "N049.00.26.119", "lon": "E002.31.27.453"},
+				"p2": {"lat": "N049.00.44.510", "lon": "E002.37.06.250"},
+				"p3": {"lat": "N049.02.03.126", "lon": "E002.37.08.150"},
+				"p4": {"lat": "N049.01.39.263", "lon": "E002.29.14.453"},
+				"p5": {"lat": "N049.00.23.316", "lon": "E002.29.23.617"}
+            }
+        }
+    }
+}

@@ -1,3 +1,14 @@
+[Changelog v0.12.0]
+
+[NEW]
+*	SID - new SID restriction levels (!! old configs incompatible !!) - levels are "field", "waypoint/base", "designator", "id"
+
+[CHANGED]
+*	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
+
+[REMOVED]
+*	SID - config option "designator"
+
 [Changelog v0.11.1]
 
 [NEW]
