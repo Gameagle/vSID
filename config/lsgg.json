@@ -1,0 +1,208 @@
+{
+    "LSGG": {
+        "elevation": 1411,
+        "runways": "04,22",
+        "transAlt": 7000,
+        "maxInitialClimb": 10000,
+		"customRules": {"low": false},
+        "appSI": "",
+        "sids": {
+            "DEPUL": {
+                "1": {
+					"designator": "P",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "T",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 2
+                },
+				"3": {
+					"designator": "A",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"BALSI": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "A",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"MEDAM": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "A",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"ROCCA": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+					"customRules": "low",
+					"climbvia": true,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "P",
+                    "rwy": "04",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 2
+                },
+				"3": {
+					"designator": "A",
+                    "rwy": "22",
+                    "initial": 9000,
+					"customRules": "low",
+					"climbvia": true,
+                    "prio": 1
+                },
+				"4": {
+					"designator": "B",
+                    "rwy": "22",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 2
+                }
+			},
+			"SAPRE": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"SOSAL": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "L",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"3": {
+					"designator": "R",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"4": {
+					"designator": "J",
+                    "rwy": "22",
+                    "initial": 9000,
+					"engineCount": 2,
+					"acftType": {"A306": false, "A310": false, "A321": false, "A20B": false, "A332": false, "A333": false, "A338": false, "A339": false, "AN124": false, "B731": false, "B732": false, "B733": false, "B734": false, "B738": false, "B739": false, "B753": false, "B752": false, "B762": false, "B763": false, "B764": false, "B772": false, "B77L": false, "B773": false, "B77W": false, "DC8": false, "DC9": false, "C650": false, "L2J": false, "L3J": false, "F7X": false, "F28": false, "MD80": false, "MD81": false, "MD82": false, "MD83": false, "MD87": false, "MD88": false},
+                    "prio": 1
+                }
+			},
+			"ARBOS": {
+                "1": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"DIPIR": {
+                "1": {
+					"designator": "A",
+					"wpt": "DJL",
+                    "rwy": "22",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "A",
+					"wpt": "ARBOS",
+                    "rwy": "22",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 1
+                },
+				"3": {
+					"designator": "A",
+					"wpt": "OBURO",
+                    "rwy": "22",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 1
+                },
+				"4": {
+					"designator": "A",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"SIROD": {
+                "1": {
+					"designator": "N",
+					"wpt": "DJL",
+                    "rwy": "04",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "N",
+					"wpt": "OBURO",
+                    "rwy": "04",
+                    "initial": 9000,
+					"climbvia": true,
+                    "prio": 1
+                },
+				"3": {
+					"designator": "N",
+                    "rwy": "04",
+                    "initial": 9000,
+                    "prio": 1
+                }
+			},
+			"KONIL": {
+                "1": {
+					"designator": "R",
+                    "rwy": "22",
+                    "initial": 9000,
+                    "prio": 1
+                },
+				"2": {
+					"designator": "J",
+                    "rwy": "22",
+                    "initial": 9000,
+					"engineCount": 2,
+					"acftType": {"A306": false, "A310": false, "A321": false, "A20B": false, "A332": false, "A333": false, "A338": false, "A339": false, "AN124": false, "B731": false, "B732": false, "B733": false, "B734": false, "B738": false, "B739": false, "B753": false, "B752": false, "B762": false, "B763": false, "B764": false, "B772": false, "B77L": false, "B773": false, "B77W": false, "DC8": false, "DC9": false, "C650": false, "L2J": false, "L3J": false, "F7X": false, "F28": false, "MD80": false, "MD81": false, "MD82": false, "MD83": false, "MD87": false, "MD88": false},
+                    "prio": 1
+                }
+			}
+        }
+    }
+}
