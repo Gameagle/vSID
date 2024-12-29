@@ -41,6 +41,34 @@ namespace vsid
 		int altCaution = 0;
 	};
 
+	struct tmpSidSettings
+	{
+		std::string base = "";
+		std::string wpt; // #continue - implement wpt override
+		std::string id = "";
+		std::string desig = "";
+		std::vector<std::string> rwys = {};
+		int prio = 99;
+		int initial = 0;
+		bool via = false;
+		bool pilotfiled = false;
+		std::map<std::string, bool> acftType = {};
+		std::map<std::string, bool> dest = {};
+		std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
+		std::string wtc = "";
+		std::string engineType = "";
+		int engineCount = 0;
+		int mtow = 0;
+		std::string customRule = "";
+		std::string area = "";
+		std::map<std::string, bool> equip = {};
+		int lvp = -1;
+		std::map<std::string, std::string> actArrRwy = {};
+		std::map<std::string, std::string> actDepRwy = {};
+		int timeFrom = -1;
+		int timeTo = -1;
+	};
+
 	class ConfigParser
 	{
 	public:
@@ -103,5 +131,14 @@ namespace vsid
 		Clrf clrf;
 		json parsedConfig;
 		json vSidConfig;
+
+		inline bool isConfigValue(const std::string& value) const
+		{
+			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "pilotfiled", "acftType", "dest", "route", 
+				"wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
+				"actDepRwy", "timeFrom", "timeTo" };
+
+			return configValues.contains(value);
+		}
 	};
 }
