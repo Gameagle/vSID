@@ -1,0 +1,275 @@
+{
+    "LFML": {
+        "elevation": 70,
+        "runways": "13L,13R,31L,31R",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "timezone": "Europe/Berlin",
+        "appSI": "ML, MLG, MLD, MLA",
+        "sids": {
+            "ETREK": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 7000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "B",
+                    "rwy": "13L,13R",
+                    "initial": 7000,
+                    "prio": 2,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+                },
+                "3": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                }
+            },
+            "FJR": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                }
+            },
+            "LERGA": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 7000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "B",
+                    "rwy": "13L,13R",
+                    "initial": 7000,
+                    "prio": 2,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+                },
+                "3": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                }
+            },
+            "LUC": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "B",
+                    "rwy": "13L,13R",
+                    "initial": 5000,
+                    "prio": 2,
+                    "climbvia": true
+                },
+                "3": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "4": {
+                    "designator": "U",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 2,
+                    "climbvia": true
+				},
+                "5": {
+                    "designator": "C",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 3,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+				}
+            },
+            "MADRA": {
+                "1": {
+                    "designator": "B",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+				}
+            },
+            "MAMES": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+				},
+                "2": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+				}
+            },
+            "MTL": {
+                "1": {
+                    "designator": "U",
+                    "rwy": "13L,13R",
+                    "initial": 7000,
+                    "prio": 1,
+                    "climbvia": true
+				},
+                "2": {
+                    "designator": "T",
+                    "rwy": "13R,13L",
+                    "initial": 7000,
+                    "prio": 3,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+				},
+                "3": {
+                    "designator": "S",
+                    "rwy": "13R,13L",
+                    "initial": 7000,
+                    "prio": 2,
+                    "climbvia": true
+				},
+                "4": {
+                    "designator": "B",
+                    "rwy": "13R,13L",
+                    "initial": 7000,
+                    "prio": 4,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+				},
+                "5": {
+                    "designator": "N",
+                    "rwy": "31L, 1R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                }
+            },
+            "MTG": {
+                "1": {
+                    "designator": "C",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+                }
+            },
+            "NASIK": {
+                "1": {
+                     "designator": "S",
+                     "rwy": "13R,13L",
+                     "initial": 5000,
+                     "prio": 1,
+                     "climbvia": true
+                },
+                "2": {
+                    "designator": "B",
+                    "rwy": "13L,13R",
+                    "initial": 5000,
+                    "prio": 2,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia": true
+                },
+                "3": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "4": {
+                    "designator": "U",
+                    "rwy": "31L,31R",
+                    "initial": 5000,
+                    "prio": 2,
+                    "climbvia": true
+                },
+                "5" : {
+                    "designator": "C",
+                    "rwy": "31L,31R",
+                    "initial" : 5000,
+                    "prio" : 2,
+                    "equip": {"NON-RNAV": true},
+                    "climbvia" : true
+					}
+                },
+			"SOSUR": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                    }
+                },
+            "TINOT": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                    },
+                "2": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                    }
+                },
+            "VATIR": {
+                "1": {
+                    "designator": "S",
+                    "rwy": "13L,13R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                },
+                "2": {
+                    "designator": "N",
+                    "rwy": "31L,31R",
+                    "initial": 4000,
+                    "prio": 1,
+                    "climbvia": true
+                }
+            }
+        }
+    }
+}
