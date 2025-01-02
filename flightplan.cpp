@@ -81,6 +81,17 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 	return filedRoute;
 }
 
+std::string vsid::fpln::getTransition(const std::vector<std::string>& route, const std::map<std::string, vsid::Transition>& transition)
+{
+	if (transition.empty()) return "";
+
+	for (auto& [base, trans] : transition)
+	{
+		if (std::find(route.begin(), route.end(), base) == route.end()) continue;
+		return trans.base + trans.number + trans.designator;
+	}
+}
+
 std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
 	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');

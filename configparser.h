@@ -44,9 +44,10 @@ namespace vsid
 	struct tmpSidSettings
 	{
 		std::string base = "";
-		std::string wpt; // #continue - implement wpt override
+		std::string wpt;
 		std::string id = "";
 		std::string desig = "";
+		std::map<std::string, vsid::Transition> transition = {};
 		std::vector<std::string> rwys = {};
 		int prio = 99;
 		int initial = 0;
@@ -134,8 +135,8 @@ namespace vsid
 
 		inline bool isConfigValue(const std::string& value) const
 		{
-			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "pilotfiled", "acftType", "dest", "route", 
-				"wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
+			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "acftType",
+				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
 				"actDepRwy", "timeFrom", "timeTo" };
 
 			return configValues.contains(value);
