@@ -73,7 +73,8 @@ namespace vsid
 		// Parameter: const std::vector<std::string> & route - filed route split in single elements
 		// Parameter: const std::map<std::string, vsid::Transition> & - map of all transitions for a given SID
 		//************************************
-		std::string getTransition(const std::vector<std::string>& route, const std::map<std::string, vsid::Transition>& trans);
+		std::string getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
+			const std::string &filedSidWpt);
 
 		/**
 		 * @brief Get only the assigned rwy extracted from the flight plan
