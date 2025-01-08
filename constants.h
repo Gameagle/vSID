@@ -43,6 +43,7 @@ const int TAG_ITEM_VSID_CLRF = 646;
 const int TAG_FUNC_VSID_CTL = 745;
 
 const int TAG_ITEM_VSID_TRANS = 647;
+const int TAG_FUNC_VSID_TRANS = 746;
 
 // menues
 

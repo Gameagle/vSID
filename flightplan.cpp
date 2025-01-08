@@ -81,15 +81,21 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 	return filedRoute;
 }
 
-std::string vsid::fpln::getTransition(const std::vector<std::string>& route, const std::map<std::string, vsid::Transition>& transition)
+std::string vsid::fpln::getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
+	const std::string& filedSidWpt)
 {
 	if (transition.empty()) return "";
+
+	std::vector<std::string> route = vsid::fpln::clean(FlightPlan, filedSidWpt);
 
 	for (auto& [base, trans] : transition)
 	{
 		if (std::find(route.begin(), route.end(), base) == route.end()) continue;
 		return trans.base + trans.number + trans.designator;
 	}
+	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) +
+		"] no matching transition wpt found", vsid::MessageHandler::DebugArea::Sid);
+	return ""; // fallback if no transition could be matched
 }
 
 std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)

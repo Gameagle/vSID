@@ -29,8 +29,22 @@ NEW
                 },
 ```
 
+*	SID - new tagItem "Transition" (Italy support) - retrieves the transition from the flightplan if set or shows the suggested transition based on config values
+*	SID - new config option "trans" to list all possible transitions for a SID as a key/value pair with the key being the waypoint and the value being the designator. Numbers are updated from .ese or .sct files same was with SIDs
+```json
+"trans": {"waypoint": "designator", "waypoint2": "designator"}
+```
+
 [CHANGED]
 *	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
+```json
+"waypoint": {
+      "A": {
+		"1": {},
+		"2": {}
+		}
+	  }
+```
 
 [REMOVED]
 *	SID - config option "designator"
