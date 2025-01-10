@@ -1548,6 +1548,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (std::string(fplnData.GetPlanType()) == "I")
 			{
 				// if a non standard SID is detected reset the SID to the standard SID
+
+				// #continue - add transition splitting
 				if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()) && atcBlock.first != this->processed[callsign].sid.name())
 				{
 					this->processFlightplan(fpln, false);
@@ -1594,9 +1596,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		}
 		else if (this->processed.contains(callsign) && blockSid != "" && depRwy != "")
 		{
-			if (std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
+			if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+				std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 			{
-				std::vector<std::string> splitSid = vsid::utils::split(blockSid, 'X');
+				std::vector<std::string> splitSid = vsid::utils::split(vsid::utils::toupper(blockSid), 'X');
 				if (splitSid.size() > 1)
 				{
 					try
@@ -1673,7 +1676,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (sid != "")
 			{
 				std::ostringstream ss;
-				ss << sid << "X" << sItemString << "/" << depRwy;
+				ss << sid << "x" << sItemString << "/" << depRwy;
 				filedRoute.insert(filedRoute.begin(), ss.str());
 
 				this->processed[callsign].noFplnUpdate = true;
@@ -1699,6 +1702,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		// code order important! the pop up list may only be generated when no sItemString is present (if a button has been clicked)
 		// if the list gets set up again while clicking a button wrong values might occur
+
 		for (int i = this->activeAirports[fplnData.GetOrigin()].maxInitialClimb; i >= vsid::utils::getMinClimb(this->activeAirports[fplnData.GetOrigin()].elevation); i -= 500)
 		{
 			std::string menuElem = (i > this->activeAirports[fplnData.GetOrigin()].transAlt) ? "0" + std::to_string(i / 100) : "A" + std::to_string(i / 100);
@@ -1713,6 +1717,9 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				std::string clmbElem = (i > this->activeAirports[fplnData.GetOrigin()].transAlt) ? "0" + std::to_string(i / 100) : "A" + std::to_string(i / 100);
 				this->AddPopupListElement(clmbElem.c_str(), clmbElem.c_str(), TAG_FUNC_VSID_CLMBMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
 			}
+
+			if(alt.size() == 0)
+				this->AddPopupListElement("NO MAX CLIMB", "NO MAX CLIMB", EuroScopePlugIn::TAG_ITEM_FUNCTION_NO, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, true, false);
 		}
 		if (strlen(sItemString) != 0)
 		{
@@ -1847,23 +1854,23 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		if (ItemCode == TAG_ITEM_VSID_SIDS)
 		{
 			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-			std::pair<std::string, std::string> atcBlock = vsid::fpln::getAtcBlock(FlightPlan);
-			/*auto [blockSid, blockRwy] = vsid::fpln::getAtcBlock(FlightPlan);*/
+			auto [blockSid, blockRwy] = vsid::fpln::getAtcBlock(FlightPlan);
 
-			if (std::find(atcBlock.first.begin(), atcBlock.first.end(), 'X') != atcBlock.first.end())
+			if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+				std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 			{
 				try
 				{
-					std::vector<std::string> splitSid = vsid::utils::split(atcBlock.first, 'X');
+					std::vector<std::string> splitSid = vsid::utils::split(vsid::utils::toupper(blockSid), 'X');
 					if (splitSid.size() > 1)
 					{
 						if (splitSid.at(0) != "" && std::isdigit(splitSid.at(0).back())) splitSid.at(0) = splitSid.at(0) + "X";
-						atcBlock.first = splitSid.at(0);
+						blockSid = splitSid.at(0);
 					}
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to split SID at \" splitter \" X");
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to split SID at \" splitter \" X in SID item");
 				}
 			}
 
@@ -1875,7 +1882,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 				if (this->processed.contains(callsign))
 				{
-					if (atcBlock.first == "")
+					if (blockSid == "")
 					{
 						this->processed.erase(callsign);
 						return; // #monitor - return added. we should stop any settings as info is deleted
@@ -1883,10 +1890,10 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 					EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 					if (cad.GetClearedAltitude() == cad.GetFinalAltitude() &&
-						atcBlock.first != "" &&
+						blockSid != "" &&
 						ControllerMyself().IsController() &&
-						(atcBlock.first == this->processed[callsign].sid.name() ||
-							atcBlock.first == this->processed[callsign].customSid.name())
+						(blockSid == this->processed[callsign].sid.name() ||
+							blockSid == this->processed[callsign].customSid.name())
 						)
 					{
 						if (!this->processed[callsign].customSid.empty()) // #monitor - RFL < initial
@@ -1916,10 +1923,10 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				std::string sidName = this->processed[callsign].sid.name();
 				std::string customSidName = this->processed[callsign].customSid.name();
 
-				if (((atcBlock.first == fplnData.GetOrigin() &&
+				if (((blockSid == fplnData.GetOrigin() &&
 					this->processed[callsign].atcRWY &&
 					this->processed[callsign].customSid.empty()) ||
-					(atcBlock.first == "" &&
+					(blockSid == "" &&
 						this->processed[callsign].sid.empty() &&
 						this->processed[callsign].customSid.empty())) &&
 					std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "I"
@@ -1927,8 +1934,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				{
 					*pRGB = this->configParser.getColor("noSid");
 				}
-				else if ((atcBlock.first == "" ||
-					atcBlock.first == fplnData.GetOrigin()) &&
+				else if ((blockSid == "" ||
+					blockSid == fplnData.GetOrigin()) &&
 					((this->processed[callsign].customSid.empty() ||
 						this->processed[callsign].sid == this->processed[callsign].customSid) ||
 						((std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V" &&
@@ -1938,24 +1945,24 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				{
 					*pRGB = this->configParser.getColor("sidSuggestion");
 				}
-				else if (atcBlock.first != "" &&
-					atcBlock.first == fplnData.GetOrigin() &&
+				else if (blockSid != "" &&
+					blockSid == fplnData.GetOrigin() &&
 					!this->processed[callsign].customSid.empty() &&
 					this->processed[callsign].sid != this->processed[callsign].customSid
 					)
 				{
 					*pRGB = this->configParser.getColor("customSidSuggestion");
 				}
-				else if ((atcBlock.first != "" &&
-					atcBlock.first != fplnData.GetOrigin() &&
-					atcBlock.first == customSidName &&
+				else if ((blockSid != "" &&
+					blockSid != fplnData.GetOrigin() &&
+					blockSid == customSidName &&
 					this->processed[callsign].sid != this->processed[callsign].customSid) ||
-					atcBlock.first != sidName
+					blockSid != sidName
 					)
 				{
 					*pRGB = this->configParser.getColor("customSidSet");
 				}
-				else if (atcBlock.first != "" && atcBlock.first == sidName)
+				else if (blockSid != "" && blockSid == sidName)
 				{
 					*pRGB = this->configParser.getColor("suggestedSidSet");
 				}
@@ -1964,21 +1971,21 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					*pRGB = RGB(140, 140, 60);
 				}
 
-				if (atcBlock.first != "" && atcBlock.first != fplnData.GetOrigin())
+				if (blockSid != "" && blockSid != fplnData.GetOrigin())
 				{
-					strcpy_s(sItemString, 16, atcBlock.first.c_str());
+					strcpy_s(sItemString, 16, blockSid.c_str());
 				}
-				else if ((atcBlock.first == "" ||
-					atcBlock.first == fplnData.GetOrigin()) &&
+				else if ((blockSid == "" ||
+					blockSid == fplnData.GetOrigin()) &&
 					std::string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V"
 					)
 				{
 					strcpy_s(sItemString, 16, "VFR");
 				}
-				else if ((atcBlock.first != "" &&
-					atcBlock.first == fplnData.GetOrigin() &&
+				else if ((blockSid != "" &&
+					blockSid == fplnData.GetOrigin() &&
 					this->processed[callsign].atcRWY &&
-					!vsid::utils::contains(this->processed[callsign].customSid.rwys, atcBlock.second)) ||
+					!vsid::utils::contains(this->processed[callsign].customSid.rwys, blockRwy)) ||
 					(this->processed[callsign].sid.empty() &&
 						this->processed[callsign].customSid.empty())
 					)
@@ -2008,23 +2015,23 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					{
 						checkOnly = true;
 					}
-					else if (!FlightPlan.GetClearenceFlag() && atcBlock.first != fplnData.GetOrigin() && fplnData.IsAmended())
+					else if (!FlightPlan.GetClearenceFlag() && blockSid != fplnData.GetOrigin() && fplnData.IsAmended())
 					{
 						// prevent automode to use rwys set before
-						atcBlock.second = "";
+						blockRwy = "";
 					}
 				}
-				if (atcBlock.second != "" &&
+				if (blockRwy != "" &&
 					//(vsid::fpln::findRemarks(fplnData, "VSID/RWY") ||
 					(vsid::fpln::findRemarks(FlightPlan, "VSID/RWY") ||
-						atcBlock.first != fplnData.GetOrigin() ||
+						blockSid != fplnData.GetOrigin() ||
 						fplnData.IsAmended())
 					)
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] not yet processed, calling processFlightplan with atcRwy: " +
-						atcBlock.second + ((!checkOnly) ? " and setting the fpln." : " and only checking the fpln"),
+						blockRwy + ((!checkOnly) ? " and setting the fpln." : " and only checking the fpln"),
 						vsid::MessageHandler::DebugArea::Sid);
-					this->processFlightplan(FlightPlan, checkOnly, atcBlock.second);
+					this->processFlightplan(FlightPlan, checkOnly, blockRwy);
 				}
 				else
 				{
@@ -2041,7 +2048,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			{
 				std::vector<std::string> route = vsid::utils::split(fplnData.GetRoute(), ' ');
 
-				if ((atcBlock.first != "" && atcBlock.first == fplnData.GetOrigin()) || atcBlock.first == "")
+				if ((blockSid != "" && blockSid == fplnData.GetOrigin()) || blockSid == "")
 				{
 					*pRGB = this->configParser.getColor("customSidSuggestion");
 					bool validWpt = false;
@@ -2056,14 +2063,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 						}
 					}
 					if (!validWpt) strcpy_s(sItemString, 16, "");
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and atc.first is no SID: \"" + atcBlock.first + "\"", vsid::MessageHandler::DebugArea::Sid);
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and atc.first is no SID: \"" + blockSid + "\"", vsid::MessageHandler::DebugArea::Sid);
 				}
 				// processed flight plans are managed above - this is for already airborne flight plans after connecting
-				else if (!this->processed.contains(callsign) && atcBlock.first != "" && atcBlock.first != fplnData.GetOrigin())
+				else if (!this->processed.contains(callsign) && blockSid != "" && blockSid != fplnData.GetOrigin())
 				{
 					*pRGB = this->configParser.getColor("customSidSuggestion");
-					strcpy_s(sItemString, 16, atcBlock.first.c_str());
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and unknown. SID: \"" + atcBlock.first + "\"", vsid::MessageHandler::DebugArea::Sid);
+					strcpy_s(sItemString, 16, blockSid.c_str());
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] airborne and unknown. SID: \"" + blockSid + "\"", vsid::MessageHandler::DebugArea::Sid);
 				}
 			}
 		}
@@ -2083,9 +2090,10 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 				auto [blockSid, blockRwy] = vsid::fpln::getAtcBlock(FlightPlan);
 
-				if (std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
+				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+					std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 				{
-					std::vector<std::string> splitSid = vsid::utils::split(blockSid, 'X');
+					std::vector<std::string> splitSid = vsid::utils::split(vsid::utils::toupper(blockSid), 'X');
 					if (splitSid.size() > 1)
 					{
 						try
@@ -2096,7 +2104,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 						}
 						catch (std::out_of_range)
 						{
-							messageHandler->writeMessage("ERROR", "Failed to split SID at \" splitter \" X");
+							messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to split SID at \" splitter \" X in Trans item");
 						}
 					}
 				}
@@ -2143,9 +2151,9 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 			int transAlt = this->activeAirports[fplnData.GetOrigin()].transAlt;
 			int tempAlt = 0;
-			int climbVia = 0;
+			bool climbVia = false;
 
-			if (this->processed.find(callsign) != this->processed.end())
+			if (this->processed.contains(callsign))
 			{
 				// determine if a found non-standard sid exists in valid sids and set it for ic comparison
 
@@ -2153,7 +2161,26 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				std::string customSidName = this->processed[callsign].customSid.name();
 				std::string atcSid = vsid::fpln::getAtcBlock(FlightPlan).first;
 
+				if (std::find(atcSid.begin(), atcSid.end(), 'x') != atcSid.end() ||
+					std::find(atcSid.begin(), atcSid.end(), 'X') != atcSid.end())
+				{
+					try
+					{
+						std::vector<std::string> splitSid = vsid::utils::split(vsid::utils::toupper(atcSid), 'X');
+						if (splitSid.size() > 1)
+						{
+							if (splitSid.at(0) != "" && std::isdigit(splitSid.at(0).back())) splitSid.at(0) = splitSid.at(0) + "X";
+							atcSid = splitSid.at(0);
+						}
+					}
+					catch (std::out_of_range)
+					{
+						messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to split SID at \" splitter \" X in Climb item");
+					}
+				}
+
 				// if an unknown Sid is set (non-standard or non-custom) try to find matching Sid in config
+
 				if (atcSid != "" && atcSid != fplnData.GetOrigin() && atcSid != sidName && atcSid != customSidName)
 				{
 					for (vsid::Sid& sid : this->activeAirports[fplnData.GetOrigin()].sids)
@@ -2174,6 +2201,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				}
 
 				// determine if climb via is needed depending on customSid
+
 				if ((atcSid == "" || atcSid == sidName || atcSid == fplnData.GetOrigin()) && sidName != customSidName)
 				{
 					climbVia = this->processed[callsign].sid.climbvia;
