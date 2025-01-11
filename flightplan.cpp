@@ -98,6 +98,33 @@ std::string vsid::fpln::getTransition(const EuroScopePlugIn::CFlightPlan& Flight
 	return ""; // fallback if no transition could be matched
 }
 
+std::string vsid::fpln::splitTransition(std::string atcSid)
+{
+	if (atcSid == "") return "";
+
+	atcSid = vsid::utils::toupper(atcSid);
+	size_t firstX = atcSid.find_first_of('X');
+
+	if (firstX == atcSid.length() - 1) return atcSid;	
+
+	std::vector<std::string> splitSid = vsid::utils::split(atcSid, 'X');
+	std::string rebuiltSid = "";
+
+	for (std::string& part : splitSid)
+	{
+		rebuiltSid += part;
+
+		if (rebuiltSid != "" && std::isdigit(static_cast<unsigned char>(rebuiltSid.back())))
+			return rebuiltSid += "X";
+		else if (rebuiltSid.find_first_of("0123456789") != std::string::npos)
+			return rebuiltSid;
+		else
+			rebuiltSid += "X";
+	}
+
+	return ""; // fallback
+}
+
 std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
 	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');
