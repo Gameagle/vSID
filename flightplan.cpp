@@ -103,15 +103,23 @@ std::string vsid::fpln::splitTransition(std::string atcSid)
 	if (atcSid == "") return "";
 
 	atcSid = vsid::utils::toupper(atcSid);
+	bool xIsFirst = false;
 	size_t firstX = atcSid.find_first_of('X');
 
-	if (firstX == atcSid.length() - 1) return atcSid;	
+	if (firstX == 0) xIsFirst = true;
+	else if (firstX == atcSid.length() - 1) return atcSid;	
 
 	std::vector<std::string> splitSid = vsid::utils::split(atcSid, 'X');
 	std::string rebuiltSid = "";
 
 	for (std::string& part : splitSid)
 	{
+		if (xIsFirst)
+		{
+			rebuiltSid += "X";
+			xIsFirst = false;
+		}
+
 		rebuiltSid += part;
 
 		if (rebuiltSid != "" && std::isdigit(static_cast<unsigned char>(rebuiltSid.back())))
@@ -121,7 +129,6 @@ std::string vsid::fpln::splitTransition(std::string atcSid)
 		else
 			rebuiltSid += "X";
 	}
-
 	return ""; // fallback
 }
 
