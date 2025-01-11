@@ -76,6 +76,18 @@ namespace vsid
 		std::string getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
 			const std::string &filedSidWpt);
 
+		//************************************
+		// Description: Splits the SID at 'X' for use with SIDxTRANS
+		// Method:    splitTransition
+		// FullName:  vsid::fpln::splitTransition
+		// Access:    public 
+		// Returns:   std::string - the SID stripped from possible transitions
+		//	 if the SID itself contains a X it is rebuilt
+		// Qualifier:
+		// Parameter: std::string atcSid
+		//************************************
+		std::string splitTransition(std::string atcSid);
+
 		/**
 		 * @brief Get only the assigned rwy extracted from the flight plan
 		 * 
