@@ -1,6 +1,6 @@
 [Changelog v0.12.0]
 
-[NEW]
+**NEW**
 *	SID - new SID restriction levels (!! old configs incompatible !!) - levels are "field", "waypoint/base", "designator", "id". Each config option can now be written above each section, e.g. "climbvia" could be written in the line before "waypointXYZ" to be used for all SIDs or it could be written before "B" to be used for all "waypointXYZ" designators. The more nested sections overwrite everything above (so id will overwrite designator and waypoint and field while the waypoint section will overwrite the field section). Aim is to reduce repetition of same config values.
 
 OLD
@@ -35,7 +35,7 @@ NEW
 "trans": {"waypoint": "designator", "waypoint2": "designator"}
 ```
 
-[CHANGED]
+**CHANGED**
 *	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
 ```json
 "waypoint": {
@@ -45,8 +45,19 @@ NEW
 		}
 	  }
 ```
+*	SID - active departure and arrival runways are now split in allow (aka mandatory) and deny. "all" and "any" reamains unchanged
+```json
+"actDepRwy": {
+	"deny":{"any": "..."},
+	"allow":{"all": "..."}
+},
+"actArrRwy": {
+	"deny":{"all": "..."},
+	"allow":{"any": "..."}
+}
+```
 
-[REMOVED]
+**REMOVED**
 *	SID - config option "designator"
 
 [Changelog v0.11.1]
