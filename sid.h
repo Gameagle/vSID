@@ -40,8 +40,9 @@ namespace vsid
 
 		Sid(std::string base = "", std::string waypoint = "", std::string id = "", std::string number = "", std::string designator = "", std::vector<std::string> rwys = {},
 			std::map<std::string, vsid::Transition> transition = {}, std::map<std::string, bool> equip = {}, int initialClimb = 0, bool climbvia = false, int prio = 99,
-			bool pilotfiled = false, std::map<std::string, std::string> actArrRwy = {}, std::map<std::string, std::string> actDepRwy = {}, std::string wtc = "",
-			std::string engineType = "", std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0, std::map<std::string, bool> dest = {},
+			bool pilotfiled = false, std::map<std::string, std::map<std::string, std::string>> actArrRwy = {},
+			std::map<std::string, std::map<std::string, std::string>> actDepRwy = {}, std::string wtc = "", std::string engineType = "",
+			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0, std::map<std::string, bool> dest = {},
 			std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {}, std::string customRule = "", std::string area = "", int lvp = -1,
 			int timeFrom = -1, int timeTo = -1) : base(base), waypoint(waypoint), id(id), number(number), designator(designator),
 			rwys(rwys), transition(transition), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
@@ -66,15 +67,17 @@ namespace vsid
 		int prio;
 		bool pilotfiled;
 		//************************************
-		// Parameter: <std::string, - type of "any" or "all"
-		// Parameter: , std::string> - comma separated list of runways
+		// Parameter: 1. map <std::string, - type of "allow" or "deny"
+		// Parameter: 2. map <std::string,  - type of "allow" or "deny"
+		// Parameter: , std::string>  - comma separated list of runways
 		//************************************
-		std::map<std::string, std::string> actArrRwy;
+		std::map<std::string, std::map<std::string, std::string>> actArrRwy;
 		//************************************
-		// Parameter: <std::string, - type of "any" or "all"
-		// Parameter: , std::string> - comma separated list of runways
+		// Parameter: 1. map <std::string, - type of "allow" or "deny"
+		// Parameter: 2. map <std::string,  - type of "allow" or "deny"
+		// Parameter: , std::string>  - comma separated list of runways
 		//************************************
-		std::map<std::string, std::string> actDepRwy;
+		std::map<std::string, std::map<std::string, std::string>> actDepRwy;
 		std::string wtc;
 		std::string engineType;
 		std::map<std::string, bool> acftType;

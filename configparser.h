@@ -64,8 +64,8 @@ namespace vsid
 		std::string area = "";
 		std::map<std::string, bool> equip = {};
 		int lvp = -1;
-		std::map<std::string, std::string> actArrRwy = {};
-		std::map<std::string, std::string> actDepRwy = {};
+		std::map<std::string, std::map<std::string, std::string>> actArrRwy = {};
+		std::map<std::string, std::map<std::string, std::string>> actDepRwy = {};
 		int timeFrom = -1;
 		int timeTo = -1;
 	};
