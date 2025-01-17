@@ -6,90 +6,82 @@
         "maxInitialClimb": 7000,
         "appSI": "NKRL,NKRH,BAD,DKB,KTG",
         "sids": {
+            "initial": 5000,
             "MANEM": {
-                "1":{
-					"designator":"C",
-                    "rwy": "09",
-                    "initial": 5000,
-                    "climbvia": false,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "C": {
+                    "1":{
+                        "rwy": "09",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"W",
-                    "rwy": "27",
-                    "initial": 5000,
-                    "climbvia": false,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "W": {
+                    "1":{
+                        "rwy": "27",
+                        "prio": 1
+                    }
                 }
 			},
 			"OLIVI": {
-                "1":{
-					"designator":"C",
-                    "rwy": "09",
-                    "initial": 5000,
-                    "climbvia": true,
-                    "prio": 1
+                "climbvia": true,
+                "C": {
+                    "1":{
+                        "rwy": "09",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"W",
-                    "rwy": "27",
-                    "initial": 5000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1":{
+                        "rwy": "27",
+                        "prio": 1
+                    }
                 }
 			},
 			"RINEX": {
-                "1":{
-					"designator":"C",
-                    "rwy": "09",
-                    "initial": 5000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "climbvia": true,
+                "C": {
+                    "1":{
+                        "rwy": "09",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"W",
-                    "rwy": "27",
-                    "initial": 5000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "W": {
+                    "1":{
+                        "rwy": "27",
+                        "prio": 1
+                    }
                 }
 			},
 			"ROLSO": {
-                "1":{
-					"designator":"C",
-                    "rwy": "09",
-                    "initial": 5000,
-                    "climbvia": false,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "C": {
+                    "1":{
+                        "rwy": "09",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"W",
-                    "rwy": "27",
-                    "initial": 5000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "W": {
+                    "1":{
+                        "rwy": "27",
+                        "climbvia": true,
+                        "prio": 1
+                    }
                 }
 			},
 			"UMDAS": {
-                "1":{
-					"designator":"C",
-                    "rwy": "09",
-                    "initial": 5000,
-                    "climbvia": false,
-                    "prio": 1
+                "C": {
+                    "1":{
+                        "rwy": "09",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"W",
-                    "rwy": "27",
-                    "initial": 5000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1":{
+                        "rwy": "27",
+                        "climbvia": true,
+                        "prio": 1
+                    }
                 }
 			}
         }
