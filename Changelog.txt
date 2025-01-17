@@ -34,6 +34,7 @@ NEW
 ```json
 "trans": {"waypoint": "designator", "waypoint2": "designator"}
 ```
+*	SID - new "sidHighlight" and "clmbHighlight" settings for SID and color config (same names apply). As a SID setting those values default to false and can be activated to highlight SID and/or climb values besides the regular colors
 
 **CHANGED**
 *	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
