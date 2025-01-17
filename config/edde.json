@@ -1,0 +1,79 @@
+{
+    "EDDE": {
+        "elevation": 1034,
+        "runways": "09,27",
+        "transAlt": 5000,
+        "maxInitialClimb": 8000,
+		"appSI": "TRS,GER,MEI,HAL,HOF,EDMM",
+        "sids": {
+            "initial": 7000,
+            "climbvia": true,
+            "ERSIL": {
+                "C": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "D": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"LASTO": {
+                "C": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "D": {
+                    "2": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"NEVKO": {
+                "C": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "D": {
+                    "2": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"PILAM": {
+                "D": {
+                    "1": {
+                        "rwy": "27",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                }
+			},
+			"ERF": {
+                "equip": {"NON-RNAV": true},
+                "A": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}
