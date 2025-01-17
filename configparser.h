@@ -64,10 +64,12 @@ namespace vsid
 		std::string area = "";
 		std::map<std::string, bool> equip = {};
 		int lvp = -1;
-		std::map<std::string, std::string> actArrRwy = {};
-		std::map<std::string, std::string> actDepRwy = {};
+		std::map<std::string, std::map<std::string, std::string>> actArrRwy = {};
+		std::map<std::string, std::map<std::string, std::string>> actDepRwy = {};
 		int timeFrom = -1;
 		int timeTo = -1;
+		bool sidHighlight = false;
+		bool clmbHighlight = false;
 	};
 
 	class ConfigParser
@@ -137,7 +139,7 @@ namespace vsid
 		{
 			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "acftType",
 				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
-				"actDepRwy", "timeFrom", "timeTo" };
+				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight"};
 
 			return configValues.contains(value);
 		}
