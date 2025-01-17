@@ -379,6 +379,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             }
                             else if (sidField.key() == "timeFrom") fieldSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "timeTo") fieldSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "sidHighlight") fieldSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "clmbHighlight") fieldSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (!this->isConfigValue(sidField.key()))
                             {
                                 fieldSetting.base = sidField.key();
@@ -517,6 +519,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 									}
 									else if (sidWpt.key() == "timeFrom") wptSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "timeTo") wptSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+									else if (sidWpt.key() == "sidHighlight") wptSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+									else if (sidWpt.key() == "clmbHighlight") wptSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if (!this->isConfigValue(sidWpt.key()))
                                     {
                                         wptSetting.desig = sidWpt.key();
@@ -682,6 +686,10 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                 desSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "timeTo")
                                                 desSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+											else if (sidDes.key() == "sidHighlight")
+                                                desSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+											else if (sidDes.key() == "clmbHighlight")
+                                                desSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
                                             else if (!this->isConfigValue(sidDes.key()))
                                             {
                                                 desSetting.id = sidDes.key();
@@ -857,6 +865,10 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                         idSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "timeTo")
                                                         idSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "sidHighlight")
+                                                        idSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "clmbHighlight")
+                                                        idSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
 
                                                     if (idSetting.equip.empty()) idSetting.equip["RNAV"] = true;
                                                 }
@@ -867,7 +879,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                                     idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled, idSetting.actArrRwy,
                                                                     idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.acftType, idSetting.engineCount,
 																	idSetting.mtow, idSetting.dest, idSetting.route, idSetting.customRule, idSetting.area, idSetting.lvp,
-																	idSetting.timeFrom, idSetting.timeTo };
+																	idSetting.timeFrom, idSetting.timeTo, idSetting.sidHighlight, idSetting.clmbHighlight };
 												aptInfo.sids.push_back(newSid);
 												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
 

@@ -1629,6 +1629,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				// if a non standard SID is detected reset the SID to the standard SID
 
 				// #continue - add transition splitting
+				// splitTransition if x or X is found in atcBlock.first and only if sid contains a transition - recall if sid or transition mismatch
 				if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()) && atcBlock.first != this->processed[callsign].sid.name())
 				{
 					this->processFlightplan(fpln, false);
@@ -2014,6 +2015,11 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				{
 					*pRGB = this->configParser.getColor("customSidSuggestion");
 				}
+				else if (blockSid != "" && ((blockSid == sidName && this->processed[callsign].sid.sidHighlight) ||
+					(blockSid == customSidName && this->processed[callsign].customSid.sidHighlight)))
+				{
+					*pRGB = this->configParser.getColor("sidHighlight");
+				}
 				else if ((blockSid != "" &&
 					blockSid != fplnData.GetOrigin() &&
 					blockSid == customSidName &&
@@ -2027,10 +2033,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				{
 					*pRGB = this->configParser.getColor("suggestedSidSet");
 				}
-				else
-				{
-					*pRGB = RGB(140, 140, 60);
-				}
+				else *pRGB = RGB(140, 140, 60);
 
 				if (blockSid != "" && blockSid != fplnData.GetOrigin())
 				{
@@ -2174,6 +2177,12 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 						!this->processed[callsign].customSid.empty() &&
 						this->processed[callsign].sid != this->processed[callsign].customSid)
 							*pRGB = this->configParser.getColor("customSidSuggestion");
+					else if (blockSid != "" && transition != "" && this->processed[callsign].transition == transition &&
+						((blockSid == sidName && this->processed[callsign].sid.sidHighlight) ||
+						(blockSid == customSidName && this->processed[callsign].customSid.sidHighlight)))
+					{
+						*pRGB = this->configParser.getColor("sidHighlight");
+					}
 					else if (transition != "" && this->processed[callsign].transition == transition)
 						*pRGB = this->configParser.getColor("suggestedSidSet");
 					else if (transition != "" && this->processed[callsign].transition != transition)
@@ -2287,7 +2296,12 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					fpln.GetClearedAltitude() == tempAlt
 					)
 				{
-					if (climbVia)
+					if ((tempAlt == this->processed[callsign].sid.initialClimb && this->processed[callsign].sid.clmbHighlight) ||
+						(tempAlt == this->processed[callsign].customSid.initialClimb && this->processed[callsign].customSid.clmbHighlight))
+					{
+						*pRGB = this->configParser.getColor("clmbHighlight");
+					}
+					else if (climbVia)
 					{
 						*pRGB = this->configParser.getColor("clmbViaSet"); // green
 					}
