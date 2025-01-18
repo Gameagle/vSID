@@ -1,0 +1,37 @@
+{
+    "EDMO": {
+        "elevation": 1947,
+        "runways": "02,22",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "appSI": "DMSL,DMNL,DMSH,DMNH,NDG,ZUG,RDG,EDMM",
+        "sids": {
+            "initial": 7000,
+            "ATMAX": {
+                "R": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+			"MAH": {
+                "R": {
+                    "1": {
+                        "rwy": "22",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "C": {
+                    "2": {
+                        "rwy": "22",
+                        "climbvia": true,
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}

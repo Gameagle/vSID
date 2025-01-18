@@ -1,0 +1,75 @@
+{
+    "EDMA": {
+        "elevation": 1515,
+        "runways": "07,25",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "appSI": "DMNL,DMSL,DMNH,DMSH,NDG,ZUG,RDG,EDMM",
+        "sids": {
+            "climbvia": true,
+            "equip": {"RNAV": true, "NON-RNAV": true},
+            "MAH": {
+                "initial": 4000,
+                "F": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			},
+			"MIQ": {
+                "F": {
+                    "1": {
+                        "rwy": "07",
+                        "initial": 5000,
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "25",
+                        "initial": 4000,
+                        "prio": 1
+                    }
+                }
+			},
+			"KPT": {
+                "initial": 7000,
+                "equip": {"RNAV": true},
+                "F": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			},
+			"RIDAR": {
+                "initial": 4000,
+                "F": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}
