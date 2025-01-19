@@ -1,0 +1,509 @@
+{
+    "ETAD": {
+        "elevation": 1197,
+        "runways": "04,22",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "EIF,RUD,GIN,KTG",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "NVO": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+            "ROPUV": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+            "TOLEY": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+            "PIREK": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+            "GERKU": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			},
+            "GEBSO": {
+                "H": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+    "ETAR": {
+        "elevation": 781,
+        "runways": "08,09,26,27",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "PFA,EIF,RUD,GIN,KTG",
+        "sids": {
+            "initial": 5000,
+            "BOLK": {
+                "E": {
+                    "1": {
+                        "wpt": "RINEX",
+                        "rwy": "08,09",
+                        "prio": 1
+                    }
+                },
+                "L": {
+                    "1": {
+                        "wpt": "LIMGO",
+                        "rwy": "08,09",
+                        "prio": 1
+                    }
+                },
+                "N": {
+                    "1": {
+                        "wpt": "RUDOT",
+                        "rwy": "08,09",
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "wpt": "BADLI",
+                        "rwy": "08,09",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "wpt": "SARRI",
+                        "rwy": "08,09",
+                        "prio": 1
+                    }
+                }
+			},
+            "TOLE": {
+                "E": {
+                    "1": {
+                        "wpt": "RINEX",
+                        "rwy": "26,27",
+                        "prio": 1
+                    }
+                },
+                "L": {
+                    "1": {
+                        "wpt": "LIMGO",
+                        "rwy": "26,27",
+                        "prio": 1
+                    }
+                },
+                "N": {
+                    "1": {
+                        "wpt": "RUDOT",
+                        "rwy": "26,27",
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "wpt": "BADLI",
+                        "rwy": "26,27",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "wpt": "SARRI",
+                        "rwy": "26,27",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+    "ETNG": {
+        "elevation": 292,
+        "runways": "09,27",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "BOT,DLD,DLA,PADH",
+        "sids": {
+            "KENUM": {
+                "initial": 3000,
+                "climbvia": true,
+                "A": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                }
+			},
+            "MILGI": {
+                "initial": 3000,
+                "climbvia": true,
+                "A": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                }
+			},
+			"NG81": {
+                "1": {
+                    "1": {
+                        "wpt": "ZELTI",
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"NG91": {
+                "1": {
+                    "1": {
+                        "wpt": "ZELTI",
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                }
+			},
+			"NG86": {
+                "1": {
+                    "1": {
+                        "wpt": "LNO",
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"NG96": {
+                "1": {
+                    "1": {
+                        "wpt": "LNO",
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                }
+			},
+			"NG209": {
+                "1": {
+                    "1": {
+                        "wpt": "XXX",
+                        "rwy": "09",
+                        "prio": 2
+                    }
+                }
+			},
+			"NG227": {
+                "1": {
+                    "1": {
+                        "wpt": "XXX",
+                        "rwy": "27",
+                        "prio": 2
+                    }
+                }
+			}
+        }
+    },
+    "ETOU": {
+        "elevation": 460,
+        "runways": "07,25",
+        "transAlt": 5000,
+        "maxInitialClimb": 8000,
+		"appSI": "DFAN,GIN,DKB,KTG",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "MASIR": {
+                "X": {
+                    "1": {
+                        "rwy": "07",
+                        "initial": 0,
+                        "prio": 1
+                    }
+                },
+                "V": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 99
+                    }
+                }
+			},
+            "FKS": {
+                "X": {
+                    "1": {
+                        "rwy": "07",
+                        "initial": 0,
+                        "prio": 1
+                    }
+                },
+                "V": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 99
+                    }
+                }
+			},
+            "SOBRA": {
+                "X": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "V": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 99
+                    }
+                }
+			},
+            "TABUM": {
+                "X": {
+                    "1": {
+                        "rwy": "07",
+                        "initial": 0,
+                        "prio": 1
+                    }
+                },
+                "V": {
+                    "1": {
+                        "rwy": "25",
+                        "initial": 6000,
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 99
+                    }
+                }
+			},
+            "UBENO": {
+                "X": {
+                    "1": {
+                        "rwy": "07",
+                        "initial": 0,
+                        "prio": 1
+                    }
+                },
+                "V": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 99
+                    }
+                }
+			}
+        }
+    },
+	"ETSB": {
+        "elevation": 1568,
+        "runways": "03,21",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "EIF,RUD,GIN,KTG",
+        "sids": {
+            "wpt": "XXX",
+            "initial": 4000,
+            "SB103": {
+                "1": {
+                    "1": {
+                        "rwy": "03",
+                        "prio": 1
+                    }
+                }
+			},
+			"SB121": {
+                "1": {
+                    "1": {
+                        "rwy": "21",
+                        "prio": 1
+                    }
+                }
+			}
+		}
+	},
+	"ETHF": {
+        "elevation": 565,
+        "runways": "11,29",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "",
+        "sids": {
+            "wpt": "XXX",
+            "initial": 4000,
+            "HF111": {
+                "1": {
+                    "1": {
+                        "rwy": "12",
+                        "prio": 1
+                    }
+                }
+			},
+			"HF129": {
+                "1": {
+                    "1": {
+                        "rwy": "30",
+                        "prio": 1
+                    }
+                }
+			}
+		}
+	},
+	"ETNN": {
+        "elevation": 380,
+        "runways": "06,24",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "",
+        "sids": {
+            "wpt": "XXX",
+            "initial": 3300,
+            "NN106": {
+                "1": {
+                    "1": {
+                        "rwy": "06",
+                        "initial": 3000,
+                        "prio": 1
+                    }
+                }
+			},
+			"NN124": {
+                "1": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"NN224": {
+                "1": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 99
+                    }
+                }
+			}
+		}
+	},
+	"ETHN": {
+        "elevation": 1536,
+        "runways": "07,25",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "",
+        "sids": {
+            "wpt": "XXX",
+            "initial": 3500,
+            "HN107": {
+                "1": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                }
+			},
+			"HN125": {
+                "1": {
+                    "1": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			}
+		}
+	}
+}
