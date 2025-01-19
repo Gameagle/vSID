@@ -1,0 +1,116 @@
+{
+    "EDDN": {
+        "elevation": 1044,
+        "runways": "10,28",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "appSI": "FRK,BBG,HOF,RDG,EDMM",
+        "sids": {
+            "initial": 7000,
+            "climbvia": true,
+            "BOLSI": {
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			},
+			"ERETO": {
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			},
+			"ERL": {
+                "engineType": "PT",
+                "mtow": 5700,
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1      
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			},
+			"RODIS": {
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			},
+			"SUKAD": {
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "28",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                }
+			},
+			"SULUS": {
+                "C": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			},
+			"NUB": {
+                "initial": 6000,
+                "equip": {"NON-RNAV": true},
+                "A": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}

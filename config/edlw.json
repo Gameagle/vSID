@@ -1,0 +1,103 @@
+{
+    "EDLW": {
+        "elevation": 425,
+        "runways": "06,24",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "appSI": "PADL,HMM,PADH",
+        "sids": {
+            "BAMSU": {
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "2": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"DOMEG": {
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "1": {
+                        "rwy": "24",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			},
+			"GMH": {
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "2": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"HMM": {
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "1": {
+                        "rwy": "24",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			},
+			"NUDGO": {
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"OSN": {
+                "Q": {
+                    "1": {
+                        "rwy": "06",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 1
+                    }
+                },
+                "U": {
+                    "1": {
+                        "rwy": "24",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}

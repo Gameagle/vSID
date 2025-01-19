@@ -1,0 +1,285 @@
+{
+    "EDDP": {
+        "elevation": 470,
+        "runways": "08L,08R,26L,26R",
+        "transAlt": 5000,
+        "maxInitialClimb": 8000,
+        "appSI": "TRS,TRN,GER,MEI,HAL,HOF,EDMM",
+        "timeMode": true,
+		"timezone": "Europe/Berlin",
+        "sids": {
+            "initial": 7000,
+            "DRN": {
+                "Q": {
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 3
+                    },
+                    "2": {
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "prio": 2
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2": {
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "L": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "climbvia": true,
+                        "prio": 2,
+                        "timeFrom": 6,
+                        "timeTo": 22
+                    }
+                }
+			},
+			"GOLAT": {
+                "Q": {
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2": {
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "K": {
+                    "1": {
+                        "rwy": "08R",
+                        "climbvia": true,
+                        "prio": 2,
+                        "mtow": 136000,
+                        "timeFrom": 6,
+                        "timeTo": 22
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2": {
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                }
+			},
+			"NEVKO": {
+                "Q": {
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2": {
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "K": {
+                    "1": {
+                        "rwy": "08R",
+                        "climbvia": true,
+                        "prio": 2,
+                        "mtow": 136000,
+                        "timeFrom": 6,
+                        "timeTo": 22
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2": {
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                }
+			},
+			"ORTAG": {
+                "Q": {
+                    "climbvia": true,
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 2
+                    },
+                    "2": {
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 99
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "prio": 1
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2": {
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                }
+			},
+			"PENEM": {
+                "climbvia": true,
+                "Q": {
+                    "1": {
+                        "rwy": "08L",
+                        "prio": 2
+                    },
+                    "2": {
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "X": {
+                    "1": {
+                        "rwy": "08L",
+                        "climbvia": false,
+                        "prio": 99
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2": {
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": false, "B742": false, "B743": false, "B744": false, "B748": false, "A388": false, "A346": false, "B77W": false, "B773": false},
+                        "area": "north"
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                }
+			},
+			"EDDP": {
+                "equip": {"NON-RNAV": true},
+                "Q": {
+                    "1": {
+                        "rwy": "08L",        
+                        "prio": 1
+                    }
+                },
+                "E": {
+                    "1": {
+                        "rwy": "08R",
+                        "prio": 1
+                    }
+                },
+                "N": {
+                    "1": {
+                        "rwy": "26R",
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "26L",
+                        "prio": 1
+                    }
+                }
+			}
+        },
+		"areas": {
+            "north": {
+                "active": true,
+                "p1": {"lat": "N051.24.49.056", "lon": "E012.12.15.301"},
+                "p2": {"lat": "N051.25.00.282", "lon": "E012.16.26.915"},
+                "p3": {"lat": "N051.26.13.856", "lon": "E012.16.19.423"},
+                "p4": {"lat": "N051.26.03.334", "lon": "E012.12.11.494"}
+            }
+		}
+    }
+}
