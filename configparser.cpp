@@ -195,7 +195,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         {
                             for (auto& area : this->parsedConfig.at(icao).at("areas").items())
                             {
-
                                 std::vector<std::pair<std::string, std::string>> coords;
                                 bool isActive = false;
                                 bool arrAsDep = false;
@@ -523,7 +522,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 									else if (sidWpt.key() == "clmbHighlight") wptSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if (!this->isConfigValue(sidWpt.key()))
                                     {
-                                        wptSetting.desig = sidWpt.key();
+                                        if(sidWpt.key().find_first_of("0123456789") == std::string::npos) wptSetting.desig = sidWpt.key();
 
                                         // "designator level" - iterates over restrictions and sid ids
 
