@@ -62,7 +62,7 @@ namespace vsid
 		int mtow = 0;
 		std::string customRule = "";
 		std::string area = "";
-		std::map<std::string, bool> equip = {};
+		std::map<std::string, bool> equip = { {"RNAV", true} };
 		int lvp = -1;
 		std::map<std::string, std::map<std::string, std::string>> actArrRwy = {};
 		std::map<std::string, std::map<std::string, std::string>> actDepRwy = {};

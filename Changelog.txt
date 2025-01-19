@@ -35,6 +35,18 @@ NEW
 "trans": {"waypoint": "designator", "waypoint2": "designator"}
 ```
 *	SID - new "sidHighlight" and "clmbHighlight" settings for SID and color config (same names apply). As a SID setting those values default to false and can be activated to highlight SID and/or climb values besides the regular colors
+*	SID - designator can now have "dummy" values (numbers) which can be used for SIDs that do not have a designator (e.g. SIDs with only a base). Those values are not saved as designator but used in the config to provide the designator level. Example:
+```json
+"NG96": {
+        "1": { #designator (dummy value)
+            "1": { #id
+                "wpt": "LNO",
+                "rwy": "09",
+                "prio": 1
+            }
+        }
+	},
+```
 
 **CHANGED**
 *	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
@@ -46,7 +58,7 @@ NEW
 		}
 	  }
 ```
-*	SID - active departure and arrival runways are now split in allow (aka mandatory) and deny. "all" and "any" reamains unchanged
+*	SID - active departure and arrival runways are now split in allow (aka mandatory) and deny. "all" and "any" remains unchanged
 ```json
 "actDepRwy": {
 	"deny":{"any": "..."},

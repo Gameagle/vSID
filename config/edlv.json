@@ -1,0 +1,59 @@
+{
+    "EDLV": {
+        "elevation": 106,
+        "runways": "09,27",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "appSI": "BOT,DLD,DLA,DLT,PADH",
+        "sids": {
+            "initial": 5000,
+            "ERKUM": {
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "27",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			},
+			"SONEB": {
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "27",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			},
+			"VEBAK": {
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "S": {
+                    "1": {
+                        "rwy": "27",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}
