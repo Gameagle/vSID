@@ -202,6 +202,13 @@
                     "1": {
                         "rwy": "23R",
                         "climbvia": true,
+                        "route": {"allow": {"1": "MEVEL,DODEN", "2": "MEVEL,KUMIK", "3": "MEVEL,COL", "4": "MEVEL,NUDGO", "5": "MEVEL,GMH"}},
+                        "sidHighlight": true,
+                        "prio": 1
+                    },
+                    "2": {
+                        "rwy": "23R",
+                        "climbvia": true,
                         "prio": 2
                     }
                 },
@@ -209,6 +216,13 @@
                     "1": {
                         "rwy": "23L",
                         "climbvia": true,
+                        "prio": 2
+                    },
+                    "2": {
+                        "rwy": "23L",
+                        "climbvia": true,
+                        "route": {"allow": {"1": "MEVEL,DODEN", "2": "MEVEL,KUMIK", "3": "MEVEL,COL", "4": "MEVEL,NUDGO", "5": "MEVEL,GMH"}},
+                        "sidHighlight": true,
                         "prio": 1
                     }
                 }
