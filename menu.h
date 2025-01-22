@@ -226,6 +226,16 @@ namespace vsid {
 		void addText(int type, std::string title, const CRect& base, std::string txt, int minWidth, int height, int weight, Spacing margin = { 0,0,0,0 },
 					std::string relElem = "", bool render = true, COLORREF textColor = defaultTxt, COLORREF bg = defaultBg);
 
+		//************************************
+		// Method:    Deletes text from menu
+		// FullName:  vsid::Menu::removeText
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & title
+		//************************************
+		void removeText(const std::string& title);
+
 		/**
 		 * @brief adds a button to the menu
 		 *

@@ -301,27 +301,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 										if (!configRoute.empty()) fieldSetting.route["deny"].insert({ routeId, configRoute });
 									}
 								}
-								// #DEV - route on field level
-								messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] route found on field level.", vsid::MessageHandler::DebugArea::Dev);
-
-								if (fieldSetting.route.contains("allow"))
-								{
-									for (auto const& [id, allowRoute] : fieldSetting.route["allow"])
-									{
-										messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] allow (ID: " +
-											id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-									}
-								}
-
-								if (fieldSetting.route.contains("deny"))
-								{
-									for (auto const& [id, denyRoute] : fieldSetting.route["deny"])
-									{
-										messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] deny (ID: " +
-											id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-									}
-								}
-								// END DEV
                             }
                             else if (sidField.key() == "wtc") fieldSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "engineType") fieldSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
@@ -441,27 +420,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												if (!configRoute.empty()) wptSetting.route["deny"].insert({ routeId, configRoute });
 											}
 										}
-										// #DEV - route on field level
-										messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] route found on wpt level.", vsid::MessageHandler::DebugArea::Dev);
-
-										if (wptSetting.route.contains("allow"))
-										{
-											for (auto const& [id, allowRoute] : wptSetting.route["allow"])
-											{
-												messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] allow (ID: " +
-													id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-											}
-										}
-
-										if (wptSetting.route.contains("deny"))
-										{
-											for (auto const& [id, denyRoute] : wptSetting.route["deny"])
-											{
-												messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] deny (ID: " +
-													id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-											}
-										}
-										// END DEV
 									}
 									else if (sidWpt.key() == "wtc") wptSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "engineType") wptSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
@@ -591,27 +549,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 														if (!configRoute.empty()) desSetting.route["deny"].insert({ routeId, configRoute });
 													}
 												}
-												// #DEV - route on desig level
-												messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] route found on des level.", vsid::MessageHandler::DebugArea::Dev);
-
-												if (desSetting.route.contains("allow"))
-												{
-													for (auto const& [id, allowRoute] : desSetting.route["allow"])
-													{
-														messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] allow (ID: " +
-															id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-													}
-												}
-
-												if (desSetting.route.contains("deny"))
-												{
-													for (auto const& [id, denyRoute] : desSetting.route["deny"])
-													{
-														messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] deny (ID: " +
-															id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-													}
-												}
-												// END DEV
 											}
 											else if (sidDes.key() == "wtc")
                                                 desSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
@@ -762,27 +699,6 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                                 if (!configRoute.empty()) idSetting.route["deny"].insert({ routeId, configRoute });
                                                             }
                                                         }
-                                                        // #DEV - route on ID level
-                                                        messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] route found on ID level.", vsid::MessageHandler::DebugArea::Dev);
-
-                                                        if (idSetting.route.contains("allow"))
-                                                        {
-                                                            for (auto const& [id, allowRoute] : idSetting.route["allow"])
-                                                            {
-                                                                messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] allow (ID: " +
-                                                                    id + "): " + vsid::utils::join(allowRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-                                                            }
-                                                        }
-
-                                                        if (idSetting.route.contains("deny"))
-                                                        {
-                                                            for (auto const& [id, denyRoute] : idSetting.route["deny"])
-                                                            {
-                                                                messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] deny (ID: " +
-                                                                    id + "): " + vsid::utils::join(denyRoute, ' '), vsid::MessageHandler::DebugArea::Dev);
-                                                            }
-                                                        }
-                                                        // END DEV
                                                     }
                                                     else if (sidId.key() == "wtc")
                                                         idSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
