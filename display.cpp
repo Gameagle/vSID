@@ -114,25 +114,27 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
 									std::string adep = fpln.GetFlightPlanData().GetOrigin();
+									std::string icao = "";
 
-									if (depRwy == fplnRwy) depCount++;
+									try
+									{
+										icao = vsid::utils::split(mMenu.getTitle(), '_').at(1);
+									}
+									catch (std::out_of_range)
+									{
+										messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " +
+											mMenu.getTitle() + " while counting startups.");
+									}
+
+									if (depRwy == fplnRwy && (adep == icao || icao == "")) depCount++;
 									else if(!mMenu.getTexts().contains("dep_" + fplnRwy))
 									{
-										try
+										if (adep == icao && fplnRwy != "")
 										{
-											std::string icao = vsid::utils::split(mMenu.getTitle(), '_').at(1);
+											mMenu.addText(MENU_TEXT, "dep_" + fplnRwy, mMenu.getArea(), fplnRwy, 20, 20, 400, { 5,5,5,5, });
+											mMenu.addText(MENU_TEXT, "depcount_" + fplnRwy, mMenu.getArea(), "", 20, 20, 400, { 5,5,5,5 }, "dep_" + fplnRwy);
 
-											if (adep == icao)
-											{
-												mMenu.addText(MENU_TEXT, "dep_" + fplnRwy, mMenu.getArea(), fplnRwy, 20, 20, 400, { 5,5,5,5, });
-												mMenu.addText(MENU_TEXT, "depcount_" + fplnRwy, mMenu.getArea(), "", 20, 20, 400, { 5,5,5,5 }, "dep_" + fplnRwy);
-
-												updateMenu = true;
-											}
-										}
-										catch (std::out_of_range)
-										{
-											messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " + mMenu.getTitle() + " while adding non-dep rwy.");
+											updateMenu = true;
 										}
 									}
 								}
@@ -151,7 +153,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								}
 								catch (std::out_of_range)
 								{
-									messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + title + " during departure count check");
+									messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + mMenu.getTitle() + " during departure count check");
 								}
 							}
 						}
