@@ -71,6 +71,9 @@ NEW
 }
 ```
 
+**FIXED**
+*	MENU - startup counter didn't account for ADEP which could result in wrong counting if two airports with identical rwy numbers where active
+
 **REMOVED**
 *	SID - config option "designator"
 
