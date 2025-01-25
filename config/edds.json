@@ -143,8 +143,8 @@
             },
 			"STG": {
                 "equip": {"RNAV": true, "NON-RNAV": true},
-                "F": {
-                    "B":{
+                "B": {
+                    "1":{
                         "rwy": "25",
                         "climbvia": true,
                         "prio": 99
@@ -158,9 +158,11 @@
                 }
             },
 			"SUL": {
+                "climbvia": true,
                 "B": {
                     "1":{
                         "rwy": "25",
+                        "climbvia": false,
                         "equip": {"RNAV": true, "NON-RNAV": true},
                         "prio": 1
                     }
@@ -168,14 +170,12 @@
                 "H": {
                     "1":{
                         "rwy": "07",
-                        "climbvia": true,
                         "prio": 1
                     }
                 },
                 "K": {
                     "1":{
                         "rwy": "07",
-                        "climbvia": true,
                         "prio": 99
                     }
                 }
@@ -196,24 +196,22 @@
                 }
             },
 			"TEDGO": {
+                "climbvia": true,
                 "B": {
                     "1":{
                         "rwy": "25",
-                        "climbvia": true,
                         "prio": 99
                     }
                 },
                 "H": {
                     "1":{
                         "rwy": "07",
-                        "climbvia": true,
                         "prio": 99
                     }
                 },
                 "K": {
                     "1":{
                         "rwy": "07",
-                        "climbvia": true,
                         "prio": 99
                     }
                 }
