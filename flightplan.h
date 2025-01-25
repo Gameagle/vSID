@@ -42,6 +42,7 @@ namespace vsid
 			vsid::Sid sid = {};
 			vsid::Sid customSid = {};
 			std::string sidWpt = "";
+			std::string transition = "";
 			std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
 			int updateCounter = 0;
 			bool request = false;
@@ -62,6 +63,30 @@ namespace vsid
 		 * @return vectored route
 		 */
 		std::vector<std::string> clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt = "");
+
+		//************************************
+		// Method:    getTransition
+		// FullName:  vsid::fpln::getTransition
+		// Access:    public 
+		// Returns:   std::string - found transition or empty string if not
+		// Qualifier:
+		// Parameter: const std::vector<std::string> & route - filed route split in single elements
+		// Parameter: const std::map<std::string, vsid::Transition> & - map of all transitions for a given SID
+		//************************************
+		std::string getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
+			const std::string &filedSidWpt);
+
+		//************************************
+		// Description: Splits the SID at 'X' for use with SIDxTRANS
+		// Method:    splitTransition
+		// FullName:  vsid::fpln::splitTransition
+		// Access:    public 
+		// Returns:   std::string - the SID stripped from possible transitions
+		//	 if the SID itself contains a X it is rebuilt
+		// Qualifier:
+		// Parameter: std::string atcSid
+		//************************************
+		std::string splitTransition(std::string atcSid);
 
 		/**
 		 * @brief Get only the assigned rwy extracted from the flight plan

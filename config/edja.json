@@ -8,70 +8,66 @@
         "timeMode": true,
 		"timezone": "Europe/Berlin",
         "sids": {
+            "initial": 7000,
+            "climbvia": true,
             "KPT": {
-                "1":{
-					"designator":"B",
-                    "rwy": "06",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
+                "B": {
+                    "1":{
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"A",
-                    "rwy": "24",
-                    "initial": 7000,
-                    "climbvia": false,
-                    "prio": 1
+                "A": {
+                    "1":{
+                        "rwy": "24",
+                        "climbvia": false,
+                        "prio": 1
+                    }
                 }
 			},
 			"LUPOL": {
-                "1":{
-					"designator":"B",
-                    "rwy": "06",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
+                "B": {
+                    "1":{
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"A",
-                    "rwy": "24",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
+                "A": {
+                    "1":{
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"UMTEX": {
-                "1":{
-					"designator":"B",
-                    "rwy": "06",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
+                "B": {
+                    "1":{
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"A",
-                    "rwy": "24",
-                    "initial": 7000,
-                    "climbvia": false,
-                    "prio": 1
+                "A": {
+                    "1":{
+                        "rwy": "24",
+                        "climbvia": false,
+                        "prio": 1
+                    }
                 }
 			},
 			"ALG": {
-                "1":{
-					"designator":"U",
-                    "rwy": "06",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "equip": {"RNAV": true, "NON-RNAV": true},
+                "U": {
+                    "1":{
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"T",
-                    "rwy": "24",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1
+                "T": {
+                    "1":{
+                        "designator":"T",
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			}
         }

@@ -6,118 +6,106 @@
         "maxInitialClimb": 7000,
         "appSI": "ARFA,ZUG,TRU,RDG,EDMM",
         "sids": {
+            "initial": 4000,
+            "climbvia": true,
             "ALAGO": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "2": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"AMIKI": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"BEMKI": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"KPT": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"ILFAF": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 }
 			},
 			"UMTEX": {
-                "1": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"TRA": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 1
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
                 }
 			},
 			"EDNY": {
-                "1": {
-					"designator": "E",
-                    "rwy": "06",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 99
+                "E": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 99
+                    }
                 },
-                "2": {
-					"designator": "W",
-                    "rwy": "24",
-                    "initial": 4000,
-                    "climbvia": true,
-                    "prio": 99
+                "W": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 99
+                    }
                 }
 			}
         }
