@@ -103,7 +103,7 @@
 						"rwy": "18",
 						"prio": 0,
 						"dest": {"EDDN": true},
-						"actDepRwy": {"any": "07C,07L,07R"}
+						"actDepRwy": {"allow": {"any": "07C,07L,07R"}}
 					}
                 },
 				"X": {
@@ -136,6 +136,7 @@
 					"3": {
 						"rwy": "07R",
 						"prio": 1,
+                        "arrAsDep": true,
 						"area": "south"
 					}
                 }
@@ -207,40 +208,30 @@
                         "prio": 2,
                         "engineCount": 2,
                         "wtc": "H",
-                        "lvp": 0
+                        "lvp": 0,
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
                     "2": {
-                        "rwy": "25C",
-                        "prio": 2,
-                        "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
-                    },
-                    "3": {
                         "rwy": "25L",
                         "prio": 20,
                         "engineCount": 2,
                         "wtc": "H",
-                        "lvp": 0
-                    },
-                    "4": {
-                        "rwy": "25L",
-                        "prio": 20,
                         "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
-                    "5": {
+                    "3": {
                         "rwy": "25C",
                         "prio": 1,
                         "customRule": "allnorth"
                     },
-                    "6": {
+                    "4": {
                         "rwy": "25L",
                         "prio": 1,
                         "customRule": "allnorth",
                         "arrAsDep": true,
                         "area": "south"
                     },
-                    "7": {
+                    "5": {
                         "rwy": "25L",
                         "prio": 1,
                         "engineCount": 2,
@@ -248,14 +239,13 @@
                         "lvp": 0,
                         "arrAsDep": true,
                         "area": "south"
-                    },
-                    "8": {
-                        "rwy": "25L",
-                        "prio": 1,
-                        "lvp": 0,
-                        "arrAsDep": true,
-                        "area": "south",
-                        "acftType": {"B752": true, "B753": true, "B757": true}
+                    }
+                },
+                "G": {
+                    "initial": 5000,
+                    "1": {
+                        "rwy": "25L,25C",
+                        "prio": 99
                     }
                 },
                 "H": {
@@ -316,7 +306,7 @@
                 },
                 "S": {
                     "initial": 4000,
-                    "actArrRwy": {"any": "25C,25L,25R"},
+                    "actArrRwy": {"allow": {"any": "25C,25L,25R"}},
                     "1": {
                         "rwy": "18",
                         "prio": 22
@@ -337,7 +327,7 @@
                     "1": {
                         "rwy": "18",
                         "prio": 25,
-                        "actArrRwy": {"any": "07C,07L,07R"}
+                        "actArrRwy": {"allow": {"any": "07C,07L,07R"}}
                     }
                 },
                 "T": {
@@ -414,53 +404,37 @@
                         "prio": 2,
                         "wtc": "H",
                         "engineCount": 2,
-                        "lvp": 0
+                        "lvp": 0,
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
                     "2": {
-                        "rwy": "25C",
-                        "prio": 2,
-                        "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
-                    },
-                    "3": {
                         "rwy": "25L",
                         "prio": 20,
                         "wtc": "H",
                         "engineCount": 2,
-                        "lvp": 0
-                    },
-                    "4": {
-                        "rwy": "25L",
-                        "prio": 20,
                         "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
-                    "5": {
+                    "3": {
                         "rwy": "25C",
                         "prio": 1,
                         "customRule": "allnorth"
                     },
-                    "6": {
+                    "4": {
                         "rwy": "25L",
                         "prio": 1,
                         "customRule": "allnorth",
                         "arrAsDep": true,
                         "area": "south"
                     },
-                    "7": {
+                    "5": {
                         "rwy": "25L",
                         "prio": 1,
                         "arrAsDep": true,
                         "area": "south",
                         "engineCount": 2,
-                        "wtc": "H"
-                    },
-                    "8": {
-                        "rwy": "25L",
-                        "prio": 1,
-                        "arrAsDep": true,
-                        "area": "south",
-                        "acftType": {"B752": true, "B753": true, "B757": true}
+                        "wtc": "H",
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     }
                 },
                 "M": {
@@ -521,7 +495,7 @@
                 },
                 "S": {
                     "initial": 4000,
-                    "actArrRwy": {"any": "25C,25L,25R"},
+                    "actArrRwy": {"allow": {"any": "25C,25L,25R"}},
                     "1": {
                         "rwy": "18",
                         "prio": 22
@@ -541,7 +515,7 @@
                     "1": {
                         "rwy": "18",
                         "initial": 4000,
-                        "actArrRwy": {"any": "25C,25L,25R"},
+                        "actArrRwy": {"allow": {"any": "25C,25L,25R"}},
                         "prio": 99
                     }
                 },
@@ -550,7 +524,7 @@
                         "rwy": "18",
                         "initial": 4000,
                         "prio": 25,
-                        "actArrRwy": {"any": "07C,07R,07L"}
+                        "actArrRwy": {"allow": {"any": "07C,07R,07L"}}
                     }
                 },
                 "T": {
@@ -695,7 +669,7 @@
                 }
             },
             "TOBAK": {
-                "route": {"allow": {"1": "N585", "2": "N850"}, "deny": {"1": "Z10", "2": "GISEM"}},
+                "route": {"allow": {"1": "N858", "2": "N850"}, "deny": {"1": "Z10", "2": "GISEM"}},
                 "D": {
                     "initial": 5000,
                     "1": {
@@ -720,40 +694,30 @@
                         "prio": 2,
                         "wtc": "H",
                         "engineCount": 2,
-                        "lvp": 0
+                        "lvp": 0,
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
                     "2": {
-                        "rwy": "25C",
-                        "prio": 2,
-                        "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
-                    },
-                    "3": {
                         "rwy": "25L",
                         "prio": 20,
                         "wtc": "H",
                         "engineCount": 2,
-                        "lvp": 0
-                    },
-                    "4": {
-                        "rwy": "25L",
-                        "prio": 20,
                         "lvp": 0,
-                        "acftType": {"B752": true, "B753": true, "B757": true}
+                        "acftType": {"B752": false, "B753": false, "B757": false}
                     },
-                    "5": {
+                    "3": {
                         "rwy": "25C",
                         "prio": 1,
                         "customRule": "allnorth"
                     },
-                    "6": {
+                    "4": {
                         "rwy": "25L",
                         "prio": 1,
                         "customRule": "allnorth",
                         "arrAsDep": true,
                         "area": "south"
                     },
-                    "7": {
+                    "5": {
                         "rwy": "25L",
                         "prio": 1,
                         "wtc": "H",
@@ -766,11 +730,7 @@
                 "G": {
                     "initial": 5000,
                     "1": {
-                        "rwy": "25C",
-                        "prio": 99
-                    },
-                    "2": {
-                        "rwy": "25L",
+                        "rwy": "25L,25C",
                         "prio": 99
                     }
                 },
@@ -837,12 +797,12 @@
                         "rwy": "18",
                         "initial": 4000,
                         "prio": 25,
-                        "actArrRwy": {"any": "07C,07L,07R"}
+                        "actArrRwy": {"allow": {"any": "07C,07L,07R"}}
                     }
                 },
                 "S": {
                     "initial": 4000,
-                    "actArrRwy": {"any": "25C,25L,25R"},
+                    "actArrRwy": {"allow": {"any": "25C,25L,25R"}},
                     "1": {
                         "rwy": "18",
                         "prio": 22
