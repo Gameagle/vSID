@@ -45,6 +45,10 @@ const int TAG_FUNC_VSID_CTL = 745;
 const int TAG_ITEM_VSID_TRANS = 647;
 const int TAG_FUNC_VSID_TRANS = 746;
 
+const int TAG_ITEM_VSID_CLR = 648;
+const int TAG_FUNC_VSID_CLR_SID = 747;
+const int TAG_FUNC_VSID_CLR_SID_SU = 748;
+
 // menues
 
 const int MENU = 100;

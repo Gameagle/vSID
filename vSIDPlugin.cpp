@@ -56,6 +56,10 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	RegisterTagItemType("vSID CLRF", TAG_ITEM_VSID_CLRF);
 	RegisterTagItemFunction("CTL", TAG_FUNC_VSID_CTL);
 
+	RegisterTagItemType("vSID CLR", TAG_ITEM_VSID_CLR);
+	RegisterTagItemFunction("vSID CLR + SID", TAG_FUNC_VSID_CLR_SID);
+	RegisterTagItemFunction("vSID CLR + SID + SU", TAG_FUNC_VSID_CLR_SID_SU);
+
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
@@ -1360,11 +1364,11 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan
 				// this->sqwkQueue.insert(callsign);
 				// END DEV
 				
-				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871);
+				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
 			}
 			else if (this->topskyLoaded)
 			{
-				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667);
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
 			}
 		}
 	}
@@ -1899,6 +1903,24 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		std::string ctl = (this->processed[callsign].ctl) ? "TRUE" : "FALSE";
 		vsid::fpln::setScratchPad(fpln, ".VSID_CTL_" + ctl);
+	}
+
+	if (FunctionId == TAG_FUNC_VSID_CLR_SID)
+	{
+		auto [atcSid, atcRwy] = vsid::fpln::getAtcBlock(fpln);
+
+		this->callExtFunc(callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
+			callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
+
+		if (this->processed.contains(callsign) && (atcSid == "" || atcSid == std::string(fplnData.GetOrigin())))
+			this->processFlightplan(fpln, false, atcRwy);
+	}
+
+	if (FunctionId == TAG_FUNC_VSID_CLR_SID_SU)
+	{
+		this->callExtFunc(callsign.c_str(), "vSID", 0, callsign.c_str(), "vSID", TAG_FUNC_VSID_CLR_SID, POINT(), RECT());
+
+		if (std::string(fpln.GetGroundState()) == "") vsid::fpln::setScratchPad(fpln, "STUP");
 	}
 }
 
@@ -2566,6 +2588,16 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					}
 				}
 			}
+		}
+
+		if (ItemCode == TAG_ITEM_VSID_CLR)
+		{
+			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+			
+			*pRGB = RGB(255, 255, 255);
+			
+			if(FlightPlan.GetClearenceFlag()) strcpy_s(sItemString, 16, "\xA4");
+			else strcpy_s(sItemString, 16, "\xAC");
 		}
 	}
 
@@ -3553,7 +3585,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				bool clrf = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
 
 				if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
-					callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG);
+					callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
 
 				vsid::fpln::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()));
 			}
@@ -4430,20 +4462,17 @@ void vsid::VSIDPlugin::deleteScreen(int id)
 }
 
 void vsid::VSIDPlugin::callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
-	int FunctionId)
-	// POINT Pt, RECT Area
+	int FunctionId, POINT Pt, RECT Area)
 {
 	if (this->radarScreens.size() > 0)
 	{
 		// check all avbl screens and use the first valid one
 
-		/*for (const std::pair<const int, std::shared_ptr<vsid::Display>>& radarScreen : this->radarScreens)*/
 		for (const auto &[id, screen] : this->radarScreens)
 		{
-			/*if (radarScreen.second)*/
 			if (screen)
 			{
-				screen->StartTagFunction(sCallsign, sItemPlugInName, ItemCode, sItemString, sFunctionPlugInName, FunctionId, POINT(), RECT());
+				screen->StartTagFunction(sCallsign, sItemPlugInName, ItemCode, sItemString, sFunctionPlugInName, FunctionId, Pt, Area);
 				break;
 			}
 			else messageHandler->writeMessage("ERROR", "Couldn't call ext func for [" + std::string(sCallsign) + "] as the screen (id: " +
