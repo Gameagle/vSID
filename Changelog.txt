@@ -1,6 +1,13 @@
 [Changelog v0.12.0]
 
 **NEW**
+*	SID - new clr item (shows an empty or full square depending on the clearance status)
+*	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag
+*	SID - new function to set the ground state to "startup" in addition to the new clearance function
+
+[Changelog v0.12.0]
+
+**NEW**
 *	SID - new SID restriction levels (!! old configs incompatible !!) - levels are "field", "waypoint/base", "designator", "id". Each config option can now be written above each section, e.g. "climbvia" could be written in the line before "waypointXYZ" to be used for all SIDs or it could be written before "B" to be used for all "waypointXYZ" designators. The more nested sections overwrite everything above (so id will overwrite designator and waypoint and field while the waypoint section will overwrite the field section). Aim is to reduce repetition of same config values.
 
 OLD
