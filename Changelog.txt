@@ -1,9 +1,9 @@
-[Changelog v0.12.0]
+[Changelog v0.12.1]
 
 **NEW**
-*	SID - new clr item (shows an empty or full square depending on the clearance status)
-*	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag
-*	SID - new function to set the ground state to "startup" in addition to the new clearance function
+*	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
+*	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
+*	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
 
 [Changelog v0.12.0]
 
