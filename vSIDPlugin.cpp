@@ -1919,7 +1919,17 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 	if (FunctionId == TAG_FUNC_VSID_CLR_SID_SU)
 	{
-		this->callExtFunc(callsign.c_str(), "vSID", 0, callsign.c_str(), "vSID", TAG_FUNC_VSID_CLR_SID, POINT(), RECT());
+		auto [atcSid, atcRwy] = vsid::fpln::getAtcBlock(fpln);
+
+		if (!fpln.GetClearenceFlag())
+		{
+			this->callExtFunc(callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
+				callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
+		}
+
+		if (this->processed.contains(callsign) && std::string(fpln.GetFlightPlanData().GetPlanType()) != "V" &&
+			(atcSid == "" || atcSid == std::string(fplnData.GetOrigin())))
+			this->processFlightplan(fpln, false, atcRwy);
 
 		if (std::string(fpln.GetGroundState()) == "") vsid::fpln::setScratchPad(fpln, "STUP");
 	}
