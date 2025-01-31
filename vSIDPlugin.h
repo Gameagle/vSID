@@ -42,7 +42,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.12.0";
+	const std::string pluginVersion = "0.12.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -220,7 +220,7 @@ namespace vsid
 		 * @param Area - area covered by tag item
 		 */
 		void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
-			int FunctionId);
+			int FunctionId, POINT Pt, RECT Area);
 		
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
