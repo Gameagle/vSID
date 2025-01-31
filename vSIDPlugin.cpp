@@ -1912,7 +1912,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		this->callExtFunc(callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
 			callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
 
-		if (this->processed.contains(callsign) && (atcSid == "" || atcSid == std::string(fplnData.GetOrigin())))
+		if (this->processed.contains(callsign) && std::string(fpln.GetFlightPlanData().GetPlanType()) != "V" &&
+			(atcSid == "" || atcSid == std::string(fplnData.GetOrigin())))
 			this->processFlightplan(fpln, false, atcRwy);
 	}
 
