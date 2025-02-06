@@ -3,6 +3,7 @@
 #include "flightplan.h"
 #include "utils.h"
 #include "messageHandler.h"
+#include "constants.h"
 
 std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
 {
@@ -24,7 +25,7 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 		catch (std::out_of_range)
 		{
 			messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route at first entry. ADEP: " + origin +
-				" with route \"" + vsid::utils::join(filedRoute) + "\". #rcfe");
+				" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNFIRST);
 		}
 	}
 
@@ -44,7 +45,7 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 			catch (std::out_of_range)
 			{
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-											" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-1");
+											" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNSPDLVL);
 			}
 			if (*it == filedSidWpt) break;
 			it = filedRoute.erase(it);
@@ -63,7 +64,7 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 			catch (std::out_of_range)
 			{
 				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-					" with route \"" + vsid::utils::join(filedRoute) + "\". #rcer-2");
+					" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNSPDLVL);
 			}
 			if (*it != origin) break;
 			it = filedRoute.erase(it);
@@ -154,10 +155,17 @@ std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugI
 					atcRwy = sidBlock.back();
 				}
 			}
+
+			messageHandler->removeFplnError(callsign, ERROR_FPLN_ATCBLOCK);
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to get ATC block. First route entry: " + filedRoute.at(0) + ". #fpgb");
+			if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_ATCBLOCK))
+			{
+				messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to get ATC block. First route entry: " +
+					filedRoute.at(0) + ". Code: " + ERROR_FPLN_ATCBLOCK);
+				messageHandler->addFplnError(callsign, ERROR_FPLN_ATCBLOCK);
+			}
 		}
 	}
 	return { atcSid, atcRwy };

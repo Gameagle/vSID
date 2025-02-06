@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #pragma once
+#include <string>
 
 const int TAG_ITEM_VSID_CLIMB = 640;
 const int TAG_FUNC_VSID_CLMBMENU = 740;
@@ -57,3 +58,33 @@ const int MENU_BUTTON = 120;
 const int MENU_BUTTON_CLOSE = 121;
 const int MENU_TOP_BAR = 111;
 const int MENU_BOTTOM_BAR = 112;
+
+// errors
+
+const std::string ERROR_FPLN_ATCBLOCK = "E010";
+const std::string ERROR_FPLN_SIDWPT = "E011";
+const std::string ERROR_FPLN_SPLITWPT = "E012";
+const std::string ERROR_FPLN_EXTFUNC = "E013";
+const std::string ERROR_FPLN_ALLOWROUTE = "E014";
+const std::string ERROR_FPLN_DENYROUTE = "E015";
+const std::string ERROR_FPLN_ADEPINACTIVE = "E016";
+const std::string ERROR_FPLN_SETROUTE = "E017";
+const std::string ERROR_FPLN_AMEND = "E018";
+const std::string ERROR_FPLN_SETALT = "E019-1";
+const std::string ERROR_FPLN_SETALT_RESET = "E019-2";
+const std::string ERROR_FPLN_INVALID = "E020";
+const std::string ERROR_FPLN_SIDMAN_RWY = "E021";
+const std::string ERROR_FPLN_REMARKSET = "E022-1";
+const std::string ERROR_FPLN_REMARKRMV = "E022-2";
+const std::string ERROR_FPLN_REQSET = "E023";
+const std::string ERROR_FPLN_CLNFIRST = "E024-1";
+const std::string ERROR_FPLN_CLNSPDLVL = "E024-2";
+
+const std::string ERROR_GEN_SCREENCREATE = "E030";
+
+const std::string ERROR_CONF_RWYMENU = "E040";
+const std::string ERROR_CONF_COLOR = "E041";
+
+const std::string ERROR_CMD_ATCICAO = "E050";
+
+const std::string ERROR_ATC_ICAOSPLIT = "E060";

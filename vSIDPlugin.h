@@ -77,7 +77,7 @@ namespace vsid
 		 * @param FlightPlanData 
 		 * @return
 		 */
-		std::string findSidWpt(EuroScopePlugIn::CFlightPlanData FlightPlanData);
+		std::string findSidWpt(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Iterate over loaded .dll and check for topsky and ccams
 		 * 
