@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "messageHandler.h"
 #include "sid.h"
+#include "constants.h"
 
 #include <vector>
 #include <fstream>
@@ -1014,11 +1015,17 @@ COLORREF vsid::ConfigParser::getColor(std::string color)
 {
     if (this->colors.contains(color))
     {
+        messageHandler->removeGenError(ERROR_CONF_COLOR + "_" + color);
+
         return this->colors[color];
     }
     else
     {
-        messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\"");
+        if (!messageHandler->genErrorsContains(ERROR_CONF_COLOR + "_" + color))
+        {
+            messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\". Code: " + ERROR_CONF_COLOR);
+            messageHandler->addGenError(ERROR_CONF_COLOR + "_" + color);
+        }
         // return purple if color could not be found to signal error
         COLORREF rgbColor = RGB(190, 30, 190);
         return rgbColor;
