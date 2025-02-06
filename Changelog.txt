@@ -4,6 +4,7 @@
 *	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
 *	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
 *	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
+*	GEN - error caching added for errors that are subject to euroscope update rates. Errors that might be thrown on controller action are not cached (#296)
 
 [Changelog v0.12.0]
 
