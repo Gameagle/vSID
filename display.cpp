@@ -26,7 +26,7 @@ vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed displ
 		sharedPlugin->deleteScreen(this->id);
 	}
 	else messageHandler->writeMessage("ERROR", "Could not remove display id: " + std::to_string(this->id) +
-		" from vSID as vSID is already destroyed.");
+		" from vSID as vSID is already destroyed. Code: " + ERROR_DSP_REMOVE);
 	
 	//delete this;
 }
@@ -119,11 +119,16 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									try
 									{
 										icao = vsid::utils::split(mMenu.getTitle(), '_').at(1);
+										messageHandler->removeGenError(ERROR_DSP_COUNTICAO + mMenu.getTitle());
 									}
 									catch (std::out_of_range)
 									{
-										messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " +
-											mMenu.getTitle() + " while counting startups.");
+										if (!messageHandler->genErrorsContains(ERROR_DSP_COUNTICAO + mMenu.getTitle()))
+										{
+											messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " +
+												mMenu.getTitle() + " while counting startups. Code: " + ERROR_DSP_COUNTICAO);
+											messageHandler->addGenError(ERROR_DSP_COUNTICAO + mMenu.getTitle());
+										}
 									}
 
 									if (depRwy == fplnRwy && (adep == icao || icao == "")) depCount++;
@@ -150,10 +155,17 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 										txtToRemove.insert("dep_" + depRwy);
 										txtToRemove.insert("depcount_" + depRwy);
 									}
+
+									messageHandler->removeGenError(ERROR_DSP_COUNTRMICAO + mMenu.getTitle());
 								}
 								catch (std::out_of_range)
 								{
-									messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + mMenu.getTitle() + " during departure count check");
+									if (!messageHandler->genErrorsContains(ERROR_DSP_COUNTRMICAO + mMenu.getTitle()))
+									{
+										messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + mMenu.getTitle() +
+											" during departure count check. Code: " + ERROR_DSP_COUNTRMICAO);
+										messageHandler->addGenError(ERROR_DSP_COUNTRMICAO + mMenu.getTitle());
+									}
 								}
 							}
 						}
@@ -288,20 +300,17 @@ void vsid::Display::OnClickScreenObject(int ObjectType, const char* sObjectId, P
 	}
 	else if (ObjectType == MENU_BUTTON_CLOSE)
 	{
-		try
-		{
-			std::string objectId = sObjectId;
+		std::string objectId = sObjectId;
 
-			if (std::size_t pos = objectId.find("_close"); pos != std::string::npos)
-			{
-				this->closeMenu(objectId.erase(pos, objectId.length() - 1));
-			}			
-		}
-		catch (std::out_of_range)
+		if (std::size_t pos = objectId.find("_close"); pos != std::string::npos)
 		{
-			messageHandler->writeMessage("ERROR", "Couldn't close menu, because menu title couldn't be extracted from button " + std::string(sObjectId));
+			this->closeMenu(objectId.erase(pos, objectId.length() - 1));
 		}
-		
+		else
+		{
+			messageHandler->writeMessage("ERROR", "Couldn't close menu, because menu title couldn't be extracted from button " +
+				std::string(sObjectId) + ". Code: " + ERROR_DSP_BTNEXTTITLE);
+		}	
 	}
 }
 
@@ -376,7 +385,8 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to get apt ICAO while re-opening startup menu \"" + title + "\"");
+					messageHandler->writeMessage("ERROR", "Failed to get apt ICAO while re-opening startup menu \"" + title +
+						"\". Code: " + ERROR_DSP_REOPENICAO);
 				}
 				
 			}
@@ -384,7 +394,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 			this->reopenStartup.clear();
 		}
 	}
-	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed.");
+	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed. Code: " + ERROR_DSP_PLUGACCESS);
 }
 
 void vsid::Display::openMainMenu(int top, int left, bool render)
@@ -466,7 +476,8 @@ void vsid::Display::openStartupMenu(const std::string apt, const std::string par
 
 		this->menues.insert({ title, std::move(newMenu) });
 	}
-	else messageHandler->writeMessage("ERROR", "Tried to create startup menu for [" + apt + "] but plugin couldn't be accessed.");
+	else messageHandler->writeMessage("ERROR", "Tried to create startup menu for [" + apt +
+		"] but plugin couldn't be accessed. Code: " + ERROR_DSP_MENUSUCREATE);
 }
 
 void vsid::Display::removeMenu(const std::string &title)
@@ -479,11 +490,13 @@ void vsid::Display::removeMenu(const std::string &title)
 		}
 		this->menues.erase(title);
 	}
-	else messageHandler->writeMessage("ERROR", "Called to remove menu [" + title + "] but it wasn't found in the menues list.");
+	else messageHandler->writeMessage("ERROR", "Called to remove menu [" + title +
+		"] but it wasn't found in the menues list. Code: " + ERROR_DSP_RMMENU);
 }
 
 void vsid::Display::closeMenu(const std::string &title)
 {
 	if (this->menues.contains(title)) this->menues[title].toggleRender();
-	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title + " because it is not in the menu list.");
+	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title +
+		" because it is not in the menu list. Code: " + ERROR_DSP_RMMENU);
 }

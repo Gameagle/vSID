@@ -1451,7 +1451,7 @@ EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char
 	catch (std::out_of_range)
 	{
 		messageHandler->writeMessage("ERROR", "Failed to return Radar Screen with id: " + std::to_string(this->screenId) +
-			". Code: " + ERROR_GEN_SCREENCREATE);
+			". Code: " + ERROR_DSP_SCREENCREATE);
 		return nullptr;
 	}
 
