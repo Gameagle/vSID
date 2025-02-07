@@ -1,8 +1,103 @@
+[Changelog v0.12.1]
+
+**NEW**
+*	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
+*	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
+*	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
+*	GEN - error caching added for errors that are subject to euroscope update rates. Errors that might be thrown on controller action are not cached (#296)
+
+[Changelog v0.12.0]
+
+**NEW**
+*	SID - new SID restriction levels (!! old configs incompatible !!) - levels are "field", "waypoint/base", "designator", "id". Each config option can now be written above each section, e.g. "climbvia" could be written in the line before "waypointXYZ" to be used for all SIDs or it could be written before "B" to be used for all "waypointXYZ" designators. The more nested sections overwrite everything above (so id will overwrite designator and waypoint and field while the waypoint section will overwrite the field section). Aim is to reduce repetition of same config values.
+
+OLD
+```json
+"ABTAL": {
+                    "1": {
+                        "designator": "B"
+                        "rwy": "25",
+                        "initial": 5000
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+```
+NEW
+```json
+"initial": 5000, # 1 (field level): now valid for the entire field if not overwritten in lower sections
+"ABTAL": {
+                # 2 (waypoint level): config option here: any config above the first designator is valid for all ABTAL designators
+                "B": { # 3: now designator has its own section
+                    "climbvia": true, # 4 (designator level): now valid for all IDs of the "B" designator
+                    "1": {
+                        "rwy": "25", # 5 (ID level): can be used on designator (see # 4 above) or ID level
+                        "prio": 1 # 6: (ID level): still has to be on ID level
+                    }
+                },
+```
+
+*	SID - new tagItem "Transition" (Italy support) - retrieves the transition from the flightplan if set or shows the suggested transition based on config values (#233)
+*	SID - new config option "trans" to list all possible transitions for a SID as a key/value pair with the key being the waypoint and the value being the designator. Numbers are updated from .ese or .sct files same was with SIDs (#233)
+```json
+"trans": {"waypoint": "designator", "waypoint2": "designator"}
+```
+*	SID - new "sidHighlight" and "clmbHighlight" settings for SID and color config (same names apply). As a SID setting those values default to false and can be activated to highlight SID and/or climb values besides the regular colors (#268)
+*	SID - designator can now have "dummy" values (numbers) which can be used for SIDs that do not have a designator (e.g. SIDs with only a base). Those values are not saved as designator but used in the config to provide the designator level. Example:
+```json
+"NG96": {
+        "1": { #designator (dummy value)
+            "1": { #id
+                "wpt": "LNO",
+                "rwy": "09",
+                "prio": 1
+            }
+        }
+	},
+```
+*	MENU - non departure rwys are now dynamically added or removed from the startup counter (#260)
+
+**CHANGED**
+*	SID - old config option "designator" has now to be moved outside (above levelwise) the ID section as a new key (e.g. "designator": "B" now becomes "B": .. followed by the ID sections for "B")
+```json
+"waypoint": {
+      "A": {
+		"1": {},
+		"2": {}
+		}
+	  }
+```
+*	SID - active departure and arrival runways are now split in allow (aka mandatory) and deny. "all" and "any" remains unchanged (#236)
+```json
+"actDepRwy": {
+	"deny":{"any": "..."},
+	"allow":{"all": "..."}
+},
+"actArrRwy": {
+	"deny":{"all": "..."},
+	"allow":{"any": "..."}
+}
+```
+
+**FIXED**
+*	MENU - startup counter didn't account for ADEP which could result in wrong counting if two airports with identical rwy numbers where active
+
+**REMOVED**
+*	SID - config option "designator"
+
 [Changelog v0.11.1]
 
 [NEW]
 *	REQ - added a reset function for the airport (.vsid req ICAO reset) or for single queues (.vsid req ICAO reset startup) (#222)
 *	GEN - connection type is checked once a minute. If the connection is disconnected all processed flight plans and those marked for removal are deleted (#261)
+*	CTL - cleared to land flag added. The function (VSID CTL) toggles the cleared to land flag. The tag item (VSID CLRF) shows if the acft is cleared or a two step warning if it is close to the airport and not cleared. Value is synced between controllers (#221)
+*	CTL - automatic MAPP detection to remove item display (if the acft climbs again MAPP is assumed to remove CTL flag and warnings)
+*	CTL - color config options for main config
+*	CTL - mandatory section for warning and caution values (distance and altitude) in main config ("clrf") - not providing the section will cause an error but ES and vSID will still work
+*	SID - added "enableRVSids" option to airport configuration as bool to enable/disable the generation of radar vectored SIDs in the manual selection menu
+
+[CHANGED]
+*	SID - if the RFL is below the initial climb don't show and clear up to the initial climb but show the RFL instead (due to ES limitations color-codes the climb even if not set if RFL is below inital climb). If the SID is clicked (manual or auto selection) the RFL is actively set as cleared altitude for the flight plan (meaning sending the info to the servers)
 
 [FIXED]
 

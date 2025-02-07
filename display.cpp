@@ -42,6 +42,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 	{
 		if (mMenu.getRender())
 		{
+			bool updateMenu = false;
+
 			CPen borderPen = { PS_SOLID, 1, mMenu.getBorder() };
 			CBrush bgBrush = { mMenu.getBg() };
 
@@ -71,6 +73,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			/*CBrush borderBrush = { RGB(255,0,0) };
 			CBrush* oldBorderBrush = dc.SelectObject(&borderBrush);*/
 			// end dev
+
+			std::set<std::string> txtToRemove = {};
 
 			for (auto &[title, txt] : mMenu.getTexts())
 			{
@@ -109,8 +113,47 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									if (std::string(fpln.GetGroundState()) == "ARR") continue;
 
 									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
+									std::string adep = fpln.GetFlightPlanData().GetOrigin();
+									std::string icao = "";
 
-									if (depRwy == fplnRwy) depCount++;
+									try
+									{
+										icao = vsid::utils::split(mMenu.getTitle(), '_').at(1);
+									}
+									catch (std::out_of_range)
+									{
+										messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " +
+											mMenu.getTitle() + " while counting startups.");
+									}
+
+									if (depRwy == fplnRwy && (adep == icao || icao == "")) depCount++;
+									else if(!mMenu.getTexts().contains("dep_" + fplnRwy))
+									{
+										if (adep == icao && fplnRwy != "")
+										{
+											mMenu.addText(MENU_TEXT, "dep_" + fplnRwy, mMenu.getArea(), fplnRwy, 20, 20, 400, { 5,5,5,5, });
+											mMenu.addText(MENU_TEXT, "depcount_" + fplnRwy, mMenu.getArea(), "", 20, 20, 400, { 5,5,5,5 }, "dep_" + fplnRwy);
+
+											updateMenu = true;
+										}
+									}
+								}
+							}
+							if (depCount == 0)
+							{
+								try
+								{
+									std::string icao = vsid::utils::split(mMenu.getTitle(), '_').at(1);
+
+									if (!sharedPlugin->getDepRwy(icao).empty() && !sharedPlugin->getDepRwy(icao).contains(depRwy))
+									{
+										txtToRemove.insert("dep_" + depRwy);
+										txtToRemove.insert("depcount_" + depRwy);
+									}
+								}
+								catch (std::out_of_range)
+								{
+									messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + mMenu.getTitle() + " during departure count check");
 								}
 							}
 						}
@@ -128,6 +171,18 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				// dev - test rect around txt
 				/*dc.FrameRect(&txt.area, &borderBrush);*/
 				// end dev
+			}
+
+			if (!txtToRemove.empty())
+			{
+				for (const std::string& txt : txtToRemove)
+				{
+					mMenu.removeText(txt);
+				}
+
+				updateMenu = true;
+
+				txtToRemove.clear();
 			}
 
 			for (auto& [title, btn] : mMenu.getBtns())
@@ -171,6 +226,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			// dev - remove test rect around txt
 			/*dc.SelectObject(oldBorderBrush);*/
 			// end dev
+
+			if (updateMenu) mMenu.update();
 		}
 	}
 	dc.Detach();

@@ -33,6 +33,45 @@ using json = nlohmann::ordered_json;
 
 namespace vsid
 {
+	struct Clrf
+	{
+		double distWarning = 0.0;
+		double distCaution = 0.0;
+		int altWarning = 0;
+		int altCaution = 0;
+	};
+
+	struct tmpSidSettings
+	{
+		std::string base = "";
+		std::string wpt;
+		std::string id = "";
+		std::string desig = "";
+		std::map<std::string, vsid::Transition> transition = {};
+		std::vector<std::string> rwys = {};
+		int prio = 99;
+		int initial = 0;
+		bool via = false;
+		bool pilotfiled = false;
+		std::map<std::string, bool> acftType = {};
+		std::map<std::string, bool> dest = {};
+		std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
+		std::string wtc = "";
+		std::string engineType = "";
+		int engineCount = 0;
+		int mtow = 0;
+		std::string customRule = "";
+		std::string area = "";
+		std::map<std::string, bool> equip = { {"RNAV", true} };
+		int lvp = -1;
+		std::map<std::string, std::map<std::string, std::string>> actArrRwy = {};
+		std::map<std::string, std::map<std::string, std::string>> actDepRwy = {};
+		int timeFrom = -1;
+		int timeTo = -1;
+		bool sidHighlight = false;
+		bool clmbHighlight = false;
+	};
+
 	class ConfigParser
 	{
 	public:
@@ -43,9 +82,9 @@ namespace vsid
 		 * @brief Loads the configs for active airports
 		 * 
 		 * @param activeAirports 
-		 * @param savedCustomRules - customRules that are transferred inbetween rwy change updates
-		 * @param savedSettings - settings that are transferred inbetween rwy change updates
-		 * @param savedAreas - area settings that are transferred inbetween rwy change updates
+		 * @param savedCustomRules - customRules that are transferred in between rwy change updates
+		 * @param savedSettings - settings that are transferred in between rwy change updates
+		 * @param savedAreas - area settings that are transferred in between rwy change updates
 		 */
 		void loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
 							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
@@ -75,6 +114,15 @@ namespace vsid
 		 */
 		COLORREF getColor(std::string color);
 
+		//************************************
+		// Method:    getClrfMinimums
+		// FullName:  vsid::ConfigParser::getClrfMinimums
+		// Access:    public 
+		// Returns:   vsid::Clrf&
+		// Qualifier:
+		//************************************
+		inline Clrf& getClrfMinimums() { return this->clrf; };
+
 		int getReqTime(std::string time);
 		json grpConfig;
 		std::set<std::string> rnavList;
@@ -83,7 +131,17 @@ namespace vsid
 		std::set<std::filesystem::path> configPaths;
 		std::map<std::string, COLORREF> colors;
 		std::map<std::string, int> reqTimes;
+		Clrf clrf;
 		json parsedConfig;
 		json vSidConfig;
+
+		inline bool isConfigValue(const std::string& value) const
+		{
+			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "acftType",
+				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
+				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight"};
+
+			return configValues.contains(value);
+		}
 	};
 }

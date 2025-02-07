@@ -9,857 +9,686 @@
         "timeMode": true,
         "timezone": "Europe/Berlin",
         "sids": {
+            "initial": 7000,
+            "climbvia": true,
             "AKINI": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
+				"S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
-                },
-				"5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
-                },
-			    "6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+			    "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
                 }
             },
             "ALG": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 1
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 1
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-				"4":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
-                },
-			    "5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1
-                },
-				"6":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
-                },
-			    "7":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
-                },
-				"8":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 }
             },
 			"ANKER": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
-                },
-				"5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
-                },
-			    "6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
                 }
             },
 			"BIBAG": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-					"acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-					"acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"7":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "wtc": "HJ",
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
             },
 			"EVIVA": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "engineType": "TP"
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3,
+                        "engineType": "TP"
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "engineType": "TP",
+                        "area": "cargo"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3,
-                    "engineType": "TP"
-                },
-				"5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-                    "engineType": "TP",
-					"area": "cargo"
-                },
-			    "6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "engineType": "TP"
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
                 }
             },
 			"GIVMI": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 0,
-					"area": "cargo"
+                "E": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 3
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
-                },
-				"5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
-                },
-			    "6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
                 }
             },
 			"INPUD": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
-                },
-				"5":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"area": "cargo"
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
                 }
             },
 			"KIRDI": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"7":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "wtc": "HJ",
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
             },
 			"MERSI": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "T": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3,
+                        "engineType": "TP"
+                    }
                 },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"7":{
-					"designator":"T",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3,
-                    "engineType": "TP"
-                },
-			    "8":{
-					"designator":"P",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "engineType": "TP"
+                "P": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
                 }
             },
 			"MIQ": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"NON-RNAV": true},
-                    "prio": 1
+                "equip": {"NON-RNAV": true},
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 1
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"NON-RNAV": true},
-                    "prio": 2
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    }
                 },
-			    "3":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"NON-RNAV": true},
-                    "prio": 2
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    }
                 },
-			    "4":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"NON-RNAV": true},
-                    "prio": 1
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 1
+                    }
                 }
             },
 			"OBAXA": {
-                "1":{
-					"designator":"T",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "engineType": "TP"
+                "T": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
                 },
-                "2":{
-					"designator":"P",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "engineType": "TP"
+                "P": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 1,
+                        "engineType": "TP"
+                    }
                 },
-			    "3":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1,
-                    "engineType": "TP"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 1,
+                        "engineType": "TP"
+                    }
                 },
-			    "4":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 2,
-                    "engineType": "TP"
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
                 }
 			},
 			"OLASO": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    },
+                    "3":{
+                        "rwy": "08L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-				"3":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 },
-                "4":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
-                },
-				"5":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
-                },
-			    "6":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2
-                },
-				"7":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
-                },
-			   "8":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
-                },
-				"9":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"10":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 0,
-					"customRule": "traalg"
+                "N": {
+                    "1":{
+                            "rwy": "26R",
+                            "prio": 3
+                        },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    },
+                    "3":{
+                        "rwy": "26R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
                 }
 			},
 			"RIDAR": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 2
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 3
+                "E": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
                 },
-				"3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 0,
-					"area": "cargo"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 2
-                },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 3
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "N": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "26R",  
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
 			},
 			"ROTAX": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"7":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "wtc": "HJ",
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
             },
 			"TULSI": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 99,
-                    "engineType": "J"
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 99,
+                        "engineType": "J"
+                    }
                 },
-                "2":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 99,
-                    "engineType": "J"
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 99,
+                        "engineType": "J"
+                    }
                 },
-			    "3":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 99,
-                    "engineType": "J"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "engineType": "J"
+                    }
                 },
-			    "4":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 99,
-                    "engineType": "J"
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "engineType": "J"
+                    }
                 },
-				"5":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 99,
-                    "wtc": "HJ",
-                    "engineType": "J",
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "wtc": "HJ",
+                        "engineType": "J",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
             },
 			"TURBU": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 3
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 3
-                },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 4,
-                    "engineType": "J"
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "N": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
 				"7":{
 					"designator":"W",
@@ -875,69 +704,58 @@
                 }
             },
 			"VAVOR": {
-                "1":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4,
-                    "engineType": "J"
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-				"2":{
-					"designator":"Q",
-                    "rwy": "08L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3,
+                        "engineType": "J"
+                    }
                 },
-                "3":{
-					"designator":"E",
-                    "rwy": "08R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3,
-                    "engineType": "J"
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3,
+                        "engineType": "J"
+                    }
                 },
-			    "4":{
-					"designator":"S",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 3,
-                    "engineType": "J"
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "engineType": "J",
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 },
-			    "5":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 4,
-                    "engineType": "J"
-                },
-				"6":{
-					"designator":"N",
-                    "rwy": "26R",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 1,
-					"engineType": "J",
-                    "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
-                    "timeFrom": 22,
-                    "timeTo": 6
-                },
-				"7":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-                    "prio": 2,
-                    "wtc": "HJ",
-                    "engineType": "J",
-                    "timeFrom": 22,
-                    "timeTo": 6
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "engineType": "J",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
                 }
             }
         },
