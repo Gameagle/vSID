@@ -8,10 +8,11 @@
 
 #include <utility>
 
-vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin) : EuroScopePlugIn::CRadarScreen()
+vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const std::string name) : EuroScopePlugIn::CRadarScreen()
 { 
 	this->id = id;
 	this->plugin = plugin;
+	this->name = name;
 }
 vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed display with id: " + std::to_string(this->id), vsid::MessageHandler::DebugArea::Menu); }
 
@@ -38,7 +39,69 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 	CDC dc;
 	dc.Attach(hDC);
 
-	for (auto &[title, mMenu] : this->menues)
+	
+	if (std::shared_ptr sharedPlugin = this->plugin.lock())
+	{
+		std::string showOn = "";
+		bool enablePbIndicator = true;
+
+		try
+		{
+			showOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showPbIndicatorOn", "");
+			enablePbIndicator = sharedPlugin->getConfigParser().getMainConfig().at("display").value("enablePbIndicator", true);
+
+			messageHandler->removeGenError(ERROR_CONF_DISPLAY);
+		}
+		catch (const json::out_of_range)
+		{
+			if (!messageHandler->genErrorsContains(ERROR_CONF_DISPLAY))
+			{
+				messageHandler->writeMessage("ERROR", "Missing config section \"display\" in main config. Code: " + ERROR_CONF_DISPLAY);
+				messageHandler->addGenError(ERROR_CONF_DISPLAY);
+			}
+		}
+		if (showOn.find(this->name) != std::string::npos)
+		{
+			CFont font;
+			LOGFONT lgfont;
+			memset(&lgfont, 0, sizeof(LOGFONT));
+
+			CFont* oldFont = dc.SelectObject(&font);
+
+			strcpy_s(lgfont.lfFaceName, LF_FACESIZE, _TEXT("EuroScope"));
+			lgfont.lfHeight = 15;
+			lgfont.lfWeight = FW_BOLD;
+
+			font.CreateFontIndirectA(&lgfont);
+
+			if (enablePbIndicator)
+			{
+				for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
+				{
+					if (fplnInfo.gndState != "PUSH") continue;
+
+					EuroScopePlugIn::CRadarTarget target = sharedPlugin->RadarTargetSelect(callsign.c_str());
+
+					POINT pos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+
+					CRect area;
+					area.bottom = pos.y + 20;
+					area.top = area.bottom - 15;
+					area.left = pos.x - 5;
+					area.right = area.left + 10;
+
+					dc.SelectObject(&font);
+
+					dc.SetTextColor(sharedPlugin->getConfigParser().getColor("pbIndicator"));
+
+					dc.DrawText("\x7C", &area, DT_BOTTOM);
+				}
+			}
+			dc.SelectObject(oldFont);
+		}
+	}
+
+	for (auto &[title, mMenu] : this->menues) // #continue - optimization: .lock() is called above, integrate loop there
 	{
 		if (mMenu.getRender())
 		{
@@ -242,6 +305,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			if (updateMenu) mMenu.update();
 		}
 	}
+	
 	dc.Detach();
 }
 

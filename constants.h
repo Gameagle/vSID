@@ -102,6 +102,7 @@ const std::string ERROR_MENU_BTNUPDATE = "E041-4";
 
 const std::string ERROR_CONF_RWYMENU = "E050";
 const std::string ERROR_CONF_COLOR = "E051";
+const std::string ERROR_CONF_DISPLAY = "E052";
 
 const std::string ERROR_CMD_ATCICAO = "E060";
 

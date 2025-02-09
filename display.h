@@ -44,21 +44,21 @@ namespace vsid
 		 * @param id - internal id to distinguish multiple displays
 		 * @param plugin - reference to the "main" plugin
 		 */
-		Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin);
+		Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const std::string name);
 
 		/**
 		 * @brief copy constructor
 		 * 
 		 * @param other - object to copy from
 		 */
-		Display(vsid::Display& other) noexcept : id(other.id), plugin(other.plugin) {};
+		Display(vsid::Display& other) noexcept : id(other.id), plugin(other.plugin), name(other.name) {};
 
 		/**
 		 * @brief move constructor
 		 * 
 		 * @param other - object to move
 		 */
-		Display(vsid::Display&& other) noexcept : id(other.id), plugin(other.plugin) {};
+		Display(vsid::Display&& other) noexcept : id(other.id), plugin(other.plugin), name(std::move(other.name)) {};
 		virtual ~Display();
 
 		/* ES Functions*/
@@ -156,5 +156,6 @@ namespace vsid
 		std::map<std::string, vsid::Display::storedStartup> reopenStartup;
 		int id;
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
+		std::string name;
 	};
 }

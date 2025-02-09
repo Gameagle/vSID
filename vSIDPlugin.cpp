@@ -1434,7 +1434,7 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan FlightPlan)
 EuroScopePlugIn::CRadarScreen* vsid::VSIDPlugin::OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated)
 {
 	this->screenId++;
-	this->radarScreens.insert({ this->screenId, std::make_shared<vsid::Display>(this->screenId, this->shared) });
+	this->radarScreens.insert({ this->screenId, std::make_shared<vsid::Display>(this->screenId, this->shared, sDisplayName) });
 
 	messageHandler->writeMessage("DEBUG", "Screen created with id: " + std::to_string(this->screenId), vsid::MessageHandler::DebugArea::Menu);
 	for (auto [id, screen] : this->radarScreens)
@@ -4047,9 +4047,7 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 
 void vsid::VSIDPlugin::OnAirportRunwayActivityChanged()
 {
-	// dev
 	this->detectPlugins();
-	// end dev
 
 	this->UpdateActiveAirports();
 
