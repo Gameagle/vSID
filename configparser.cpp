@@ -1011,7 +1011,7 @@ void vsid::ConfigParser::loadRnavList()
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
-COLORREF vsid::ConfigParser::getColor(std::string color)
+const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
     if (this->colors.contains(color))
     {

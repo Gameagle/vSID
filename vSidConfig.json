@@ -110,7 +110,8 @@
             "r": 200,
 			"g": 10,
 			"b": 10
-        }
+        },
+        "pbIndicator": {"r": 0, "g": 255, "b": 0}
     },
     "requests": {
         "caution": 2,
@@ -121,5 +122,9 @@
         "distWarning": 2.0,
         "altCaution": 1500,
         "altWarning": 500
+    },
+    "display": {
+        "showPbIndicatorOn": "Ground Radar display",
+        "enablePbIndicator": true
     }
 }

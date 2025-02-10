@@ -80,11 +80,30 @@ const std::string ERROR_FPLN_REQSET = "E023";
 const std::string ERROR_FPLN_CLNFIRST = "E024-1";
 const std::string ERROR_FPLN_CLNSPDLVL = "E024-2";
 
-const std::string ERROR_GEN_SCREENCREATE = "E030";
+const std::string ERROR_DSP_SCREENCREATE = "E030-1";
+const std::string ERROR_DSP_MENUSUCREATE = "E030-2";
+const std::string ERROR_DSP_REMOVE = "E031";
+const std::string ERROR_DSP_COUNTICAO = "E032-1";
+const std::string ERROR_DSP_COUNTRMICAO = "E032-2";
+const std::string ERROR_DSP_REOPENICAO = "E032-3";
+const std::string ERROR_DSP_BTNEXTTITLE = "E033";
+const std::string ERROR_DSP_RMMENU = "E034";
+const std::string ERROR_DSP_CLSMENU = "E035";
+const std::string ERROR_DSP_PLUGACCESS = "E036";
 
-const std::string ERROR_CONF_RWYMENU = "E040";
-const std::string ERROR_CONF_COLOR = "E041";
+const std::string ERROR_MEN_TXTADD = "E040-1";
+const std::string ERROR_MEN_TXTINVTYPE = "E040-2";
+const std::string ERROR_MENU_TXTINVTABPOS = "E040-3";
+const std::string ERROR_MENU_TXTUPDATE = "E040-4";
+const std::string ERROR_MENU_BTNADD = "E041-1";
+const std::string ERROR_MEN_BTNINVTYPE = "E041-2";
+const std::string ERROR_MENU_BTNINVTABPOS = "E041-3";
+const std::string ERROR_MENU_BTNUPDATE = "E041-4";
 
-const std::string ERROR_CMD_ATCICAO = "E050";
+const std::string ERROR_CONF_RWYMENU = "E050";
+const std::string ERROR_CONF_COLOR = "E051";
+const std::string ERROR_CONF_DISPLAY = "E052";
 
-const std::string ERROR_ATC_ICAOSPLIT = "E060";
+const std::string ERROR_CMD_ATCICAO = "E060";
+
+const std::string ERROR_ATC_ICAOSPLIT = "E070";

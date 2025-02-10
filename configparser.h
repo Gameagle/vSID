@@ -106,13 +106,25 @@ namespace vsid
 		 * @brief load list of RNAV capable acft
 		 */
 		void loadRnavList();
+		//************************************
+		// Description: grants read-only access to vSID main config
+		// Method:    getMainConfig
+		// FullName:  vsid::ConfigParser::getMainConfig
+		// Access:    public 
+		// Returns:   const json&
+		// Qualifier: const
+		//************************************
+		inline json& getMainConfig()
+		{
+			return this->vSidConfig;
+		}
 		/**
 		 * @brief Fetches a specific color from the settings file
 		 * 
 		 * @param color - name of the key in the settings file
 		 * @return COLORREF 
 		 */
-		COLORREF getColor(std::string color);
+		const COLORREF getColor(std::string color);
 
 		//************************************
 		// Method:    getClrfMinimums

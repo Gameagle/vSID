@@ -102,6 +102,18 @@ namespace vsid
 		 * @param manualSid - manual Sid that has been selected and should be processed
 		 */
 		void processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+		//************************************
+		// Description: Retrieves the config parser as read-only for access to configs
+		// Method:    getConfigParser
+		// FullName:  vsid::VSIDPlugin::getConfigParser
+		// Access:    public 
+		// Returns:   const vsid::ConfigParser
+		// Qualifier: const
+		//************************************
+		inline vsid::ConfigParser& getConfigParser()
+		{	
+			return this->configParser;
+		}
 		/**
 		 * @brief Called with every function call (list interaction) inside ES
 		 *
