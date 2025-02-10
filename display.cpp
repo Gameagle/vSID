@@ -52,11 +52,12 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			messageHandler->removeGenError(ERROR_CONF_DISPLAY);
 		}
-		catch (const json::out_of_range)
+		catch (const json::out_of_range &e)
 		{
 			if (!messageHandler->genErrorsContains(ERROR_CONF_DISPLAY))
 			{
-				messageHandler->writeMessage("ERROR", "Missing config section \"display\" in main config. Code: " + ERROR_CONF_DISPLAY);
+				messageHandler->writeMessage("ERROR", "[Range] Missing config section during display refresh: " +
+					std::string(e.what()) + ". Code: " + ERROR_CONF_DISPLAY);
 				messageHandler->addGenError(ERROR_CONF_DISPLAY);
 			}
 		}
