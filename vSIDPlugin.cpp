@@ -1648,6 +1648,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 	if (FunctionId == TAG_FUNC_VSID_SIDS_AUTO)
 	{
+		if (!this->activeAirports.contains(adep)) return;
+
 		if (this->processed.contains(callsign))
 		{
 			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
@@ -1957,6 +1959,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 	if (FunctionId == TAG_FUNC_VSID_CLR_SID)
 	{
+		if (!this->activeAirports.contains(adep)) return;
+
 		auto [atcSid, atcRwy] = vsid::fpln::getAtcBlock(fpln);
 
 		this->callExtFunc(callsign.c_str(), nullptr, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
@@ -1969,6 +1973,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 	if (FunctionId == TAG_FUNC_VSID_CLR_SID_SU)
 	{
+		if (!this->activeAirports.contains(adep)) return;
+
 		auto [atcSid, atcRwy] = vsid::fpln::getAtcBlock(fpln);
 
 		if (!fpln.GetClearenceFlag())
@@ -3515,7 +3521,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 			}
 
 			// END DEV
-			if (atcBlock.first == adep && atcBlock.second != "")
+			if (atcBlock.first == adep && atcBlock.second != "" && this->activeAirports.contains(adep))
 			{
 				messageHandler->writeMessage("DEBUG", "[" + callsign + "] fpln updated, calling processFlightplan with atcRwy : " + atcBlock.second,
 											vsid::MessageHandler::DebugArea::Sid
@@ -3543,7 +3549,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 											vsid::MessageHandler::DebugArea::Sid);
 				this->processFlightplan(FlightPlan, true, atcBlock.second, atcSid);
 			}
-			else
+			else if(this->activeAirports.contains(adep))
 			{
 				messageHandler->writeMessage("DEBUG", "[" + callsign + "] fpln updated, calling processFlightplan without atcRwy",
 											vsid::MessageHandler::DebugArea::Sid
