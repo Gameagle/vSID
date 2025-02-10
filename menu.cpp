@@ -43,7 +43,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 {
 	if (this->texts.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add text \"" + title + "\" to menu \"" + this->title + "\". Report as an error.");
+		messageHandler->writeMessage("ERROR", "Trying to add text \"" + title + "\" to menu \"" + this->title +
+			"\". Report as an error. Code: " + ERROR_MEN_TXTADD);
 		return;
 	}
 
@@ -124,7 +125,7 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 		catch (std::out_of_range)
 		{
 			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newText.title + "\"");
+				this->title + "\" working on new text: \"" + newText.title + "\". Code: " + ERROR_MENU_TXTINVTABPOS);
 			return;
 		}
 
@@ -142,7 +143,39 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 	// insert into total text overview
 
 	if (newText.title != "INVALID") this->texts.insert({ title, newText });
-	else messageHandler->writeMessage("ERROR", "Trying to add text " + title + " of invalid type to menu " + this->title);
+	else messageHandler->writeMessage("ERROR", "Trying to add text " + title + " of invalid type to menu " +
+		this->title + ". Code: " + ERROR_MEN_TXTINVTYPE);
+}
+
+void vsid::Menu::removeText(const std::string& title)
+{
+	if (this->texts.contains(title))
+	{
+		messageHandler->writeMessage("DEBUG", "Removing " + title + " from " + this->title, vsid::MessageHandler::DebugArea::Menu);
+		this->texts.erase(title);
+
+		// update table
+
+		for (auto row = this->table.begin(); row != this->table.end();)
+		{
+			for (auto col = row->second.begin(); col != row->second.end();)
+			{
+				if (col->second == title)
+				{
+					col = row->second.erase(col);
+					continue;
+				}
+				++col;
+			}
+
+			if (row->second.size() == 0)
+			{
+				row = this->table.erase(row);
+				continue;
+			}
+			++row;
+		}
+	}
 }
 
 void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::string label, int minWidth, int height, int weight, Spacing margin,
@@ -150,7 +183,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 {
 	if (this->buttons.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add button \"" + title + "\" to menu \"" + this->title + "\". Report as an error.");
+		messageHandler->writeMessage("ERROR", "Trying to add button \"" + title + "\" to menu \"" + this->title +
+			"\". Report as an error. Code: " + ERROR_MENU_BTNADD);
 		return;
 	}
 
@@ -232,7 +266,7 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 		catch (std::out_of_range)
 		{
 			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newButton.title + "\"");
+				this->title + "\" working on new text: \"" + newButton.title + "\". Code: " + ERROR_MENU_BTNINVTABPOS);
 			return;
 		}
 
@@ -250,7 +284,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 	// insert into total text overview
 
 	if (newButton.title != "INVALID") this->buttons.insert({ title, newButton });
-	else messageHandler->writeMessage("ERROR", "Trying to add button " + title + " of invalid type to menu " + this->title);
+	else messageHandler->writeMessage("ERROR", "Trying to add button " + title + " of invalid type to menu " +
+		this->title + ". Code: " + ERROR_MEN_BTNINVTYPE);
 }
 
 void vsid::Menu::resize(int top, int right, int bottom, int left)
@@ -440,7 +475,8 @@ void vsid::Menu::update()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating text [" + txt.title + "]");
+					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating text [" +
+						txt.title + "]. Code: " + ERROR_MENU_TXTUPDATE);
 				}
 
 				// adjust base area right side based on margin
@@ -466,6 +502,24 @@ void vsid::Menu::update()
 
 						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting main area to new .bottom [" +
 							std::to_string(newArea.bottom) + "]", vsid::MessageHandler::DebugArea::Menu);
+					}
+					else
+					{
+						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom smaller", vsid::MessageHandler::DebugArea::Menu);
+					}
+				}
+				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom) // #dev - test for bottom bar movement after deletion
+				{
+					if (txt.base == this->area)
+					{
+						newArea.bottom = txt.area.bottom + txt.margin.bottom;
+
+						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting main area to new .bottom [" +
+							std::to_string(newArea.bottom) + "] (reducing base area)", vsid::MessageHandler::DebugArea::Menu);
+					}
+					else
+					{
+						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom greater", vsid::MessageHandler::DebugArea::Menu);
 					}
 				}
 
@@ -493,10 +547,6 @@ void vsid::Menu::update()
 						"]", vsid::MessageHandler::DebugArea::Menu);
 				}
 
-				// set new areas for txt
-
-				if (txt.base == this->area) txt.base = newArea;
-
 				// move txt area based on margin and re-adjusted base area
 
 				if ((txt.area.top != txt.base.top + txt.margin.top) && row == 0)
@@ -517,7 +567,6 @@ void vsid::Menu::update()
 				if (newTopBar.right != farRight) newTopBar.right = farRight;
 				if (newArea.right != farRight) newArea.right = farRight;
 				if (newBottomBar.right != farRight) newBottomBar.right = farRight;
-
 			}
 
 			if (this->buttons.contains(elem))
@@ -660,7 +709,8 @@ void vsid::Menu::update()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating button [" + btn.title + "]");
+					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating button [" +
+						btn.title + "]. Code: " + ERROR_MENU_BTNUPDATE);
 				}
 
 				// adjust base area right side based on margin
@@ -711,10 +761,6 @@ void vsid::Menu::update()
 					messageHandler->writeMessage("DEBUG", "[bottomBar] Adjusting bottom bar area. New .top [" + std::to_string(newTopBar.top) +
 						"]", vsid::MessageHandler::DebugArea::Menu);
 				}
-
-				// set new areas for btn
-
-				if (btn.base == this->area) btn.base = newArea;
 
 				// move btn area based on margin and re-adjusted base area
 
@@ -823,6 +869,14 @@ void vsid::Menu::update()
 				txt.area.top = newBottomBar.top + txt.margin.top;
 				txt.area.bottom = txt.area.top + height;
 			}
+			// move text up inside base area if too far
+			else if (newBottomBar.bottom < txt.area.bottom + txt.margin.bottom)
+			{
+				int height = txt.area.bottom - txt.area.top;
+
+				txt.area.top = newBottomBar.top + txt.margin.top;
+				txt.area.bottom = txt.area.top + height;
+			}
 
 			// extend base down
 
@@ -911,6 +965,22 @@ void vsid::Menu::update()
 		btn.base = newTopBar;
 	}
 
+	// final re-iteration over texts to change for new base
+
+	for (auto& [title, txt] : this->texts)
+	{
+		if (txt.type == MENU_TOP_BAR || txt.type == MENU_BOTTOM_BAR) continue;
+		if (txt.base == this->area)	txt.base = newArea;
+	}
+
+	// final re-iteration over btns to change for new base
+
+	for (auto& [title, btn] : this->buttons)
+	{
+		if (btn.type == MENU_TOP_BAR || btn.type == MENU_BOTTOM_BAR) continue;
+		if (btn.base == this->area)	btn.base = newArea;
+	}
+
 	this->area = newArea;
 	this->topBar = newTopBar;
 	this->bottomBar = newBottomBar;
@@ -946,6 +1016,8 @@ void vsid::Menu::move(int type, RECT &Area)
 		txt.area.top += difTop;
 		txt.area.right += difRight;
 		txt.area.bottom += difBot;
+
+		txt.base = this->getArea();
 	}
 
 	for (auto& [title, btn] : this->buttons)
@@ -954,6 +1026,8 @@ void vsid::Menu::move(int type, RECT &Area)
 		btn.area.top += difTop;
 		btn.area.right += difRight;
 		btn.area.bottom += difBot;
+
+		btn.base = this->getArea();
 	}
 
 	// update topBar

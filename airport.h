@@ -44,6 +44,7 @@ namespace vsid
 		int facility = 0;
 		double freq = 0.0;
 	};
+
 	struct Airport
 	{
 		/**
@@ -61,6 +62,7 @@ namespace vsid
 		std::string icao = "";
 		int elevation = 0;
 		bool equipCheck = true;
+		bool enableRVSids = true;
 		std::vector<std::string> allRwys = {};
 		std::set<std::string> depRwys = {};
 		std::set<std::string> arrRwys = {};
@@ -77,7 +79,6 @@ namespace vsid
 		std::map<std::string, vsid::Controller> controllers = {};
 		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
 		bool forceAuto = false;
-
 		/**
 		 * @brief Checks if another controller with a lower facility is online
 		 * 
