@@ -90,7 +90,8 @@ namespace vsid
 							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
 							std::map<std::string, std::map<std::string, bool>>& savedSettings,
 							std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+							std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
 							);
 		/**
 		 * @brief Loads vsid config
