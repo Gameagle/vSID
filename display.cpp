@@ -86,9 +86,16 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 					POINT pos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 
 					CRect area;
-					area.bottom = pos.y + 20;
+					/*area.bottom = pos.y + 20; -- arrow position below target
 					area.top = area.bottom - 15;
 					area.left = pos.x - 5;
+					area.right = area.left + 10;*/
+
+					// arrow position left of target
+
+					area.bottom = pos.y + 10;
+					area.top = area.bottom - 15;
+					area.left = pos.x - 15;
 					area.right = area.left + 10;
 
 					dc.SelectObject(&font);
