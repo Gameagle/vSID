@@ -89,7 +89,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                         std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
                                         std::map<std::string, std::map<std::string, bool>>& savedSettings,
                                         std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+                                        std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
                                         )
 {
     // get the current path where plugins .dll is stored
@@ -158,7 +159,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         aptInfo.requests["pushback"] = {};
                         aptInfo.requests["taxi"] = {};
                         aptInfo.requests["departure"] = {};
-                        aptInfo.requests["vfr"] = {};                     
+                        aptInfo.requests["vfr"] = {};
+                        aptInfo.rwyrequests["rwy startup"] = {};
 
                         // customRules
 
@@ -254,10 +256,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         }
 
                         // saved requests - if not found base settings already in general settings
-                        if (savedRequests.contains(icao))
-                        {
-                            aptInfo.requests = savedRequests[icao];
-                        }
+
+                        if (savedRequests.contains(icao)) aptInfo.requests = savedRequests[icao];
+
+                        // saved rwy requests - if not found base settings already in general settings
+
+                        if (savedRwyRequests.contains(icao)) aptInfo.rwyrequests = savedRwyRequests[icao];
 
                         // sids
 						// initialize default values

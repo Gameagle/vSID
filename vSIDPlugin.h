@@ -248,6 +248,7 @@ namespace vsid
 		std::map<std::string, std::map<std::string, bool>> savedRules;
 		std::map<std::string, std::map<std::string, vsid::Area>> savedAreas;
 		std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>> savedRequests = {};
+		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {}; // #rwy req
 		// list of ground states set by controllers
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;
