@@ -2396,21 +2396,13 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 				if (atcSid != "" && atcSid != fplnData.GetOrigin() && atcSid != sidName && atcSid != customSidName)
 				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] atcSID: " + atcSid, vsid::MessageHandler::DebugArea::Dev);
 					for (vsid::Sid& sid : this->activeAirports[fplnData.GetOrigin()].sids)
 					{
-						if (atcSid.find_first_of("0123456789") != std::string::npos)
+						if (atcSid == sid.name())
 						{
-							if (sid.waypoint != atcSid.substr(0, atcSid.length() - 2)) continue;
-							if (sid.designator != std::string(1, atcSid[atcSid.length() - 1])) continue;
-							if (sid.number != std::string(1, atcSid[atcSid.length() - 2])) break;
+							this->processed[callsign].customSid = sid;
+							break;
 						}
-						else
-						{
-							if (sid.base != atcSid) continue;
-						}
-
-						this->processed[callsign].customSid = sid;
 					}
 				}
 
@@ -3626,7 +3618,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 				{
 					if (atcBlock.first.find_first_of("0123456789") != std::string::npos)
 					{
-						if (sid.waypoint != atcBlock.first.substr(0, atcBlock.first.length() - 2)) continue;
+						if (sid.base != atcBlock.first.substr(0, atcBlock.first.length() - 2)) continue;
 						if (sid.designator != std::string(1, atcBlock.first[atcBlock.first.length() - 1])) continue;
 					}
 					else
