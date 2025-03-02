@@ -5,7 +5,7 @@
 #include "messageHandler.h"
 #include "constants.h"
 
-std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
+std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
 {
 	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
 	std::string callsign = FlightPlan.GetCallsign();
@@ -82,12 +82,14 @@ std::vector<std::string> vsid::fpln::clean(const EuroScopePlugIn::CFlightPlan &F
 	return filedRoute;
 }
 
-std::string vsid::fpln::getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
+// #evaluate - do we still need filedSidWpt or should we used the stored value?
+
+std::string vsid::fplnhelper::getTransition(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::map<std::string, vsid::Transition>& transition,
 	const std::string& filedSidWpt)
 {
 	if (transition.empty()) return "";
 
-	std::vector<std::string> route = vsid::fpln::clean(FlightPlan, filedSidWpt);
+	std::vector<std::string> route = vsid::fplnhelper::clean(FlightPlan, filedSidWpt);
 
 	for (auto& [base, trans] : transition)
 	{
@@ -99,7 +101,7 @@ std::string vsid::fpln::getTransition(const EuroScopePlugIn::CFlightPlan& Flight
 	return ""; // fallback if no transition could be matched
 }
 
-std::string vsid::fpln::splitTransition(std::string atcSid)
+std::string vsid::fplnhelper::splitTransition(std::string atcSid)
 {
 	if (atcSid == "") return "";
 
@@ -133,7 +135,7 @@ std::string vsid::fpln::splitTransition(std::string atcSid)
 	return ""; // fallback
 }
 
-std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
+std::pair<std::string, std::string> vsid::fplnhelper::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
 	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');
 	std::string origin = FlightPlan.GetFlightPlanData().GetOrigin();
@@ -171,7 +173,7 @@ std::pair<std::string, std::string> vsid::fpln::getAtcBlock(const EuroScopePlugI
 	return { atcSid, atcRwy };
 }
 
-bool vsid::fpln::findRemarks(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& searchStr))
+bool vsid::fplnhelper::findRemarks(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(& searchStr))
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -180,7 +182,7 @@ bool vsid::fpln::findRemarks(const EuroScopePlugIn::CFlightPlan& FlightPlan, con
 	return std::string(fplnData.GetRemarks()).find(searchStr) != std::string::npos;
 }
 
-bool vsid::fpln::removeRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toRemove))
+bool vsid::fplnhelper::removeRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toRemove))
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -199,7 +201,7 @@ bool vsid::fpln::removeRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const st
 	return fplnData.SetRemarks(vsid::utils::join(remarks).c_str());
 }
 
-bool vsid::fpln::addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toAdd))
+bool vsid::fplnhelper::addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string(&toAdd))
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -210,7 +212,7 @@ bool vsid::fpln::addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::
 	return fplnData.SetRemarks(vsid::utils::join(remarks).c_str());
 }
 
-bool vsid::fpln::findScratchPad(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toSearch)
+bool vsid::fplnhelper::findScratchPad(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toSearch)
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -219,7 +221,7 @@ bool vsid::fpln::findScratchPad(const EuroScopePlugIn::CFlightPlan& FlightPlan, 
 	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch));
 }
 
-bool vsid::fpln::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
+bool vsid::fplnhelper::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -232,7 +234,7 @@ bool vsid::fpln::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const s
 	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
 }
 
-bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
+bool vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
 {
 	if (!FlightPlan.IsValid()) return false;
 
@@ -253,7 +255,7 @@ bool vsid::fpln::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, cons
 	return false; // default / fall back state
 }
 
-std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
+std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
 {
 
 	std::string equip = FlightPlan.GetFlightPlanData().GetAircraftInfo();
@@ -322,9 +324,9 @@ std::string vsid::fpln::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan,
 	}
 }
 
-std::string vsid::fpln::getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan)
+std::string vsid::fplnhelper::getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan)
 {
-	if (vsid::fpln::findRemarks(FlightPlan, "PBN/"))
+	if (vsid::fplnhelper::findRemarks(FlightPlan, "PBN/"))
 	{
 		std::string pbn;
 		std::vector<std::string> vecPbn = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRemarks(), ' ');
