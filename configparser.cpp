@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "messageHandler.h"
 #include "sid.h"
+#include "constants.h"
 
 #include <vector>
 #include <fstream>
@@ -88,7 +89,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                         std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
                                         std::map<std::string, std::map<std::string, bool>>& savedSettings,
                                         std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+                                        std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
                                         )
 {
     // get the current path where plugins .dll is stored
@@ -157,7 +159,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         aptInfo.requests["pushback"] = {};
                         aptInfo.requests["taxi"] = {};
                         aptInfo.requests["departure"] = {};
-                        aptInfo.requests["vfr"] = {};                     
+                        aptInfo.requests["vfr"] = {};
+                        aptInfo.rwyrequests["rwy startup"] = {};
 
                         // customRules
 
@@ -253,10 +256,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         }
 
                         // saved requests - if not found base settings already in general settings
-                        if (savedRequests.contains(icao))
-                        {
-                            aptInfo.requests = savedRequests[icao];
-                        }
+
+                        if (savedRequests.contains(icao)) aptInfo.requests = savedRequests[icao];
+
+                        // saved rwy requests - if not found base settings already in general settings
+
+                        if (savedRwyRequests.contains(icao)) aptInfo.rwyrequests = savedRwyRequests[icao];
 
                         // sids
 						// initialize default values
@@ -1010,15 +1015,21 @@ void vsid::ConfigParser::loadRnavList()
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
-COLORREF vsid::ConfigParser::getColor(std::string color)
+const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
     if (this->colors.contains(color))
     {
+        messageHandler->removeGenError(ERROR_CONF_COLOR + "_" + color);
+
         return this->colors[color];
     }
     else
     {
-        messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\"");
+        if (!messageHandler->genErrorsContains(ERROR_CONF_COLOR + "_" + color))
+        {
+            messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\". Code: " + ERROR_CONF_COLOR);
+            messageHandler->addGenError(ERROR_CONF_COLOR + "_" + color);
+        }
         // return purple if color could not be found to signal error
         COLORREF rgbColor = RGB(190, 30, 190);
         return rgbColor;

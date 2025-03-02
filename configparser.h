@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "pch.h"
 
 #include "airport.h"
-#include "nlohmann/json.hpp"
+#include "include/nlohmann/json.hpp"
 
 #include <string>
 #include <map>
@@ -90,7 +90,8 @@ namespace vsid
 							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
 							std::map<std::string, std::map<std::string, bool>>& savedSettings,
 							std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+							std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
 							);
 		/**
 		 * @brief Loads vsid config
@@ -106,13 +107,25 @@ namespace vsid
 		 * @brief load list of RNAV capable acft
 		 */
 		void loadRnavList();
+		//************************************
+		// Description: grants read-only access to vSID main config
+		// Method:    getMainConfig
+		// FullName:  vsid::ConfigParser::getMainConfig
+		// Access:    public 
+		// Returns:   const json&
+		// Qualifier: const
+		//************************************
+		inline json& getMainConfig()
+		{
+			return this->vSidConfig;
+		}
 		/**
 		 * @brief Fetches a specific color from the settings file
 		 * 
 		 * @param color - name of the key in the settings file
 		 * @return COLORREF 
 		 */
-		COLORREF getColor(std::string color);
+		const COLORREF getColor(std::string color);
 
 		//************************************
 		// Method:    getClrfMinimums

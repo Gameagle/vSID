@@ -4,6 +4,24 @@
 *	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
 *	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
 *	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
+*	GEN - error caching added for errors that are subject to euroscope update rates. Errors that might be thrown on controller action are not cached (#296)
+*	DIS - new configurable (which screen to display on, color and display enable/disable) pushback indicator - a small arrow left to the radar target when the gnd state is push
+*	REQ - new "rwy startup" request list. Request are switchable between startup and rwy startup, i.e. the request time of the first request is transfered between those lists. The new list is usable to check the startup position for that specific runway. To see the global position again one can switch back to regular startup. As of now each flight plan only exists in ONE of both lists (#145)
+
+**CHANGED**
+*	GEN - removed "vSID" from items as it is already written in the dropdown menu (this also mean that in the item type list vSID is not displayed anymore)
+*	GEN - renamed item "CLMB" to "Initial Climb"
+*	GEN - renamed item "CLR" to "Clearance received flag"
+*	GEN - renamed item "CLRF" to "Cleared to land flag"
+*	GEN - renamed item "RWY" to "Departure Runway"
+*	GEN - renamed item "Trans" to "Departure Transition"
+*	GEN - renamed func "SIDs Auto Select" to "Set/Reset suggested SID"
+*	GEN - renamed func "Trans Menu" to "Transition menu"
+*	GEN - renamed func "RWY menu" to "Runway menu"
+*	GEN - renamed func "REQ menu" to "Request menu"
+*	GEN - renamed func "CTL" to "Set cleared to land flag"
+*	GEN - renamed func "CLR + SID" to "Set CRF and SID"
+*	GEN - renamed func "CLR + SID + SU" to "Set CRF, SID and Startup state"
 
 [Changelog v0.12.0]
 

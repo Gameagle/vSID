@@ -78,6 +78,7 @@ namespace vsid
 		std::map<std::string, bool> settings = {};
 		std::map<std::string, vsid::Controller> controllers = {};
 		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
+		std::map<std::string, std::map< std::string, std::set<std::pair<std::string, long long>, compreq>>> rwyrequests = {};
 		bool forceAuto = false;
 		/**
 		 * @brief Checks if another controller with a lower facility is online
