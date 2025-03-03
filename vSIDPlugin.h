@@ -30,7 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
-#include "es/EuroScopePlugIn.h"
+#include "include/es/EuroScopePlugIn.h"
 #include "airport.h"
 #include "constants.h"
 
@@ -59,7 +59,8 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
-		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
+		inline std::map<std::string, vsid::Fpln>& getProcessed() { return this->processed; };
+		/*inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };*/ // #removal - old fpln::Info
 		inline std::set<std::string> getDepRwy(std::string icao)
 		{
 			if (this->activeAirports.contains(icao))
@@ -69,7 +70,7 @@ namespace vsid
 			else return {};
 		}
 		
-		inline std::map<std::string, vsid::Airport> getActiveApts() { return this->activeAirports; };
+		inline const std::map<std::string, vsid::Airport>& getActiveApts() const { return this->activeAirports; };
 
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
@@ -91,17 +92,17 @@ namespace vsid
 		 * @param FlightPlan - Flightplan data from ES
 		 * @param atcRwy - The rwy assigned by ATC which shall be considered
 		 */
-		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan FlightPlan, std::string atcRwy = "");
+		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan& FlightPlan, std::string atcRwy = "");
 		/**
 		 * @brief Tries to set a clean route without SID. SID will then be placed in front
-		 * and color codes for the TagItem set. Processed flightplans are stored.
+		 * and color codes for the TagItem set. Processed flight plans are stored.
 		 * 
 		 * @param FlightPlan - Flightplan data from ES
-		 * @param checkOnly - If the flightplan should only be validated
+		 * @param checkOnly - If the flight plan should only be validated
 		 * @param atcRwy - The rwy assigned by ATC which shall be considered
 		 * @param manualSid - manual Sid that has been selected and should be processed
 		 */
-		void processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
 		//************************************
 		// Description: Retrieves the config parser as read-only for access to configs
 		// Method:    getConfigParser
@@ -201,7 +202,7 @@ namespace vsid
 		 * 
 		 * @param FlightPlan - ES flight plan object
 		 */
-		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
+		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		/**
 		 * @brief Radar Screen.
 		 */
@@ -236,7 +237,8 @@ namespace vsid
 		
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
-		std::map<std::string, vsid::fpln::Info> processed;
+		std::map<std::string, vsid::Fpln> processed;
+		/*std::map<std::string, vsid::fpln::Info> processed;*/ // #removal old fpln::Info
 		/**
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
