@@ -1201,6 +1201,11 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		sidSuggestion = this->processSid(FlightPlan);
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] processing SID with atcRWY (for customSuggestion): " + atcRwy, vsid::MessageHandler::DebugArea::Sid);
 		sidCustomSuggestion = this->processSid(FlightPlan, atcRwy);
+
+		if (vsid::utils::contains(sidSuggestion.rwys, atcRwy) && sidSuggestion == sidCustomSuggestion)
+		{
+			sidCustomSuggestion = {};
+		}
 	}
 	/* default state */
 	else
@@ -1221,6 +1226,18 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 	{
 		fpln.validEquip = false;
 		sidCustomSuggestion.base = "";
+	}
+
+	// if a custom sid has already been detected but evaluation fails (e.g. old airac entry)
+	// preserve data previously pulled from the flight plan (suggestion value for other checks below)
+
+	if (this->processed.contains(callsign))
+	{
+		if (!this->processed[callsign].customSid.empty() && sidSuggestion.empty() && sidCustomSuggestion.empty() &&
+			std::string(fplnData.GetRoute()).find(this->processed[callsign].customSid.name()) != std::string::npos)
+		{
+			sidCustomSuggestion = this->processed[callsign].customSid;
+		}
 	}
 
 	// determine dep rwy based on suggested SIDs
@@ -2392,13 +2409,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					atcSid = vsid::fplnhelper::splitTransition(atcSid);
 				}
 
+				
 				// if an unknown Sid is set (non-standard or non-custom) try to find matching Sid in config
 
 				if (atcSid != "" && atcSid != fplnData.GetOrigin() && atcSid != sidName && atcSid != customSidName)
 				{
 					for (vsid::Sid& sid : this->activeAirports[fplnData.GetOrigin()].sids)
 					{
-						if (atcSid == sid.name())
+						if (atcSid == sid.name() && this->processed[callsign].sid != sid)
 						{
 							this->processed[callsign].customSid = sid;
 							break;
