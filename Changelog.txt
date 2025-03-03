@@ -23,6 +23,9 @@
 *	GEN - renamed func "CLR + SID" to "Set CRF and SID"
 *	GEN - renamed func "CLR + SID + SU" to "Set CRF, SID and Startup state"
 
+**FIXED**
+*	SID - possible wrong result in SID determination if waypoint doesn't match base and SID is entered in the flight plan (#304)
+
 [Changelog v0.12.0]
 
 **NEW**
