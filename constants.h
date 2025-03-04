@@ -107,3 +107,5 @@ const std::string ERROR_CONF_DISPLAY = "E052";
 const std::string ERROR_CMD_ATCICAO = "E060";
 
 const std::string ERROR_ATC_ICAOSPLIT = "E070";
+
+const std::string ERROR_REQ_RWYSPLIT = "E080";

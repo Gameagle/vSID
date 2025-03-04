@@ -43,7 +43,8 @@ namespace vsid
 		std::string transition = "";
 		std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
 		int updateCounter = 0;
-		bool request = false;
+		/*bool request = false;*/
+		std::string request = "";
 		bool validEquip = true;
 		std::string gndState = "";
 		bool ctl = false;
