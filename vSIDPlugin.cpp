@@ -1141,31 +1141,44 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 
 	// restore requests after an airport update was called but only for first processing
 
-	if (!this->processed.contains(callsign) &&
-		(std::any_of(this->activeAirports[icao].requests.begin(), this->activeAirports[icao].requests.end(), [&](auto request)
+	if (!this->processed.contains(callsign)) // #refactor - new save and restore function for saved fpln infos
 	{
-		for (const std::pair<std::string, long long>& fpln : request.second)
+		bool stop = false;
+		for (auto& [type, req] : this->activeAirports[icao].requests)
 		{
-			if (fpln.first == callsign) return true;
-			else continue;
-		}
-		return false; // fall back state
-	}) || 
-		std::any_of(this->activeAirports[icao].rwyrequests.begin(), this->activeAirports[icao].rwyrequests.end(), [&](auto rwyrequest) // #req rwy
+			for (auto& [reqCallsign, reqTime] : req)
 			{
-				for (auto& [rwy, request] : rwyrequest.second)
+				if (reqCallsign != callsign) continue;
+
+				fpln.request = type;
+				stop = true;
+				break;
+			}
+			if (stop) break;
+		}
+
+		stop = false;
+
+		for (auto& [type, rwys] : this->activeAirports[icao].rwyrequests)
+		{
+			for (auto& [reqRwy, req] : rwys)
+			{
+				for (auto& [reqCallsign, reqTime] : req)
 				{
-					for (const std::pair<std::string, long long>& fpln : request)
-					{
-						if (fpln.first == callsign) return true;
-						else continue;
-					}
-				}			
-				return false; // fall back state
-			})
-		))
-	{
-		fpln.request = true;
+					if (reqCallsign != callsign) continue;
+
+					std::string fplnRwy = fplnData.GetDepartureRwy();
+
+					if (fplnRwy == "" || fplnRwy != reqRwy) continue;
+
+					fpln.request = type;
+					stop = true;
+					break;
+				}
+				if (stop) break;
+			}
+			if (stop) break;
+		}
 	}
 
 	// save the SID waypoint with each processing for later evaluation (e.g. SID tagItem)
