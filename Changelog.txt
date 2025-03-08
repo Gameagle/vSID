@@ -22,6 +22,7 @@
 *	GEN - renamed func "CTL" to "Set cleared to land flag"
 *	GEN - renamed func "CLR + SID" to "Set CRF and SID"
 *	GEN - renamed func "CLR + SID + SU" to "Set CRF, SID and Startup state"
+*	GEN - changed / improved flight plan info storing during flight plan updates (attempt for #214)
 
 **FIXED**
 *	SID - possible wrong result in SID determination if waypoint doesn't match base and SID is entered in the flight plan (#304)
