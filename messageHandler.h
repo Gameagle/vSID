@@ -27,6 +27,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
+#include <source_location> // #dev - add source_location
+
 namespace vsid
 {
 	/**
@@ -66,6 +68,8 @@ namespace vsid
 		 * @param msg 
 		 */
 		void writeMessage(std::string sender, std::string msg, DebugArea debugArea = DebugArea::All);
+
+		void writeMessage(std::string sender, std::string msg, const std::source_location& loc, DebugArea debugArea = DebugArea::All);
 		/**
 		 * @brief Retrieve the first message from the local message stack
 		 * 
