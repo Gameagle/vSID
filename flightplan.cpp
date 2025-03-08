@@ -348,3 +348,26 @@ std::string vsid::fplnhelper::getPbn(const EuroScopePlugIn::CFlightPlan& FlightP
 	}
 	return "";
 }
+
+void vsid::fplnhelper::saveFplnInfo(const std::string& callsign, vsid::Fpln fplnInfo, std::map<std::string, vsid::Fpln>& savedFplnInfo)
+{
+	savedFplnInfo[callsign] = std::move(fplnInfo);
+
+	savedFplnInfo[callsign].sid = {};
+	savedFplnInfo[callsign].customSid = {};
+	savedFplnInfo[callsign].sidWpt = "";
+	savedFplnInfo[callsign].transition = "";
+	savedFplnInfo[callsign].validEquip = true;
+}
+
+bool vsid::fplnhelper::restoreFplnInfo(const std::string& callsign, std::map<std::string, vsid::Fpln>& processed, std::map<std::string, vsid::Fpln>& savedFplnInfo)
+{
+	if (!savedFplnInfo.contains(callsign)) return false;
+
+	processed[callsign] = std::move(savedFplnInfo[callsign]);
+
+	savedFplnInfo.erase(callsign);
+
+	if (processed.contains(callsign)) return true;
+	else return false;
+}

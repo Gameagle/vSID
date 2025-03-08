@@ -207,5 +207,37 @@ namespace vsid
 		// Parameter: const EuroScopePlugIn::CFlightPlan & FlightPlan
 		//************************************
 		std::string getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan);
+
+		//************************************
+		// Description: Stores flight plan info
+		// Method:    saveFplnInfo
+		// FullName:  vsid::fplnhelper::saveFplnInfo
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: vsid::Fpln fplnInfo
+		// Parameter: std::map<std::string
+		// Parameter: vsid::Fpln> & savedFplnInfo
+		//************************************
+		void saveFplnInfo(const std::string& callsign, vsid::Fpln fplnInfo,
+			std::map<std::string, vsid::Fpln>& savedFplnInfo);
+
+
+		//************************************
+		// Description: Restores flight plan info if callsign has stored info
+		// Method:    restoreFplnInfo
+		// FullName:  vsid::fplnhelper::restoreFplnInfo
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: std::map<std::string
+		// Parameter: vsid::Fpln> & processed
+		// Parameter: std::map<std::string
+		// Parameter: vsid::Fpln> & savedFplnInfo
+		//************************************
+		bool restoreFplnInfo(const std::string& callsign, std::map<std::string, vsid::Fpln>& processed,
+			std::map<std::string, vsid::Fpln>& savedFplnInfo);
 	}
 }
