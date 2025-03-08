@@ -508,7 +508,7 @@ void vsid::Menu::update()
 						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom smaller", vsid::MessageHandler::DebugArea::Menu);
 					}
 				}
-				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom) // #dev - test for bottom bar movement after deletion
+				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom)
 				{
 					if (txt.base == this->area)
 					{
