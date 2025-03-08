@@ -60,7 +60,6 @@ namespace vsid
 		virtual ~VSIDPlugin();
 
 		inline std::map<std::string, vsid::Fpln>& getProcessed() { return this->processed; };
-		/*inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };*/ // #removal - old fpln::Info
 		inline std::set<std::string> getDepRwy(std::string icao)
 		{
 			if (this->activeAirports.contains(icao))
@@ -238,7 +237,6 @@ namespace vsid
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
 		std::map<std::string, vsid::Fpln> processed;
-		/*std::map<std::string, vsid::fpln::Info> processed;*/ // #removal old fpln::Info
 		/**
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
@@ -249,8 +247,24 @@ namespace vsid
 		std::map<std::string, std::map<std::string, bool>> savedSettings;
 		std::map<std::string, std::map<std::string, bool>> savedRules;
 		std::map<std::string, std::map<std::string, vsid::Area>> savedAreas;
+		std::map<std::string, vsid::Fpln> savedFplnInfo = {};
+		//************************************
+		// Description: Stores requests during airport updates
+		// Param 1: std::string - airport icao
+		// Param 2: std::string - request type
+		// Param 3 (pair): std::string - callsign
+		// Param 4 (pair): long long - time
+		//************************************
 		std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>> savedRequests = {};
-		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {}; // #rwy req
+		//************************************
+		// Description: Stores runway requests during airport updates
+		// Param 1: std::string - airport icao
+		// Param 2: std::string - request type
+		// Param 3: std::string - runway
+		// Param 4 (pair): std::string - callsign
+		// Param 5 (pair): long long - time
+		//************************************
+		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {};
 		// list of ground states set by controllers
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;
