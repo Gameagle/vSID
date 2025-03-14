@@ -77,7 +77,20 @@ namespace vsid
 		int maxInitialClimb = 0;
 		std::map<std::string, bool> settings = {};
 		std::map<std::string, vsid::Controller> controllers = {};
+		//************************************
+		// Description: Stores requests during airport updates
+		// Param 1: std::string - request type
+		// Param 2 (pair): std::string - callsign
+		// Param 3 (pair): long long - time
+		//************************************
 		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
+		//************************************
+		// Description: Stores runway requests
+		// Param 1: std::string - request type
+		// Param 2: std::string - runway
+		// Param 3 (pair): std::string - callsign
+		// Param 4 (pair): long long - time
+		//************************************
 		std::map<std::string, std::map< std::string, std::set<std::pair<std::string, long long>, compreq>>> rwyrequests = {};
 		bool forceAuto = false;
 		/**
