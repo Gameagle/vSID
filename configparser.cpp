@@ -279,6 +279,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "wingType") fieldSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "acftType") fieldSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "dest") fieldSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "route")
@@ -394,6 +395,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 										}
 									}
                                     else if(sidWpt.key() == "pilotfiled") wptSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    else if (sidWpt.key() == "wingType") wptSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "acftType") wptSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "dest") wptSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "route")
@@ -521,6 +523,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											}
 											else if (sidDes.key() == "pilotfiled")
                                                 desSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+											else if (sidDes.key() == "wingType")
+												desSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "acftType")
                                                 desSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "dest")
@@ -671,6 +675,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                     }
                                                     else if (sidId.key() == "pilotfiled")
                                                         idSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "wingType")
+														idSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "acftType")
                                                         idSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "dest")
@@ -797,7 +803,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
 												vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition, idSetting.equip,
                                                                     idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled, idSetting.actArrRwy,
-                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.acftType, idSetting.engineCount,
+                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType, idSetting.acftType, idSetting.engineCount,
 																	idSetting.mtow, idSetting.dest, idSetting.route, idSetting.customRule, idSetting.area, idSetting.lvp,
 																	idSetting.timeFrom, idSetting.timeTo, idSetting.sidHighlight, idSetting.clmbHighlight };
 												aptInfo.sids.push_back(newSid);
@@ -837,6 +843,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												}
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wtc: " + newSid.wtc, vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] engType: " + newSid.engineType, vsid::MessageHandler::DebugArea::Conf);
+                                                messageHandler->writeMessage("DEBUG", "[" + sidName + "] wingType: " + newSid.wingType, vsid::MessageHandler::DebugArea::Conf);
 												for (auto& [sAcftType, allow] : newSid.acftType)
 												{
 													messageHandler->writeMessage("DEBUG", "[" + sidName + "] acftType: " + sAcftType + " allowed " + ((allow) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
