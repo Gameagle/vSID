@@ -53,7 +53,7 @@ namespace vsid
 		int initial = 0;
 		bool via = false;
 		bool pilotfiled = false;
-		std::string wingType = "?LSAT";
+		std::string wingType = "LSAT";
 		std::map<std::string, bool> acftType = {};
 		std::map<std::string, bool> dest = {};
 		std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
