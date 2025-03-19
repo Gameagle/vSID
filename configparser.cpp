@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "messageHandler.h"
 #include "sid.h"
+#include "constants.h"
 
 #include <vector>
 #include <fstream>
@@ -88,7 +89,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                         std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
                                         std::map<std::string, std::map<std::string, bool>>& savedSettings,
                                         std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+                                        std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+                                        std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
                                         )
 {
     // get the current path where plugins .dll is stored
@@ -157,7 +159,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         aptInfo.requests["pushback"] = {};
                         aptInfo.requests["taxi"] = {};
                         aptInfo.requests["departure"] = {};
-                        aptInfo.requests["vfr"] = {};                     
+                        aptInfo.requests["vfr"] = {};
+                        aptInfo.rwyrequests["rwy startup"] = {};
 
                         // customRules
 
@@ -253,10 +256,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         }
 
                         // saved requests - if not found base settings already in general settings
-                        if (savedRequests.contains(icao))
-                        {
-                            aptInfo.requests = savedRequests[icao];
-                        }
+
+                        if (savedRequests.contains(icao)) aptInfo.requests = savedRequests[icao];
+
+                        // saved rwy requests - if not found base settings already in general settings
+
+                        if (savedRwyRequests.contains(icao)) aptInfo.rwyrequests = savedRwyRequests[icao];
 
                         // sids
 						// initialize default values
@@ -274,6 +279,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "wingType") fieldSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "acftType") fieldSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "dest") fieldSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "route")
@@ -389,6 +395,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 										}
 									}
                                     else if(sidWpt.key() == "pilotfiled") wptSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    else if (sidWpt.key() == "wingType") wptSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "acftType") wptSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "dest") wptSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "route")
@@ -516,6 +523,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											}
 											else if (sidDes.key() == "pilotfiled")
                                                 desSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+											else if (sidDes.key() == "wingType")
+												desSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "acftType")
                                                 desSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "dest")
@@ -666,6 +675,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                     }
                                                     else if (sidId.key() == "pilotfiled")
                                                         idSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "wingType")
+														idSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "acftType")
                                                         idSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "dest")
@@ -792,7 +803,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
 												vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition, idSetting.equip,
                                                                     idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled, idSetting.actArrRwy,
-                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.acftType, idSetting.engineCount,
+                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType, idSetting.acftType, idSetting.engineCount,
 																	idSetting.mtow, idSetting.dest, idSetting.route, idSetting.customRule, idSetting.area, idSetting.lvp,
 																	idSetting.timeFrom, idSetting.timeTo, idSetting.sidHighlight, idSetting.clmbHighlight };
 												aptInfo.sids.push_back(newSid);
@@ -832,6 +843,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												}
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wtc: " + newSid.wtc, vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] engType: " + newSid.engineType, vsid::MessageHandler::DebugArea::Conf);
+                                                messageHandler->writeMessage("DEBUG", "[" + sidName + "] wingType: " + newSid.wingType, vsid::MessageHandler::DebugArea::Conf);
 												for (auto& [sAcftType, allow] : newSid.acftType)
 												{
 													messageHandler->writeMessage("DEBUG", "[" + sidName + "] acftType: " + sAcftType + " allowed " + ((allow) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
@@ -1010,15 +1022,21 @@ void vsid::ConfigParser::loadRnavList()
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
-COLORREF vsid::ConfigParser::getColor(std::string color)
+const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
     if (this->colors.contains(color))
     {
+        messageHandler->removeGenError(ERROR_CONF_COLOR + "_" + color);
+
         return this->colors[color];
     }
     else
     {
-        messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\"");
+        if (!messageHandler->genErrorsContains(ERROR_CONF_COLOR + "_" + color))
+        {
+            messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\". Code: " + ERROR_CONF_COLOR);
+            messageHandler->addGenError(ERROR_CONF_COLOR + "_" + color);
+        }
         // return purple if color could not be found to signal error
         COLORREF rgbColor = RGB(190, 30, 190);
         return rgbColor;

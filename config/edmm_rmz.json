@@ -1,0 +1,455 @@
+{
+    "EDAB": {
+        "elevation": 568,
+        "runways": "07,25",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "SAS,TRS,MEI,GER,HAL,HOF,EDMM",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "ABLOX": {
+                "S": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			},
+			"BUSIR": {
+                "S": {
+                    "1": {
+                        "rwy": "07",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "2": {
+                        "rwy": "25",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDAC": {
+        "elevation": 640,
+        "runways": "04,22",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "TRS,TRN,GER,MEI,HAL,HOF,EDMM",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "EKPEK": {
+                "A": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                },
+                "H": {
+                    "3": {
+                        "rwy": "22",
+                        "climbvia": false,
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                }
+			},
+			"GOLAT": {
+                "A": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "04",
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                },
+                "H": {
+                    "1": {
+                        "rwy": "22",
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                }
+			},
+			"OSKAT": {
+                "A": {
+                    "1": {
+                        "rwy": "04",
+                        "prio": 1
+                    }
+                },
+                "B": {
+                    "1": {
+                        "rwy": "22",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "04",
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                },
+                "H": {
+                    "1": {
+                        "rwy": "22",
+                        "equip": {"NON-RNAV": true},
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDQM": {
+        "elevation": 1960,
+        "runways": "08,26",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "FRK,BBG,HOF,RDG,EDMM",
+        "sids": {
+            "initial": 7000,
+            "climbvia": true,
+            "PEROX": {
+                "S": {
+                    "1": {
+                        "rwy": "08",
+                        "prio": 1
+                    }
+                },
+                "T": {
+                    "1": {
+                        "rwy": "26",
+                        "prio": 1
+                    }
+                }
+			},
+			"TABAT": {
+                "S": {
+                    "1": {
+                        "rwy": "08",
+                        "prio": 1
+                    }
+                },
+                "T": {
+                    "1": {
+                        "rwy": "26",
+                        "prio": 1
+                    }
+                }
+			},
+			"ABERU": {
+                "S": {
+                    "1": {
+                        "rwy": "08",
+                        "prio": 1
+                    }
+                },
+                "T": {
+                    "1": {
+                        "rwy": "26",
+                        "prio": 1
+                    }
+                }
+			},
+			"KULOK": {
+                "initial": 5000,
+                "S": {
+                    "1": {
+                        "rwy": "08",
+                        "prio": 1
+                    }
+                },
+                "T": {
+                    "1": {
+                        "rwy": "26",
+                        "prio": 1
+                    }
+                }
+			},
+			"LASGA": {
+                "S": {
+                    "1": {
+                        "rwy": "08",
+                        "prio": 1
+                    }
+                },
+                "T": {
+                    "1": {
+                        "rwy": "26",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDQC": {
+        "elevation": 1486,
+        "runways": "12,30",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "FRK,BBG,HOF,RDG,EDMM",
+        "sids": {
+            "initial": 7000,
+            "climbvia": true,
+            "LASGA": {
+                "E": {
+                    "1": {
+                        "rwy": "12",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "30",
+                        "prio": 1
+                    }
+                }
+			},
+			"LONLI": {
+                "E": {
+                    "1": {
+                        "rwy": "12",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "30",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDQD": {
+        "elevation": 1601,
+        "runways": "06,24",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "FRK,BBG,HOF,RDG,EDMM",
+        "sids": {
+            "initial": 5000,
+            "ABERU": {
+                "R": {
+                    "1": {
+                        "rwy": "06",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"KULOK": {
+                "R": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"ANELA": {
+                "R": {
+                    "1": {
+                        "rwy": "06",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"LONLI": {
+                "R": {
+                    "1": {
+                        "rwy": "06",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			},
+			"PIVIR": {
+                "R": {
+                    "1": {
+                        "rwy": "06",
+                        "climbvia": true,
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "24",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDQA": {
+        "elevation": 827,
+        "runways": "03,21",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "FRK,BBG,HOF,RDG,EDMM",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "ANELA": {
+                "E": {
+                    "1": {
+                        "rwy": "03",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "21",
+                        "prio": 1
+                    }
+                }
+			},
+			"SULUS": {
+                "E": {
+                    "1": {
+                        "rwy": "03",
+                        "prio": 1
+                    }
+                },
+                "W": {
+                    "1": {
+                        "rwy": "21",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDMS": {
+        "elevation": 1053,
+        "runways": "09,27",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "RDG,EGG,ALB,WLD,ZUG,EDMM",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "MAMOR": {
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"RDG": {
+                "initial": 6000,
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "27",
+                        "prio": 1
+                    }
+                }
+			},
+			"STAUB": {
+                "R": {
+                    "1": {
+                        "rwy": "09",
+                        "prio": 1
+                    }
+                },
+                "G": {
+                    "1": {
+                        "rwy": "27",
+                        "climbvia": false,
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    },
+	"EDME": {
+        "elevation": 1342,
+        "runways": "08,26",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+		"appSI": "EGG,RDG,ALB,WLD,ZUG,EDMM",
+        "sids": {
+            "initial": 5000,
+            "climbvia": true,
+            "BIBAG": {
+                "R": {
+                    "1": {
+                        "rwy": "10",
+                        "prio": 1
+                    }
+                },
+                "L": {
+                    "1": {
+                        "rwy": "28",
+                        "prio": 1
+                    }
+                }
+			}
+        }
+    }
+}

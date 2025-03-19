@@ -1,0 +1,772 @@
+{
+    "EDDM": {
+        "elevation": 1487,
+        "runways": "26R,26L,08R,08L",
+        "transAlt": 5000,
+        "maxInitialClimb": 7000,
+        "customRules" : {"traalg":false},
+		"appSI": "NDG,WLD,ZUG,RDG,EDMM",
+        "timeMode": true,
+        "timezone": "Europe/Berlin",
+        "sids": {
+            "initial": 7000,
+            "climbvia": true,
+            "AKINI": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+				"S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+			    "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
+                }
+            },
+            "ALG": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 1
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 1
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                }
+            },
+			"ANKER": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
+                }
+            },
+			"BIBAG": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+            },
+			"EVIVA": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3,
+                        "engineType": "TP"
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "engineType": "TP",
+                        "area": "cargo"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
+                }
+            },
+			"GIVMI": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
+                },
+                "E": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
+                }
+            },
+			"INPUD": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 2
+                    }
+                }
+            },
+			"KIRDI": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+            },
+			"MERSI": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "T": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3,
+                        "engineType": "TP"
+                    }
+                },
+                "P": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
+                }
+            },
+			"MIQ": {
+                "equip": {"NON-RNAV": true},
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 1
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 1
+                    }
+                }
+            },
+			"OBAXA": {
+                "T": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
+                },
+                "P": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 1,
+                        "engineType": "TP"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 1,
+                        "engineType": "TP"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2,
+                        "engineType": "TP"
+                    }
+                }
+			},
+			"OLASO": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    },
+                    "3":{
+                        "rwy": "08L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2
+                    },
+                    "2":{
+                        "rwy": "26L",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                },
+                "N": {
+                    "1":{
+                            "rwy": "26R",
+                            "prio": 3
+                        },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    },
+                    "3":{
+                        "rwy": "26R",
+                        "prio": 0,
+                        "customRule": "traalg"
+                    }
+                }
+			},
+			"RIDAR": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
+                },
+                "E": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "08R",
+                        "prio": 0,
+                        "area": "cargo"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2
+                    }
+                },
+                "N": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "26R",  
+                        "prio": 3
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+			},
+			"ROTAX": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+            },
+			"TULSI": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 99,
+                        "engineType": "J"
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 99,
+                        "engineType": "J"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "engineType": "J"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "engineType": "J"
+                    }
+                },
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 99,
+                        "wtc": "HJ",
+                        "engineType": "J",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+            },
+			"TURBU": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 3
+                    }
+                },
+                "N": {
+                    "equip": {"RNAV": true, "NON-RNAV": true},
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+				"7":{
+					"designator":"W",
+                    "rwy": "26L",
+                    "initial": 7000,
+                    "climbvia": true,
+					"equip": {"RNAV": true, "NON-RNAV": true},
+                    "prio": 2,
+                    "wtc": "HJ",
+                    "engineType": "J",
+                    "timeFrom": 22,
+                    "timeTo": 6
+                }
+            },
+			"VAVOR": {
+                "Q": {
+                    "1":{
+                        "rwy": "08L",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "08L",
+                        "prio": 1,
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "E": {
+                    "1":{
+                        "rwy": "08R",
+                        "prio": 3,
+                        "engineType": "J"
+                    }
+                },
+                "S": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 3,
+                        "engineType": "J"
+                    }
+                },
+                "N": {
+                    "1":{
+                        "rwy": "26R",
+                        "prio": 4,
+                        "engineType": "J"
+                    },
+                    "2":{
+                        "rwy": "26R",
+                        "prio": 1,
+                        "engineType": "J",
+                        "acftType": {"B741": true, "B742": true, "B743": true, "B744": true, "B748": true},
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                },
+                "W": {
+                    "1":{
+                        "rwy": "26L",
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "engineType": "J",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                    }
+                }
+            }
+        },
+		"areas": {
+            "cargo": {
+                "active": true,
+                "p1": {"lat": "N048.20.39.848", "lon": "E011.44.43.040"},
+                "p2": {"lat": "N048.20.48.162", "lon": "E011.46.30.262"},
+                "p3": {"lat": "N048.20.59.695", "lon": "E011.46.28.253"},
+                "p4": {"lat": "N048.20.51.680", "lon": "E011.44.41.294"}
+            }
+		}
+    }
+}

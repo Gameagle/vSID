@@ -43,7 +43,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 {
 	if (this->texts.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add text \"" + title + "\" to menu \"" + this->title + "\". Report as an error.");
+		messageHandler->writeMessage("ERROR", "Trying to add text \"" + title + "\" to menu \"" + this->title +
+			"\". Report as an error. Code: " + ERROR_MEN_TXTADD);
 		return;
 	}
 
@@ -124,7 +125,7 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 		catch (std::out_of_range)
 		{
 			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newText.title + "\"");
+				this->title + "\" working on new text: \"" + newText.title + "\". Code: " + ERROR_MENU_TXTINVTABPOS);
 			return;
 		}
 
@@ -142,7 +143,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 	// insert into total text overview
 
 	if (newText.title != "INVALID") this->texts.insert({ title, newText });
-	else messageHandler->writeMessage("ERROR", "Trying to add text " + title + " of invalid type to menu " + this->title);
+	else messageHandler->writeMessage("ERROR", "Trying to add text " + title + " of invalid type to menu " +
+		this->title + ". Code: " + ERROR_MEN_TXTINVTYPE);
 }
 
 void vsid::Menu::removeText(const std::string& title)
@@ -181,7 +183,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 {
 	if (this->buttons.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add button \"" + title + "\" to menu \"" + this->title + "\". Report as an error.");
+		messageHandler->writeMessage("ERROR", "Trying to add button \"" + title + "\" to menu \"" + this->title +
+			"\". Report as an error. Code: " + ERROR_MENU_BTNADD);
 		return;
 	}
 
@@ -263,7 +266,7 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 		catch (std::out_of_range)
 		{
 			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newButton.title + "\"");
+				this->title + "\" working on new text: \"" + newButton.title + "\". Code: " + ERROR_MENU_BTNINVTABPOS);
 			return;
 		}
 
@@ -281,7 +284,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 	// insert into total text overview
 
 	if (newButton.title != "INVALID") this->buttons.insert({ title, newButton });
-	else messageHandler->writeMessage("ERROR", "Trying to add button " + title + " of invalid type to menu " + this->title);
+	else messageHandler->writeMessage("ERROR", "Trying to add button " + title + " of invalid type to menu " +
+		this->title + ". Code: " + ERROR_MEN_BTNINVTYPE);
 }
 
 void vsid::Menu::resize(int top, int right, int bottom, int left)
@@ -471,7 +475,8 @@ void vsid::Menu::update()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating text [" + txt.title + "]");
+					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating text [" +
+						txt.title + "]. Code: " + ERROR_MENU_TXTUPDATE);
 				}
 
 				// adjust base area right side based on margin
@@ -503,7 +508,7 @@ void vsid::Menu::update()
 						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom smaller", vsid::MessageHandler::DebugArea::Menu);
 					}
 				}
-				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom) // #dev - test for bottom bar movement after deletion
+				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom)
 				{
 					if (txt.base == this->area)
 					{
@@ -704,7 +709,8 @@ void vsid::Menu::update()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating button [" + btn.title + "]");
+					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating button [" +
+						btn.title + "]. Code: " + ERROR_MENU_BTNUPDATE);
 				}
 
 				// adjust base area right side based on margin

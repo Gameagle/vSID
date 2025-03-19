@@ -1,24 +1,20 @@
-# vSID
+## vSID
 
-vSID is a small plugin for Euroscope that aims to help controllers with SID selection and clearances. There are some more small features to aid in the management of an airport.
+vSID is a powerfull plugin for Euroscope that assists controllers with SID selection, clearances and some additional features.
 
-### Feature List
-* Configuration files for great variation
-  * Values that can be configured are `aircraft type`, `engine count`, `engine type`, `MTOW`, `rnav / non-rnav aircraft`, `runways`, `initial climb`, `custom rule`, `areas`, `priority`
-* SID suggestion based on the config file and the filed flight plan
-  * Different colors for `suggested`, `suggested based on different runway`, `flight plan matches suggestion`, `flight plan does NOT match suggestion (custom)`, `error`
-* Initial climb suggestion based on the suggested SID
-  * Different colors for `suggested`, `set and climb`, `set and climb via` and `set and custom altitude (not matching the SID or for VFR traffic)`
-* Runway suggestion based on the suggested SID
-  * Different colors for `suggested`, `set`, `set but not a departure runway`
-* Request menu for different requests as `clearance`, `startup`, `pushback`, `taxi`, `vfr`
-* Custom menu with a submenu for each airport
-  * Startup counter menu (currently for all active departure runways)
-  * More menues coming later
-* Areas can be configured with Euroscope coordinates to "draw" an area around different stands or parts of the airport that can then be used to configure SIDs (SID is allowed/denied based on wether the area is active and the aircraft is inside this area or not)
-* Custom rules that can be set to be used to further configure SIDs (basically a rule name that is than set in a SID to allow/deny this SID based on wether the rule is active or not)
+The plugin is used within several vACCs by default.
 
-### Default colors
+## Feature List
+* Configuration files for great variation and different conditions. For details check the Github wiki to find out the huge potential of the plugin.
+* SID/RWY suggestion based on the config file and the filed flight plan.
+* Initial climb suggestion based on the SID.
+* Different colors for SID, climb, runway to indicate any deviations from default assigment and highlights.
+* Optimized menus für SIDs, runways, climbs, etc.
+* Request menu for different requests as clearance, startup, pushback, taxi, vfr.
+* Startup counter per runway (all "active" flights with startup approval).
+* Optional pushback and request indicator next to the radar target.
+
+## Default colors
 * SID
   * suggested - white
   * custom suggestion - yellow
@@ -43,3 +39,5 @@ vSID is a small plugin for Euroscope that aims to help controllers with SID sele
 
 ![image](https://github.com/user-attachments/assets/1c8e2d02-44e2-4676-aeda-410ffcddcb92)
 
+## Help and Support
+If you need any help or support setting up the config for your airport (vACC), feel free to open an issue.
