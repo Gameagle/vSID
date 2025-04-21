@@ -1,7 +1,7 @@
 {
     "EDDR": {
-        "elevation": 1058,
-        "runways": "09,27",
+        "elevation": 1055,
+        "runways": "08,26",
         "transAlt": 5000,
         "maxInitialClimb": 8000,
         "appSI": "PFA,EIF,RUD,GIN,KTG",
@@ -10,28 +10,20 @@
             "GTQ": {
                 "initial": 8000,
                 "L": {
-                    "1": {
-                        "rwy": "09",
+                    "2": {
+                        "rwy": "08",
                         "prio": 1
                     }
                 },
                 "M": {
-                    "1": {
-                        "rwy": "27",
-                        "prio": 1
+                    "2": {
+                        "rwy": "26",
+                        "prio": 2
                     }
                 },
-                "E": {
+                "S": {
                     "1": {
-                        "rwy": "09",
-                        "equip": {"NON-RNAV": true},
-                        "prio": 1
-                    }
-                },
-                "W": {
-                    "1": {
-                        "rwy": "27",
-                        "equip": {"NON-RNAV": true},
+                        "rwy": "26",
                         "prio": 1
                     }
                 }
@@ -39,73 +31,64 @@
 			"TOMPI": {
                 "initial": 4000,
                 "L": {
-                    "1": {
-                        "rwy": "09",
+                    "2": {
+                        "rwy": "08",
                         "prio": 2
                     }
                 },
                 "M": {
-                    "1": {
-                        "rwy": "27",
+                    "2": {
+                        "rwy": "26",
                         "prio": 2
                     }
                 },
                 "K": {
-                    "1": {
-                        "rwy": "09",
+                    "2": {
+                        "rwy": "08",
                         "prio": 1,
                         "engineType": "PT",
                         "mtow": 5700
                     }
                 },
                 "N": {
-                    "1": {
-                        "rwy": "27",
+                    "2": {
+                        "rwy": "26",
                         "prio": 1,
                         "engineType": "PT",
                         "mtow": 5700
                     }
-                },
-                "E": {
-                    "1": {
-                        "rwy": "09",
-                        "equip": {"NON-RNAV": true},
-                        "prio": 1
-                    }
-                },
-                "W": {
-                    "1": {
-                        "rwy": "27",
-                        "equip": {"NON-RNAV": true},
-                        "prio": 1
-                    }
                 }
 			},
-			"ZWN": {
+			"IXWIB": {
                 "initial": 4000,
                 "L": {
                     "1": {
-                        "rwy": "09",
+                        "rwy": "08",
                         "prio": 1
                     }
                 },
                 "M": {
                     "1": {
-                        "rwy": "27",
-                        "prio": 1
+                        "rwy": "26",
+                        "prio": 1,
+			"engineType": "PT",
+                        "mtow": 5700
                     }
-                },
+                }
+			},
+		"EDDR": {
+                "initial": 4000,
                 "E": {
                     "1": {
-                        "rwy": "09",
-                        "equip": {"NON-RNAV": true},
+                        "rwy": "08",
+			"equip": {"NON-RNAV": true},
                         "prio": 1
                     }
                 },
                 "W": {
                     "1": {
-                        "rwy": "27",
-                        "equip": {"NON-RNAV": true},
+                        "rwy": "26",
+			"equip": {"NON-RNAV": true},
                         "prio": 1
                     }
                 }
