@@ -53,6 +53,7 @@ namespace vsid
 		int initial = 0;
 		bool via = false;
 		bool pilotfiled = false;
+		std::string wingType = "LSAT";
 		std::map<std::string, bool> acftType = {};
 		std::map<std::string, bool> dest = {};
 		std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
@@ -150,7 +151,7 @@ namespace vsid
 
 		inline bool isConfigValue(const std::string& value) const
 		{
-			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "acftType",
+			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "wingType", "acftType",
 				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
 				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight"};
 

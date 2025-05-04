@@ -4,6 +4,7 @@
 *	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
 *	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
 *	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
+*	SID - add "wing type" config option (#305)
 *	GEN - error caching added for errors that are subject to euroscope update rates. Errors that might be thrown on controller action are not cached (#296)
 *	DIS - new configurable (which screen to display on, color and display enable/disable) pushback indicator - a small arrow left to the radar target when the gnd state is push
 *	REQ - new "rwy startup" request list. Requests are switchable between startup and rwy startup. The new list is usable to check the startup position for that specific runway. To see the global position again one can switch back to regular startup. (#145)
