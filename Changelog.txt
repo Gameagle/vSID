@@ -1,6 +1,11 @@
 [Changelog v0.12.1]
 
 **NEW**
+*	CONFIG - default values for colors are now set instead of an "error" color for missing config values
+
+[Changelog v0.12.1]
+
+**NEW**
 *	SID - new clr item (shows an empty or full square depending on the clearance status) (#277)
 *	SID - new function to trigger the SID setting in the flight plan and setting the clearance flag (#277)
 *	SID - new function to set the ground state to "startup" in addition to the new clearance function (#277)
