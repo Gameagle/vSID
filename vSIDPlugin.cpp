@@ -3583,6 +3583,12 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				return true;
 			}			
 		}
+		else if (vsid::utils::tolower(command[1]) == "reload")
+		{
+			messageHandler->writeMessage("INFO", "Reloading main config...");
+			this->configParser.loadMainConfig();
+			return true;
+		}
 		else
 		{
 			messageHandler->writeMessage("INFO", "Unknown command");
