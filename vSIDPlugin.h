@@ -102,6 +102,22 @@ namespace vsid
 		 * @param manualSid - manual Sid that has been selected and should be processed
 		 */
 		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+
+		// #dev #requests - removal function
+
+		//************************************
+		// Description: Removes given callsign from any requests for the specified airport
+		// Method:    removeFromRequests
+		// FullName:  vsid::VSIDPlugin::removeFromRequests
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: const std::string & icao
+		//************************************
+		void removeFromRequests(const std::string& callsign, const std::string& icao);
+		// end dev
+
 		//************************************
 		// Description: Retrieves the config parser as read-only for access to configs
 		// Method:    getConfigParser
@@ -196,6 +212,7 @@ namespace vsid
 		 * @return * void 
 		 */
 		void OnTimer(int Counter);
+		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		/**
 		 * @brief Sync states and clearance flag to new controller
 		 * 

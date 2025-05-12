@@ -209,7 +209,7 @@ namespace vsid
 		std::string getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan);
 
 		//************************************
-		// Description: Stores flight plan info
+		// Description: Stores flight plan info for possible reconnect
 		// Method:    saveFplnInfo
 		// FullName:  vsid::fplnhelper::saveFplnInfo
 		// Access:    public 
