@@ -351,6 +351,7 @@ std::string vsid::fplnhelper::getPbn(const EuroScopePlugIn::CFlightPlan& FlightP
 
 void vsid::fplnhelper::saveFplnInfo(const std::string& callsign, vsid::Fpln fplnInfo, std::map<std::string, vsid::Fpln>& savedFplnInfo)
 {
+	messageHandler->writeMessage("DEBUG", "[" + callsign + "] saving flight plan info for possible reconnection.", vsid::MessageHandler::DebugArea::Dev);
 	savedFplnInfo[callsign] = std::move(fplnInfo);
 
 	savedFplnInfo[callsign].sid = {};
@@ -362,12 +363,24 @@ void vsid::fplnhelper::saveFplnInfo(const std::string& callsign, vsid::Fpln fpln
 
 bool vsid::fplnhelper::restoreFplnInfo(const std::string& callsign, std::map<std::string, vsid::Fpln>& processed, std::map<std::string, vsid::Fpln>& savedFplnInfo)
 {
-	if (!savedFplnInfo.contains(callsign)) return false;
+	if (!savedFplnInfo.contains(callsign))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] cannot be restored, no saved info.", vsid::MessageHandler::DebugArea::Dev);
+		return false;
+	}
 
 	processed[callsign] = std::move(savedFplnInfo[callsign]);
 
 	savedFplnInfo.erase(callsign);
 
-	if (processed.contains(callsign)) return true;
-	else return false;
+	if (processed.contains(callsign))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] successfully  restored.", vsid::MessageHandler::DebugArea::Dev);
+		return true;
+	}
+	else
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to restore from saved info.", vsid::MessageHandler::DebugArea::Dev); 
+		return false;
+	}
 }
