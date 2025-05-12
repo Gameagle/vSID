@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "pch.h"
 
 #include "airport.h"
-#include "nlohmann/json.hpp"
+#include "include/nlohmann/json.hpp"
 
 #include <string>
 #include <map>
@@ -53,6 +53,7 @@ namespace vsid
 		int initial = 0;
 		bool via = false;
 		bool pilotfiled = false;
+		std::string wingType = "LSAT";
 		std::map<std::string, bool> acftType = {};
 		std::map<std::string, bool> dest = {};
 		std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {};
@@ -90,7 +91,8 @@ namespace vsid
 							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
 							std::map<std::string, std::map<std::string, bool>>& savedSettings,
 							std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests
+							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
+							std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
 							);
 		/**
 		 * @brief Loads vsid config
@@ -106,13 +108,25 @@ namespace vsid
 		 * @brief load list of RNAV capable acft
 		 */
 		void loadRnavList();
+		//************************************
+		// Description: grants read-only access to vSID main config
+		// Method:    getMainConfig
+		// FullName:  vsid::ConfigParser::getMainConfig
+		// Access:    public 
+		// Returns:   const json&
+		// Qualifier: const
+		//************************************
+		inline json& getMainConfig()
+		{
+			return this->vSidConfig;
+		}
 		/**
 		 * @brief Fetches a specific color from the settings file
 		 * 
 		 * @param color - name of the key in the settings file
 		 * @return COLORREF 
 		 */
-		COLORREF getColor(std::string color);
+		const COLORREF getColor(std::string color);
 
 		//************************************
 		// Method:    getClrfMinimums
@@ -137,7 +151,7 @@ namespace vsid
 
 		inline bool isConfigValue(const std::string& value) const
 		{
-			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "acftType",
+			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "wingType", "acftType",
 				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
 				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight"};
 

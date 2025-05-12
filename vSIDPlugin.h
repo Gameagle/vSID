@@ -30,7 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
-#include "es/EuroScopePlugIn.h"
+#include "include/es/EuroScopePlugIn.h"
 #include "airport.h"
 #include "constants.h"
 
@@ -42,7 +42,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.12.0";
+	const std::string pluginVersion = "0.12.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -59,7 +59,7 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
-		inline std::map<std::string, vsid::fpln::Info>& getProcessed() { return this->processed; };
+		inline std::map<std::string, vsid::Fpln>& getProcessed() { return this->processed; };
 		inline std::set<std::string> getDepRwy(std::string icao)
 		{
 			if (this->activeAirports.contains(icao))
@@ -69,7 +69,7 @@ namespace vsid
 			else return {};
 		}
 		
-		inline std::map<std::string, vsid::Airport> getActiveApts() { return this->activeAirports; };
+		inline const std::map<std::string, vsid::Airport>& getActiveApts() const { return this->activeAirports; };
 
 		/**
 		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
@@ -77,7 +77,7 @@ namespace vsid
 		 * @param FlightPlanData 
 		 * @return
 		 */
-		std::string findSidWpt(EuroScopePlugIn::CFlightPlanData FlightPlanData);
+		std::string findSidWpt(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Iterate over loaded .dll and check for topsky and ccams
 		 * 
@@ -91,17 +91,29 @@ namespace vsid
 		 * @param FlightPlan - Flightplan data from ES
 		 * @param atcRwy - The rwy assigned by ATC which shall be considered
 		 */
-		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan FlightPlan, std::string atcRwy = "");
+		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan& FlightPlan, std::string atcRwy = "");
 		/**
 		 * @brief Tries to set a clean route without SID. SID will then be placed in front
-		 * and color codes for the TagItem set. Processed flightplans are stored.
+		 * and color codes for the TagItem set. Processed flight plans are stored.
 		 * 
 		 * @param FlightPlan - Flightplan data from ES
-		 * @param checkOnly - If the flightplan should only be validated
+		 * @param checkOnly - If the flight plan should only be validated
 		 * @param atcRwy - The rwy assigned by ATC which shall be considered
 		 * @param manualSid - manual Sid that has been selected and should be processed
 		 */
-		void processFlightplan(EuroScopePlugIn::CFlightPlan FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+		//************************************
+		// Description: Retrieves the config parser as read-only for access to configs
+		// Method:    getConfigParser
+		// FullName:  vsid::VSIDPlugin::getConfigParser
+		// Access:    public 
+		// Returns:   const vsid::ConfigParser
+		// Qualifier: const
+		//************************************
+		inline vsid::ConfigParser& getConfigParser()
+		{	
+			return this->configParser;
+		}
 		/**
 		 * @brief Called with every function call (list interaction) inside ES
 		 *
@@ -189,7 +201,7 @@ namespace vsid
 		 * 
 		 * @param FlightPlan - ES flight plan object
 		 */
-		void syncStates(EuroScopePlugIn::CFlightPlan FlightPlan);
+		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		/**
 		 * @brief Radar Screen.
 		 */
@@ -220,11 +232,11 @@ namespace vsid
 		 * @param Area - area covered by tag item
 		 */
 		void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
-			int FunctionId);
+			int FunctionId, POINT Pt, RECT Area);
 		
 	private:
 		std::map<std::string, vsid::Airport> activeAirports;
-		std::map<std::string, vsid::fpln::Info> processed;
+		std::map<std::string, vsid::Fpln> processed;
 		/**
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
@@ -235,7 +247,24 @@ namespace vsid
 		std::map<std::string, std::map<std::string, bool>> savedSettings;
 		std::map<std::string, std::map<std::string, bool>> savedRules;
 		std::map<std::string, std::map<std::string, vsid::Area>> savedAreas;
+		std::map<std::string, vsid::Fpln> savedFplnInfo = {};
+		//************************************
+		// Description: Stores requests during airport updates
+		// Param 1: std::string - airport icao
+		// Param 2: std::string - request type
+		// Param 3 (pair): std::string - callsign
+		// Param 4 (pair): long long - time
+		//************************************
 		std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>> savedRequests = {};
+		//************************************
+		// Description: Stores runway requests during airport updates
+		// Param 1: std::string - airport icao
+		// Param 2: std::string - request type
+		// Param 3: std::string - runway
+		// Param 4 (pair): std::string - callsign
+		// Param 5 (pair): long long - time
+		//************************************
+		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {};
 		// list of ground states set by controllers
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;

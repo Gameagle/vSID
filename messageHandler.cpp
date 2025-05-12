@@ -39,6 +39,36 @@ void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, Deb
 	
 }
 
+void vsid::MessageHandler::writeMessage(std::string sender, std::string msg, const std::source_location& loc, DebugArea debugArea)
+{
+	if (sender == "DEBUG" && this->getLevel() != Level::Debug) return;
+
+	try
+	{
+		if (this->currentLevel == Level::Debug && (this->debugArea == debugArea || this->debugArea == DebugArea::All) && sender == "DEBUG")
+		{
+			std::string area;
+			if (debugArea == DebugArea::Atc) area = "ATC";
+			else if (debugArea == DebugArea::Conf) area = "CONF";
+			else if (debugArea == DebugArea::Dev) area = "DEV";
+			else if (debugArea == DebugArea::Req) area = "REQ";
+			else if (debugArea == DebugArea::Rwy) area = "RWY";
+			else if (debugArea == DebugArea::Sid) area = "SID";
+			else if (debugArea == DebugArea::Menu) area = "MENU";
+			else area = "N/A";
+
+			std::cout << "[" << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] [" << area << "] " << msg
+				<< " | file: " << loc.file_name() << " | func: " << loc.function_name() << " | " << " line: " << loc.line() << '\n';
+		}
+		else if (/*this->currentLevel != Level::Debug && */sender != "DEBUG") this->msg.push_back(std::pair<std::string, std::string>(sender, msg));
+	}
+	catch (std::exception& e)
+	{
+		this->msg.push_back(std::pair<std::string, std::string>("ERROR", e.what()));
+	}
+
+}
+
 std::pair<std::string, std::string> vsid::MessageHandler::getMessage()
 {
 	if (this->msg.size() > 0)
