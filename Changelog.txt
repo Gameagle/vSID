@@ -12,6 +12,7 @@
 
 **FIXED**
 *	REQ - possible fix for lacking removal from request lists of disconnected flight plans
+*	FPL - possible orphaned remarks after departure are now deleted from the flight plan
 
 [Changelog v0.12.1]
 
