@@ -58,6 +58,7 @@ namespace vsid
 			Req,
 			Conf,
 			Menu,
+			Fpln,
 			Dev
 		};
 

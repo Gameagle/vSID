@@ -36,19 +36,254 @@ void vsid::ConfigParser::loadMainConfig()
     {
         messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
     }
+    catch (const json::other_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
+    }
 
     try
     {
-        for (auto &elem : this->vSidConfig.at("colors").items())
+        // import colors or set default values
+
+        if (this->vSidConfig.at("colors").contains("sidSuggestion"))
         {
-            // default values are blue to signal if the import went wrong
-            COLORREF rgbColor = RGB(
-                this->vSidConfig.at("colors").at(elem.key()).value("r", 60),
-                this->vSidConfig.at("colors").at(elem.key()).value("g", 80),
-                this->vSidConfig.at("colors").at(elem.key()).value("b", 240)
-                );
-            this->colors[elem.key()] = rgbColor;
+			this->colors["sidSuggestion"] = RGB(
+				this->vSidConfig.at("colors").at("sidSuggestion").value("r", 255),
+				this->vSidConfig.at("colors").at("sidSuggestion").value("g", 255),
+				this->vSidConfig.at("colors").at("sidSuggestion").value("b", 255)
+			);
         }
+        else this->colors["sidSuggestion"] = RGB(255, 255, 255);
+		
+		if (this->vSidConfig.at("colors").contains("suggestedSidSet"))
+		{
+			this->colors["suggestedSidSet"] = RGB(
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("r", 0),
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("g", 255),
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("b", 0)
+			);
+		}
+		else this->colors["suggestedSidSet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("customSidSuggestion"))
+		{
+			this->colors["customSidSuggestion"] = RGB(
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("r", 255),
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("g", 255),
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("b", 180)
+			);
+		}
+		else this->colors["customSidSuggestion"] = RGB(255, 255, 180);
+
+		if (this->vSidConfig.at("colors").contains("customSidSet"))
+		{
+			this->colors["customSidSet"] = RGB(
+				this->vSidConfig.at("colors").at("customSidSet").value("r", 255),
+				this->vSidConfig.at("colors").at("customSidSet").value("g", 120),
+				this->vSidConfig.at("colors").at("customSidSet").value("b", 30)
+			);
+		}
+		else this->colors["customSidSet"] = RGB(255, 120, 30);
+
+		if (this->vSidConfig.at("colors").contains("noSid"))
+		{
+			this->colors["noSid"] = RGB(
+				this->vSidConfig.at("colors").at("noSid").value("r", 220),
+				this->vSidConfig.at("colors").at("noSid").value("g", 30),
+				this->vSidConfig.at("colors").at("noSid").value("b", 20)
+			);
+		}
+		else this->colors["noSid"] = RGB(220, 30, 20);
+
+		if (this->vSidConfig.at("colors").contains("sidHighlight"))
+		{
+			this->colors["sidHighlight"] = RGB(
+				this->vSidConfig.at("colors").at("sidHighlight").value("r", 240),
+				this->vSidConfig.at("colors").at("sidHighlight").value("g", 90),
+				this->vSidConfig.at("colors").at("sidHighlight").value("b", 190)
+			);
+		}
+		else this->colors["sidHighlight"] = RGB(240, 90, 190);
+
+		if (this->vSidConfig.at("colors").contains("suggestedClmb"))
+		{
+			this->colors["suggestedClmb"] = RGB(
+				this->vSidConfig.at("colors").at("suggestedClmb").value("r", 255),
+				this->vSidConfig.at("colors").at("suggestedClmb").value("g", 255),
+				this->vSidConfig.at("colors").at("suggestedClmb").value("b", 255)
+			);
+		}
+		else this->colors["suggestedClmb"] = RGB(255, 255, 255);
+
+		if (this->vSidConfig.at("colors").contains("customClmbSet"))
+		{
+			this->colors["customClmbSet"] = RGB(
+				this->vSidConfig.at("colors").at("customClmbSet").value("r", 255),
+				this->vSidConfig.at("colors").at("customClmbSet").value("g", 120),
+				this->vSidConfig.at("colors").at("customClmbSet").value("b", 30)
+			);
+		}
+		else this->colors["customClmbSet"] = RGB(255, 120, 30);
+
+		if (this->vSidConfig.at("colors").contains("clmbSet"))
+		{
+			this->colors["clmbSet"] = RGB(
+				this->vSidConfig.at("colors").at("clmbSet").value("r", 50),
+				this->vSidConfig.at("colors").at("clmbSet").value("g", 240),
+				this->vSidConfig.at("colors").at("clmbSet").value("b", 210)
+			);
+		}
+		else this->colors["clmbSet"] = RGB(50, 240, 210);
+
+		if (this->vSidConfig.at("colors").contains("clmbViaSet"))
+		{
+			this->colors["clmbViaSet"] = RGB(
+				this->vSidConfig.at("colors").at("clmbViaSet").value("r", 0),
+				this->vSidConfig.at("colors").at("clmbViaSet").value("g", 255),
+				this->vSidConfig.at("colors").at("clmbViaSet").value("b", 0)
+			);
+		}
+		else this->colors["clmbViaSet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("clmbHighlight"))
+		{
+			this->colors["clmbHighlight"] = RGB(
+				this->vSidConfig.at("colors").at("clmbHighlight").value("r", 240),
+				this->vSidConfig.at("colors").at("clmbHighlight").value("g", 90),
+				this->vSidConfig.at("colors").at("clmbHighlight").value("b", 190)
+			);
+		}
+		else this->colors["clmbHighlight"] = RGB(240, 90, 190);
+
+		if (this->vSidConfig.at("colors").contains("rwyNotSet"))
+		{
+			this->colors["rwyNotSet"] = RGB(
+				this->vSidConfig.at("colors").at("rwyNotSet").value("r", 255),
+				this->vSidConfig.at("colors").at("rwyNotSet").value("g", 255),
+				this->vSidConfig.at("colors").at("rwyNotSet").value("b", 255)
+			);
+		}
+		else this->colors["rwyNotSet"] = RGB(255, 255, 255);
+
+		if (this->vSidConfig.at("colors").contains("rwySet"))
+		{
+			this->colors["rwySet"] = RGB(
+				this->vSidConfig.at("colors").at("rwySet").value("r", 0),
+				this->vSidConfig.at("colors").at("rwySet").value("g", 255),
+				this->vSidConfig.at("colors").at("rwySet").value("b", 0)
+			);
+		}
+		else this->colors["rwySet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("notDepRwySet"))
+		{
+			this->colors["notDepRwySet"] = RGB(
+				this->vSidConfig.at("colors").at("notDepRwySet").value("r", 230),
+				this->vSidConfig.at("colors").at("notDepRwySet").value("g", 230),
+				this->vSidConfig.at("colors").at("notDepRwySet").value("b", 60)
+			);
+		}
+		else this->colors["notDepRwySet"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("squawkSet"))
+		{
+			this->colors["squawkSet"] = RGB(
+				this->vSidConfig.at("colors").at("squawkSet").value("r", 255),
+				this->vSidConfig.at("colors").at("squawkSet").value("g", 255),
+				this->vSidConfig.at("colors").at("squawkSet").value("b", 255)
+			);
+		}
+		// no else case for squawk set due to special values following below
+
+		if (this->vSidConfig.at("colors").contains("squawkNotSet"))
+		{
+			this->colors["squawkNotSet"] = RGB(
+				this->vSidConfig.at("colors").at("squawkNotSet").value("r", 230),
+				this->vSidConfig.at("colors").at("squawkNotSet").value("g", 230),
+				this->vSidConfig.at("colors").at("squawkNotSet").value("b", 60)
+			);
+		}
+		else this->colors["squawkNotSet"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("requestNeutral"))
+		{
+			this->colors["requestNeutral"] = RGB(
+				this->vSidConfig.at("colors").at("requestNeutral").value("r", 128),
+				this->vSidConfig.at("colors").at("requestNeutral").value("g", 128),
+				this->vSidConfig.at("colors").at("requestNeutral").value("b", 128)
+			);
+		}
+		else this->colors["requestNeutral"] = RGB(128, 128, 128);
+
+		if (this->vSidConfig.at("colors").contains("requestCaution"))
+		{
+			this->colors["requestCaution"] = RGB(
+				this->vSidConfig.at("colors").at("requestCaution").value("r", 230),
+				this->vSidConfig.at("colors").at("requestCaution").value("g", 230),
+				this->vSidConfig.at("colors").at("requestCaution").value("b", 60)
+			);
+		}
+		else this->colors["requestCaution"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("requestWarning"))
+		{
+			this->colors["requestWarning"] = RGB(
+				this->vSidConfig.at("colors").at("requestWarning").value("r", 220),
+				this->vSidConfig.at("colors").at("requestWarning").value("g", 30),
+				this->vSidConfig.at("colors").at("requestWarning").value("b", 20)
+			);
+		}
+		else this->colors["requestWarning"] = RGB(220, 30, 20);
+
+		if (this->vSidConfig.at("colors").contains("clrfSet"))
+		{
+			this->colors["clrfSet"] = RGB(
+				this->vSidConfig.at("colors").at("clrfSet").value("r", 0),
+				this->vSidConfig.at("colors").at("clrfSet").value("g", 160),
+				this->vSidConfig.at("colors").at("clrfSet").value("b", 30)
+			);
+		}
+		else this->colors["clrfSet"] = RGB(0, 160, 30);
+
+		if (this->vSidConfig.at("colors").contains("clrfCaution"))
+		{
+			this->colors["clrfCaution"] = RGB(
+				this->vSidConfig.at("colors").at("clrfCaution").value("r", 250),
+				this->vSidConfig.at("colors").at("clrfCaution").value("g", 160),
+				this->vSidConfig.at("colors").at("clrfCaution").value("b", 0)
+			);
+		}
+		else this->colors["clrfCaution"] = RGB(250, 160, 0);
+
+		if (this->vSidConfig.at("colors").contains("clrfWarning"))
+		{
+			this->colors["clrfWarning"] = RGB(
+				this->vSidConfig.at("colors").at("clrfWarning").value("r", 200),
+				this->vSidConfig.at("colors").at("clrfWarning").value("g", 10),
+				this->vSidConfig.at("colors").at("clrfWarning").value("b", 10)
+			);
+		}
+		else this->colors["clrfWarning"] = RGB(200, 10, 10);
+
+		if (this->vSidConfig.at("colors").contains("pbIndicator"))
+		{
+			this->colors["pbIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("pbIndicator").value("r", 0),
+				this->vSidConfig.at("colors").at("pbIndicator").value("g", 255),
+				this->vSidConfig.at("colors").at("pbIndicator").value("b", 0)
+			);
+		}
+		else this->colors["pbIndicator"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("reqIndicator"))
+		{
+			this->colors["reqIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("reqIndicator").value("r", 255),
+				this->vSidConfig.at("colors").at("reqIndicator").value("g", 255),
+				this->vSidConfig.at("colors").at("reqIndicator").value("b", 255)
+			);
+		}
+		else this->colors["reqIndicator"] = RGB(255, 255, 255);
 
         // pseudo values for special color use cases
         if (!this->colors.contains("squawkSet")) this->colors["squawkSet"] = RGB(300, 300, 300);
@@ -56,6 +291,22 @@ void vsid::ConfigParser::loadMainConfig()
     catch (std::error_code& e)
     {
         messageHandler->writeMessage("ERROR", "Failed to import colors: " + e.message());
+    }
+    catch (const json::parse_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Parse Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::type_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Type Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::other_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Other Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Out of Range] in color config section: " + std::string(e.what()));
     }
 
     // get request times

@@ -45,6 +45,7 @@ namespace vsid
 		int updateCounter = 0;
 		/*bool request = false;*/
 		std::string request = "";
+		long long reqTime = -1;
 		bool validEquip = true;
 		std::string gndState = "";
 		bool ctl = false;
@@ -209,7 +210,7 @@ namespace vsid
 		std::string getPbn(const EuroScopePlugIn::CFlightPlan& FlightPlan);
 
 		//************************************
-		// Description: Stores flight plan info
+		// Description: Stores flight plan info for possible reconnect
 		// Method:    saveFplnInfo
 		// FullName:  vsid::fplnhelper::saveFplnInfo
 		// Access:    public 

@@ -266,10 +266,13 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 							{
 								EuroScopePlugIn::CFlightPlan fpln = sharedPlugin->FlightPlanSelect(callsign.c_str());
 
-								if (std::string(fpln.GetGroundState()) != "")
+								if(info.gndState != "")
 								{
 									if (sharedPlugin->RadarTargetSelect(callsign.c_str()).GetGS() >= 50) continue;
-									if (std::string(fpln.GetGroundState()) == "ARR") continue;
+
+									// skip specific gnd states - also accounts for GRP gnd states
+									if (info.gndState == "ARR" || info.gndState == "DE-ICE" ||
+										info.gndState == "ONFREQ" || info.gndState == "ARR") continue;
 
 									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
 									std::string adep = fpln.GetFlightPlanData().GetOrigin();
@@ -295,7 +298,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									{
 										if (adep == icao && fplnRwy != "")
 										{
-											mMenu.addText(MENU_TEXT, "dep_" + fplnRwy, mMenu.getArea(), fplnRwy, 20, 20, 400, { 5,5,5,5, });
+											mMenu.addText(MENU_TEXT, "dep_" + fplnRwy, mMenu.getArea(), fplnRwy, 20, 20, 400, { 5,5,5,5 });
 											mMenu.addText(MENU_TEXT, "depcount_" + fplnRwy, mMenu.getArea(), "", 20, 20, 400, { 5,5,5,5 }, "dep_" + fplnRwy);
 
 											updateMenu = true;
