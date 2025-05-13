@@ -43,17 +43,6 @@ void vsid::ConfigParser::loadMainConfig()
 
     try
     {
-        //for (auto &elem : this->vSidConfig.at("colors").items()) - #removal
-        //{
-        //    // default values are blue to signal if the import went wrong
-        //    COLORREF rgbColor = RGB(
-        //        this->vSidConfig.at("colors").at(elem.key()).value("r", 60),
-        //        this->vSidConfig.at("colors").at(elem.key()).value("g", 80),
-        //        this->vSidConfig.at("colors").at(elem.key()).value("b", 240)
-        //        );
-        //    this->colors[elem.key()] = rgbColor;
-        //}
-
         // import colors or set default values
 
         if (this->vSidConfig.at("colors").contains("sidSuggestion"))

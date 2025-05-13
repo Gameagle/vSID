@@ -92,6 +92,7 @@ namespace vsid
 		 * @param atcRwy - The rwy assigned by ATC which shall be considered
 		 */
 		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan& FlightPlan, std::string atcRwy = "");
+
 		/**
 		 * @brief Tries to set a clean route without SID. SID will then be placed in front
 		 * and color codes for the TagItem set. Processed flight plans are stored.
@@ -102,8 +103,6 @@ namespace vsid
 		 * @param manualSid - manual Sid that has been selected and should be processed
 		 */
 		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
-
-		// #dev #requests - removal function
 
 		//************************************
 		// Description: Removes given callsign from any requests for the specified airport
@@ -116,7 +115,6 @@ namespace vsid
 		// Parameter: const std::string & icao
 		//************************************
 		void removeFromRequests(const std::string& callsign, const std::string& icao);
-		// end dev
 
 		//************************************
 		// Description: Retrieves the config parser as read-only for access to configs
@@ -130,6 +128,7 @@ namespace vsid
 		{	
 			return this->configParser;
 		}
+
 		/**
 		 * @brief Called with every function call (list interaction) inside ES
 		 *
@@ -139,6 +138,7 @@ namespace vsid
 		 * @param Area
 		 */
 		void OnFunctionCall(int FunctionId, const char* sItemString, POINT Pt, RECT Area);
+
 		/**
 		 * @brief Handles events on plane position updates if the flightplan is present in a tagItem
 		 * 
@@ -152,6 +152,7 @@ namespace vsid
 		 * @param pFontSize 
 		 */
 		void OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize);
+		
 		/**
 		 * @brief Called when a dot command is used and ES couldn't resolve it.
 		 * ES then checks this functions to evaluate the command
@@ -168,6 +169,7 @@ namespace vsid
 		 * 
 		 * @param FlightPlan 
 		 */
+		
 		void OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Called when something is changed in the controller assigned data
@@ -175,35 +177,41 @@ namespace vsid
 		 * @param FlightPlan - the flight plan reference whose controller assigned data is updated
 		 * @param DataType - the type of the data updated (CTR_DATA_TYPE ...)
 		 */
+		
 		void OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan, int DataType);
 		/**
 		 * @brief Called when a flight plan disconnects from the network
 		 * 
 		 * @param FlightPlan 
 		 */
+		
 		void OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan FlightPlan);
 		/**
 		 * @brief Called when a position for radar target is updated
 		 * 
 		 * @param RadarTarget
 		 */
+		
 		void OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget RadarTarget);
 		/**
 		 * @brief Called whenever a controller position is updated. ~ every 5 seconds
 		 * 
 		 * @param Controller 
 		 */
+		
 		void OnControllerPositionUpdate(EuroScopePlugIn::CController Controller);
 		/**
 		 * @brief Called if a controller disconnects
 		 * 
 		 * @param Controller 
 		 */
+		
 		void OnControllerDisconnect(EuroScopePlugIn::CController Controller);
 		/**
 		 * @brief Called when the user clicks on the ok button of the runway selection dialog
 		 *
 		 */
+		
 		void OnAirportRunwayActivityChanged();
 		/**
 		 * @brief Called once a second
@@ -212,17 +220,21 @@ namespace vsid
 		 * @return * void 
 		 */
 		void OnTimer(int Counter);
+		
 		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
+		
 		/**
 		 * @brief Sync states and clearance flag to new controller
 		 * 
 		 * @param FlightPlan - ES flight plan object
 		 */
 		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
+		
 		/**
 		 * @brief Radar Screen.
 		 */
 		EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);
+		
 		/**
 		 * @brief Resets and deletes stored pointers to radar screens
 		 * 
