@@ -1597,6 +1597,11 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 		if (this->processed[callsign].gndState != "") vsid::fplnhelper::setScratchPad(FlightPlan, this->processed[callsign].gndState);
 	}
 }
+
+bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
+{
+	return ControllerMyself().GetPosition().DistanceTo(FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetPosition()) > ControllerMyself().GetRange();
+}
 /*
 * END OWN FUNCTIONS
 */
@@ -2250,6 +2255,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
 {
 	if (!FlightPlan.IsValid()) return;
+
+	if (this->outOfVis(FlightPlan)) return;
 
 	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
 	std::string callsign = FlightPlan.GetCallsign();
@@ -4282,6 +4289,16 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 		{
 			EuroScopePlugIn::CFlightPlan fpln = RadarTarget.GetCorrelatedFlightPlan();
 			vsid::fplnhelper::removeRemark(fpln, "VSID/RWY");
+
+			if (!fpln.GetFlightPlanData().AmendFlightPlan())
+			{
+				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_AMEND))
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] - Failed to amend flight plan! - #FFDU");
+					messageHandler->addFplnError(callsign, ERROR_FPLN_AMEND);
+				}
+			}
+			else messageHandler->removeFplnError(callsign, ERROR_FPLN_AMEND);
 		}
 	}
 
@@ -4883,8 +4900,6 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 	if (Counter % 10 == 0)
 	{
-		EuroScopePlugIn::CPosition atcPos = ControllerMyself().GetPosition();
-
 		for (std::map<std::string, vsid::Fpln>::iterator it = this->processed.begin(); it != this->processed.end();)
 		{
 			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
@@ -4906,9 +4921,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 			// remove processed flight plans if outside of base vis range
 
-			EuroScopePlugIn::CPosition fplnPos = fpln.GetCorrelatedRadarTarget().GetPosition().GetPosition();
-
-			if (atcPos.DistanceTo(fplnPos) >= ControllerMyself().GetRange())
+			if(this->outOfVis(fpln))
 			{
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] is further away than my range of NM " +
 					std::to_string(ControllerMyself().GetRange()), vsid::MessageHandler::DebugArea::Dev);
@@ -4917,7 +4930,24 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				this->savedFplnInfo.erase(it->first);
 				this->removeFromRequests(it->first, adep);
 
-				if (vsid::fplnhelper::findRemarks(fpln, "VSID/RWY")) vsid::fplnhelper::removeRemark(fpln, "VSID/RWY");
+				if (vsid::fplnhelper::findRemarks(fpln, "VSID/RWY"))
+				{
+					vsid::fplnhelper::removeRemark(fpln, "VSID/RWY");
+
+					std::string callsign = fpln.GetCallsign();
+
+					if (!fpln.GetFlightPlanData().AmendFlightPlan())
+					{
+						if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_AMEND))
+						{
+							messageHandler->writeMessage("ERROR", "[" + callsign + "] - Failed to amend flight plan! - #FFDU");
+							messageHandler->addFplnError(callsign, ERROR_FPLN_AMEND);
+						}
+
+						this->processed[callsign].noFplnUpdate = false;
+					}
+					else messageHandler->removeFplnError(callsign, ERROR_FPLN_AMEND);
+				}
 
 				it = this->processed.erase(it);
 
@@ -4937,9 +4967,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		{
 			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
 
-			if (it->second.second && fpln.IsValid() &&
-				ControllerMyself().GetPosition().DistanceTo(fpln.GetCorrelatedRadarTarget().GetPosition().GetPosition()) <
-				ControllerMyself().GetRange())
+			if (it->second.second && fpln.IsValid() && !this->outOfVis(fpln))
 			{
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] reconnected.", vsid::MessageHandler::DebugArea::Fpln);
 				it = this->removeProcessed.erase(it);
