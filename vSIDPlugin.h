@@ -221,14 +221,30 @@ namespace vsid
 		 */
 		void OnTimer(int Counter);
 		
+		//************************************
+		// Description: Syncs present requests for the given flight plan
+		// Method:    syncReq
+		// FullName:  vsid::VSIDPlugin::syncReq
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		//************************************
 		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		
-		/**
-		 * @brief Sync states and clearance flag to new controller
-		 * 
-		 * @param FlightPlan - ES flight plan object
-		 */
+		
+		//************************************
+		// Description: Syncs saved gnd states and clearance flag
+		// Method:    syncStates
+		// FullName:  vsid::VSIDPlugin::syncStates
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		//************************************
 		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
+
+		bool outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		
 		/**
 		 * @brief Radar Screen.
