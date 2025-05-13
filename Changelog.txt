@@ -9,6 +9,7 @@
 *	GEN - re-sync ground states and clearance flags after a flight plan reconnects that has its information still stored
 *	GEN - added additional checks to remove stored information for different flight phases as a cleanup
 *	DIS - changed gnd state counting for startup counter (#318)
+*	SID	- if only a rwy was selected and sid and customSid were the same customSid is no longer deleted to prevent false evaluation for the item
 
 **FIXED**
 *	REQ - possible fix for lacking removal from request lists of disconnected flight plans
