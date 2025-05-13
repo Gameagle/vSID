@@ -45,6 +45,7 @@ namespace vsid
 		int updateCounter = 0;
 		/*bool request = false;*/
 		std::string request = "";
+		long long reqTime = -1;
 		bool validEquip = true;
 		std::string gndState = "";
 		bool ctl = false;

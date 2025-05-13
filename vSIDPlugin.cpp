@@ -1165,18 +1165,27 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 	{
 		fpln = this->processed[callsign];
 
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] resyncinc req and states for reconnected flight plan.",
-			vsid::MessageHandler::DebugArea::Dev);
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] re-syncing req and states for reconnected flight plan.",
+			vsid::MessageHandler::DebugArea::Fpln);
 
-		this->syncReq(FlightPlan);
+		// sync requests - sync function requires fpln to be known in one of the lists
+
+		if (fpln.request != "" && fpln.reqTime != -1)
+		{
+			std::string scratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(fpln.reqTime);
+
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing " + fpln.request +
+				" with scratch: " + scratch, vsid::MessageHandler::DebugArea::Req
+			);
+			vsid::fplnhelper::setScratchPad(FlightPlan, scratch);
+		}
+
 		this->syncStates(FlightPlan);
 
 		std::string ades = fplnData.GetDestination();
 
 		if (this->activeAirports.contains(ades) && fpln.ctl)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing ctlf.", vsid::MessageHandler::DebugArea::Dev);
-
 			std::string scratch = ".VSID_CTL_TRUE";
 			vsid::fplnhelper::setScratchPad(FlightPlan, scratch);
 		}
@@ -1393,6 +1402,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 	{
 		fpln.atcRWY = this->processed[callsign].atcRWY;
 		fpln.request = this->processed[callsign].request;
+		fpln.reqTime = this->processed[callsign].reqTime;
 		fpln.noFplnUpdate = this->processed[callsign].noFplnUpdate;
 	}
 
@@ -1480,7 +1490,11 @@ void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std
 				messageHandler->writeMessage("DEBUG", "[" + callsign + "] erasing from request \"" + it->first +
 					"\" at [" + icao + "]", vsid::MessageHandler::Req);
 
-				if(this->processed.contains(callsign)) this->processed[callsign].request = "";
+				if (this->processed.contains(callsign))
+				{
+					this->processed[callsign].request = "";
+					this->processed[callsign].reqTime = -1;
+				}
 				
 				jt = it->second.erase(jt);
 			}
@@ -1500,7 +1514,11 @@ void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] erasing from rwy request \"" + type + "\" at [" + icao + "] in rwy \"" +
 						it->first + "\"", vsid::MessageHandler::Req);
 
-					if (this->processed.contains(callsign)) this->processed[callsign].request = "";
+					if (this->processed.contains(callsign))
+					{
+						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
+					}
 					
 					jt = it->second.erase(jt);
 				}
@@ -2418,7 +2436,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					}
 				}
 				if (blockRwy != "" &&
-					//(vsid::fpln::findRemarks(fplnData, "VSID/RWY") ||
 					(vsid::fplnhelper::findRemarks(FlightPlan, "VSID/RWY") ||
 						blockSid != fplnData.GetOrigin() ||
 						fplnData.IsAmended())
@@ -2703,7 +2720,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					!this->processed[callsign].remarkChecked
 					)
 				{
-					/*this->processed[callsign].atcRWY = vsid::fpln::findRemarks(fplnData, "VSID/RWY");*/
 					this->processed[callsign].atcRWY = vsid::fplnhelper::findRemarks(FlightPlan, "VSID/RWY");
 					this->processed[callsign].remarkChecked = true;
 					if (this->processed[callsign].atcRWY)
@@ -2732,7 +2748,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 						vsid::MessageHandler::DebugArea::Rwy);
 					this->processed[callsign].atcRWY = true;
 				}
-				else if (!this->processed[callsign].atcRWY && // MONITOR
+				else if (!this->processed[callsign].atcRWY && // #MONITOR
 					atcBlock.first != "" &&
 					atcBlock.first != fplnData.GetOrigin() &&
 					(fplnData.IsAmended() || FlightPlan.GetClearenceFlag())
@@ -3519,61 +3535,15 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			{
 				messageHandler->writeMessage("DEBUG", "[" + callsign + "] sync processing...", vsid::MessageHandler::DebugArea::Dev);
 				EuroScopePlugIn::CFlightPlan FlightPlan = FlightPlanSelect(callsign.c_str());
-
-				this->syncReq(FlightPlan);
 				
 				if (!FlightPlan.IsValid()) continue;
 
 				std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
 				std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
 
-				//// sync requests  #checkforremoval
+				// sync requests
 
-				//if (fpln.request != "")
-				//{
-				//	if(!this->activeAirports.contains(adep)) continue;
-
-				//	// sync rwy requests - parallel req lists are already managed on scratchpad updates
-				//	if (this->activeAirports[adep].rwyrequests.contains(fpln.request))
-				//	{
-				//		bool stop = false;
-				//		for (auto& [rwy, reqRwy] : this->activeAirports[adep].rwyrequests[fpln.request])
-				//		{
-				//			for (auto& [reqCallsign, reqTime] : reqRwy)
-				//			{
-				//				if (reqCallsign != callsign) continue;
-
-				//				std::string scratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
-
-				//				messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing " + fpln.request +
-				//					" with scratch: " + scratch, vsid::MessageHandler::DebugArea::Req
-				//				);
-				//				vsid::fplnhelper::setScratchPad(FlightPlan, scratch);
-
-				//				stop = true;
-				//				break;
-				//			}
-				//			if (stop) break;
-				//		}
-				//	}
-				//	// sync normal requests
-				//	else if (this->activeAirports[adep].requests.contains(fpln.request))
-				//	{
-				//		for (auto& [reqCallsign, reqTime] : this->activeAirports[adep].requests[fpln.request])
-				//		{
-				//			if (reqCallsign != callsign) continue;
-
-				//			std::string scratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
-
-				//			messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing " + fpln.request +
-				//				" with scratch: " + scratch, vsid::MessageHandler::DebugArea::Req
-				//			);
-				//			vsid::fplnhelper::setScratchPad(FlightPlan, scratch);
-
-				//			break;
-				//		}
-				//	}
-				//}
+				this->syncReq(FlightPlan);
 				
 				// sync states
 
@@ -4065,7 +4035,11 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 									continue;
 								}
 
-								if (!reqActive) this->processed[callsign].request = "";
+								if (!reqActive)
+								{
+									this->processed[callsign].request = "";
+									this->processed[callsign].reqTime = -1;
+								}
 
 								messageHandler->writeMessage("DEBUG", "[" + callsign + "] removing from requests in: " +
 									it->first, vsid::MessageHandler::DebugArea::Req);
@@ -4079,6 +4053,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 								it->second.insert({ callsign, reqTime });
 								this->processed[callsign].request = reqType;
+								this->processed[callsign].reqTime = reqTime;
 								reqActive = true;
 							}
 							else if (reqType.find(it->first) != std::string::npos)
@@ -4100,7 +4075,11 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 										continue;
 									}
 
-									if (!reqActive) this->processed[callsign].request = "";
+									if (!reqActive)
+									{
+										this->processed[callsign].request = "";
+										this->processed[callsign].reqTime = -1;
+									}
 
 									messageHandler->writeMessage("DEBUG", "[" + callsign + "] removing from rwy requests in: " +
 										type + "/" + it->first, vsid::MessageHandler::DebugArea::Req);
@@ -4115,6 +4094,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 								rwys[FlightPlan.GetFlightPlanData().GetDepartureRwy()].insert({ callsign, reqTime });
 								this->processed[callsign].request = reqType;
+								this->processed[callsign].reqTime = reqTime;
 								reqActive = true;
 							}
 							else if (type.find(reqType) != std::string::npos && fplnRwy != "")
@@ -4176,6 +4156,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["clearance"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 				}
@@ -4192,6 +4173,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["startup"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 
@@ -4201,6 +4183,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["rwy startup"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 				}
@@ -4212,6 +4195,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["pushback"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 				}
@@ -4223,6 +4207,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["taxi"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 
@@ -4235,6 +4220,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						this->activeAirports[adep].requests["departure"].erase(fp);
 						this->processed[callsign].request = "";
+						this->processed[callsign].reqTime = -1;
 						break;
 					}
 				}
@@ -4247,47 +4233,8 @@ void vsid::VSIDPlugin::OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan Fligh
 {
 	std::string callsign = FlightPlan.GetCallsign();
 	std::string icao = FlightPlan.GetFlightPlanData().GetOrigin();
-	/*if (this->processed.contains(callsign))
-	{
-		auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
-		this->removeProcessed[callsign] = { now, true };
 
-		if (this->processed[callsign].request != "" && this->activeAirports.contains(icao))
-		{
-			for (auto it = this->activeAirports[icao].requests.begin(); it != this->activeAirports[icao].requests.end(); ++it)
-			{
-				for (std::set<std::pair<std::string, long long>>::iterator jt = it->second.begin(); jt != it->second.end();)
-				{
-					if (jt->first != callsign)
-					{
-						++jt;
-						continue;
-					}
-					this->processed[callsign].request = "";
-					jt = it->second.erase(jt);
-				}
-			}
-
-			for (auto& [type, rwys] : this->activeAirports[icao].rwyrequests)
-			{
-				for (auto it = rwys.begin(); it != rwys.end(); ++it)
-				{
-					for (auto jt = it->second.begin(); jt != it->second.end();)
-					{
-						if (jt->first != callsign)
-						{
-							++jt;
-							continue;
-						}
-						this->processed[callsign].request = "";
-						jt = it->second.erase(jt);
-					}
-				}
-			}
-		}
-	}*/
-
-	messageHandler->writeMessage("DEBUG", "[" + callsign + "] disconnected from the network.", vsid::MessageHandler::DebugArea::Dev);
+	messageHandler->writeMessage("DEBUG", "[" + callsign + "] disconnected from the network.", vsid::MessageHandler::DebugArea::Fpln);
 
 	if (this->processed.contains(callsign)) vsid::fplnhelper::saveFplnInfo(callsign, this->processed[callsign], this->savedFplnInfo);
 
@@ -4325,41 +4272,9 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 	if (this->processed.contains(callsign) && this->activeAirports.contains(adep) &&
 		RadarTarget.GetGS() >= 50)
 	{
-		// remove requests that might still be present
+		// remove requests that might still be present #evalaute - replace with removeRequests function
 
-		if (this->processed[callsign].request != "")
-		{
-			for (auto it = this->activeAirports[adep].requests.begin(); it != this->activeAirports[adep].requests.end(); ++it)
-			{
-				for (std::set<std::pair<std::string, long long>>::iterator jt = it->second.begin(); jt != it->second.end();)
-				{
-					if (jt->first != callsign)
-					{
-						++jt;
-						continue;
-					}
-					this->processed[callsign].request = "";
-					jt = it->second.erase(jt);
-				}
-			}
-
-			for (auto& [type, rwys] : this->activeAirports[adep].rwyrequests)
-			{
-				for (auto it = rwys.begin(); it != rwys.end(); ++it)
-				{
-					for (auto jt = it->second.begin(); jt != it->second.end();)
-					{
-						if (jt->first != callsign)
-						{
-							++jt;
-							continue;
-						}
-						this->processed[callsign].request = "";
-						jt = it->second.erase(jt);
-					}
-				}
-			}
-		}
+		this->removeFromRequests(callsign, adep);
 
 		// remove rwy remark if still present
 
@@ -4973,6 +4888,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		for (std::map<std::string, vsid::Fpln>::iterator it = this->processed.begin(); it != this->processed.end();)
 		{
 			EuroScopePlugIn::CFlightPlan fpln = FlightPlanSelect(it->first.c_str());
+			std::string adep = fpln.GetFlightPlanData().GetOrigin();
 
 			// mark invalid flight plans for removal
 
@@ -4997,8 +4913,11 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				messageHandler->writeMessage("DEBUG", "[" + it->first + "] is further away than my range of NM " +
 					std::to_string(ControllerMyself().GetRange()), vsid::MessageHandler::DebugArea::Dev);
 
-				if (this->removeProcessed.contains(it->first)) this->removeProcessed.erase(it->first); // #refactor - erase_if
-				if (this->savedFplnInfo.contains(it->first)) this->savedFplnInfo.erase(it->first); // #refactor - erase_if
+				this->removeProcessed.erase(it->first);
+				this->savedFplnInfo.erase(it->first);
+				this->removeFromRequests(it->first, adep);
+
+				if (vsid::fplnhelper::findRemarks(fpln, "VSID/RWY")) vsid::fplnhelper::removeRemark(fpln, "VSID/RWY");
 
 				it = this->processed.erase(it);
 
@@ -5022,7 +4941,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				ControllerMyself().GetPosition().DistanceTo(fpln.GetCorrelatedRadarTarget().GetPosition().GetPosition()) <
 				ControllerMyself().GetRange())
 			{
-				messageHandler->writeMessage("DEBUG", "[" + it->first + "] valid again.", vsid::MessageHandler::DebugArea::Dev);
+				messageHandler->writeMessage("DEBUG", "[" + it->first + "] reconnected.", vsid::MessageHandler::DebugArea::Fpln);
 				it = this->removeProcessed.erase(it);
 				continue;
 			}
@@ -5032,47 +4951,9 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				std::string icao = fpln.GetFlightPlanData().GetOrigin();
 				std::string callsign = fpln.GetCallsign();
 
-				/*if (this->processed.contains(it->first) && this->processed[it->first].request != "" && this->activeAirports.contains(icao)) #checkforremoval
-				{
-					for (auto jt = this->activeAirports[icao].requests.begin(); jt != this->activeAirports[icao].requests.end();++jt)
-					{
-						for (auto kt = jt->second.begin(); kt != jt->second.end();)
-						{
-							if (kt->first != callsign)
-							{
-								++kt;
-								continue;
-							}
-							messageHandler->writeMessage("DEBUG", "Erasing [" + kt->first + "] from request \"" + jt->first + "\"", vsid::MessageHandler::Req);
-							this->processed[kt->first].request = "";
-							kt = jt->second.erase(kt);
-						}
-					}
-
-					for (auto& [type, rwys] : this->activeAirports[icao].rwyrequests)
-					{
-						for (auto jt = rwys.begin(); jt != rwys.end(); ++jt)
-						{
-							for (auto kt = jt->second.begin(); kt != jt->second.end();)
-							{
-								if (kt->first != callsign)
-								{
-									++kt;
-									continue;
-								}
-								messageHandler->writeMessage("DEBUG", "Erasing [" + kt->first + "] from rwy request \"" + type + "\" in rwy \"" +
-									jt->first + "\"", vsid::MessageHandler::Req);
-								this->processed[kt->first].request = "";
-								kt = jt->second.erase(kt);
-							}
-						}
-					}
-				}*/
-
-				messageHandler->writeMessage("DEBUG", "[" + it->first + "] checking for request removal.", vsid::MessageHandler::DebugArea::Dev);
 				this->removeFromRequests(callsign, icao);
 
-				messageHandler->writeMessage("DEBUG", "[" + it->first + "] exceeded disconnection time. Dropping", vsid::MessageHandler::DebugArea::Dev);
+				messageHandler->writeMessage("DEBUG", "[" + it->first + "] exceeded disconnection time. Dropping", vsid::MessageHandler::DebugArea::Fpln);
 
 				std::erase_if(this->processed, [&](const auto& fpln) { return it->first == fpln.first; });
 				if (this->savedFplnInfo.contains(it->first)) this->savedFplnInfo.erase(it->first); // #refactor - erase_if
