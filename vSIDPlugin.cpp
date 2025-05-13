@@ -1235,10 +1235,10 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] processing SID with atcRWY (for customSuggestion): " + atcRwy, vsid::MessageHandler::DebugArea::Sid);
 		sidCustomSuggestion = this->processSid(FlightPlan, atcRwy);
 
-		if (vsid::utils::contains(sidSuggestion.rwys, atcRwy) && sidSuggestion == sidCustomSuggestion)
+		/*if (vsid::utils::contains(sidSuggestion.rwys, atcRwy) && sidSuggestion == sidCustomSuggestion) #monitor - disabled to prevent false evaluation in item if only a rwy is in the flight plan
 		{
 			sidCustomSuggestion = {};
-		}
+		}*/
 	}
 	/* default state */
 	else
@@ -2340,7 +2340,9 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				}
 
 				std::string sidName = this->processed[callsign].sid.name();
-				std::string customSidName = this->processed[callsign].customSid.name();			
+				std::string customSidName = this->processed[callsign].customSid.name();		
+
+				// set sid item color
 
 				if (((blockSid == fplnData.GetOrigin() &&
 					this->processed[callsign].atcRWY &&
@@ -2391,6 +2393,8 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					*pRGB = this->configParser.getColor("suggestedSidSet");
 				}
 				else *pRGB = RGB(140, 140, 60);
+
+				// set sid item text
 
 				if (blockSid != "" && blockSid != fplnData.GetOrigin())
 				{
