@@ -1,11 +1,14 @@
-[Changelog v0.12.1]
+[Changelog v0.12.2]
 
 **NEW**
 *	CONFIG - default values for colors are now set instead of an "error" color for missing config values
+*	REQ - request time is stored for cases a flight plan might reconnect and on a reconnect used to get the request position
 
 **CHANGED**
 *	REQ - re-sync requests after a flight plan reconnects that has its information still stored
-*	GEN - re-sync ground states and clearance flags after a flight plan reconnects that has its information still stored (might fix #318)
+*	GEN - re-sync ground states and clearance flags after a flight plan reconnects that has its information still stored
+*	GEN - added additional checks to remove stored information for different flight phases as a cleanup
+*	DIS - changed gnd state counting for startup counter (#318)
 
 **FIXED**
 *	REQ - possible fix for lacking removal from request lists of disconnected flight plans
