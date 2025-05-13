@@ -4902,6 +4902,15 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		DisplayUserMessage("vSID", msg.first.c_str(), msg.second.c_str(), true, true, false, flash, false);
 	}
 
+	// check if we're still connected and clean up all flight plans if not
+
+	if (this->GetConnectionType() == EuroScopePlugIn::CONNECTION_TYPE_NO)
+	{
+		if (this->processed.size() > 0) this->processed.clear();
+		if (this->removeProcessed.size() > 0) this->removeProcessed.clear();
+		if (this->savedFplnInfo.size() > 0) this->savedFplnInfo.clear();
+	}
+
 	if (Counter % 10 == 0)
 	{
 		for (std::map<std::string, vsid::Fpln>::iterator it = this->processed.begin(); it != this->processed.end();)
@@ -4993,18 +5002,6 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				it = this->removeProcessed.erase(it);
 			}
 			else ++it;
-		}
-	}
-
-	// check once a minute if we're still connected and clean up all flight plans if not
-
-	if (Counter % 60 == 0)
-	{
-		if (!this->GetConnectionType())
-		{
-			if (this->processed.size() > 0) this->processed.clear();
-			if (this->removeProcessed.size() > 0) this->removeProcessed.clear();
-			if (this->savedFplnInfo.size() > 0) this->savedFplnInfo.clear();
 		}
 	}
 }
