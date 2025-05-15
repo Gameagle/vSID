@@ -1,3 +1,21 @@
+[Changelog v0.12.2]
+
+**NEW**
+*	CONFIG - default values for colors are now set instead of an "error" color for missing config values
+*	REQ - request time is stored for cases a flight plan might reconnect and on a reconnect used to get the request position
+
+**CHANGED**
+*	REQ - re-sync requests after a flight plan reconnects that has its information still stored
+*	GEN - re-sync ground states and clearance flags after a flight plan reconnects that has its information still stored
+*	GEN - added additional checks to remove stored information for different flight phases as a cleanup
+*	GEN - time for own connection state check is reduced from once a minute to once a second to keep the data always up to date
+*	DIS - changed gnd state counting for startup counter (#318)
+*	SID	- if only a rwy was selected and sid and customSid were the same customSid is no longer deleted to prevent false evaluation for the item
+
+**FIXED**
+*	REQ - possible fix for lacking removal from request lists of disconnected flight plans
+*	FPL - possible orphaned remarks after departure are now deleted from the flight plan
+
 [Changelog v0.12.1]
 
 **NEW**
