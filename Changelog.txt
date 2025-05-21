@@ -1,8 +1,9 @@
 [Changelog v0.12.2]
 
 **NEW**
-*	CONFIG - default values for colors are now set instead of an "error" color for missing config values
+*	CONFIG - default values for colors are now set instead of an "error" color for missing config values (#316)
 *	REQ - request time is stored for cases a flight plan might reconnect and on a reconnect used to get the request position
+*	MENU - optional ICAO parameter added to directly open the startup menu (.vsid menu ZZZZ) (#325)
 
 **CHANGED**
 *	REQ - re-sync requests after a flight plan reconnects that has its information still stored
