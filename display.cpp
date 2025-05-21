@@ -481,29 +481,31 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 {
 	std::vector<std::string> params = vsid::utils::split(vsid::utils::toupper(sCommandLine), ' ');
 
-	if (std::string(sCommandLine) == ".vsid menu")
+	if (std::string(sCommandLine).find(".vsid menu") != std::string::npos)
 	{
-		this->openMainMenu();
-
-		return true;
-	}
-	else if (params.size() == 3)
-	{
-		if (std::shared_ptr sharedPlugin = this->plugin.lock())
+		if (params.size() == 2)
 		{
-			if (!sharedPlugin->getActiveApts().contains(params[2]))
-			{
-				messageHandler->writeMessage("INFO", "[" + params[2] + "] is not an active airport. Cannot open menu.");
-				return true;
-			}
+			this->openMainMenu();
 
-			if (!this->menues.contains("mainmenu")) this->openMainMenu(-1, -1, false);
-
-			this->openStartupMenu(params[2], "mainmenu");
+			return true;
 		}
-		return true;
-	}
+		else if (params.size() == 3)
+		{
+			if (std::shared_ptr sharedPlugin = this->plugin.lock())
+			{
+				if (!sharedPlugin->getActiveApts().contains(params[2]))
+				{
+					messageHandler->writeMessage("INFO", "[" + params[2] + "] is not an active airport. Cannot open menu.");
+					return true;
+				}
 
+				if (!this->menues.contains("mainmenu")) this->openMainMenu(-1, -1, false);
+
+				this->openStartupMenu(params[2], "mainmenu");
+			}
+			return true;
+		}
+	}
 	return false;
 }
 
