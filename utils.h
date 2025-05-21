@@ -61,7 +61,7 @@ namespace vsid
 		 * @param del - delimiter
 		 * @return std::vector<std::string>
 		 */
-		std::vector<std::string> split(const std::string& string, const char& del);
+		std::vector<std::string> split(const std::string& string, const char& del, const bool keepWhitespace = false);
 		/**
 		 * @brief Joins a vector of strings into one string
 		 * 
