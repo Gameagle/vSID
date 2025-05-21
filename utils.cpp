@@ -23,7 +23,7 @@ std::string vsid::utils::trim(const std::string& string)
 	return vsid::utils::ltrim(vsid::utils::rtrim(string));
 }
 
-std::vector<std::string> vsid::utils::split(const std::string &string, const char &del)
+std::vector<std::string> vsid::utils::split(const std::string &string, const char &del, const bool keepWhitespace)
 {
 	std::istringstream ss(string);
 	std::vector<std::string> elems;
@@ -31,7 +31,7 @@ std::vector<std::string> vsid::utils::split(const std::string &string, const cha
 
 	while (std::getline(ss, elem, del))
 	{
-		if (elem == "") continue; // remove excessive whitespaces to prevent a crash caused by wrong routes
+		if (elem == "" && !keepWhitespace) continue; // remove excessive whitespaces to prevent a crash caused by wrong routes
 		elems.push_back(vsid::utils::trim(elem));
 	}
 	return elems;

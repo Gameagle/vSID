@@ -4245,17 +4245,20 @@ void vsid::VSIDPlugin::OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan Fligh
 	std::string callsign = FlightPlan.GetCallsign();
 	std::string icao = FlightPlan.GetFlightPlanData().GetOrigin();
 
-	messageHandler->writeMessage("DEBUG", "[" + callsign + "] disconnected from the network.", vsid::MessageHandler::DebugArea::Fpln);
+	if (this->processed.contains(callsign))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] disconnected from the network.", vsid::MessageHandler::DebugArea::Fpln);
 
-	if (this->processed.contains(callsign)) vsid::fplnhelper::saveFplnInfo(callsign, this->processed[callsign], this->savedFplnInfo);
+		vsid::fplnhelper::saveFplnInfo(callsign, this->processed[callsign], this->savedFplnInfo);
 
-	this->processed.erase(callsign);
-	
-	this->removeFromRequests(callsign, icao);
+		this->processed.erase(callsign);
 
-	this->removeProcessed[callsign] = { std::chrono::utc_clock::now() + std::chrono::minutes{1}, true };
+		this->removeFromRequests(callsign, icao);
 
-	messageHandler->removeCallsignFromErrors(callsign);
+		this->removeProcessed[callsign] = { std::chrono::utc_clock::now() + std::chrono::minutes{1}, true };
+
+		messageHandler->removeCallsignFromErrors(callsign);
+	}
 }
 
 void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget RadarTarget)
@@ -4599,7 +4602,6 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 							}
 						}
 					}
-					// end dev
 
 					if (sid.base != name.substr(0, name.length() - 2)) continue;
 					if (sid.designator != std::string(1, name[name.length() - 1])) continue;
