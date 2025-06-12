@@ -479,11 +479,32 @@ void vsid::Display::OnClickScreenObject(int ObjectType, const char* sObjectId, P
 
 bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 {
-	if (std::string(sCommandLine) == ".vsid menu")
-	{
-		this->openMainMenu();
+	std::vector<std::string> params = vsid::utils::split(vsid::utils::toupper(sCommandLine), ' ');
 
-		return true;
+	if (std::string(sCommandLine).find(".vsid menu") != std::string::npos)
+	{
+		if (params.size() == 2)
+		{
+			this->openMainMenu();
+
+			return true;
+		}
+		else if (params.size() == 3)
+		{
+			if (std::shared_ptr sharedPlugin = this->plugin.lock())
+			{
+				if (!sharedPlugin->getActiveApts().contains(params[2]))
+				{
+					messageHandler->writeMessage("INFO", "[" + params[2] + "] is not an active airport. Cannot open menu.");
+					return true;
+				}
+
+				if (!this->menues.contains("mainmenu")) this->openMainMenu(-1, -1, false);
+
+				this->openStartupMenu(params[2], "mainmenu");
+			}
+			return true;
+		}
 	}
 	return false;
 }
