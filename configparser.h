@@ -108,6 +108,11 @@ namespace vsid
 		 * @brief load list of RNAV capable acft
 		 */
 		void loadRnavList();
+
+		// #dev
+		void loadEse();
+		// end dev
+		
 		//************************************
 		// Description: grants read-only access to vSID main config
 		// Method:    getMainConfig

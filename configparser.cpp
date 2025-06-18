@@ -41,6 +41,16 @@ void vsid::ConfigParser::loadMainConfig()
         messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
     }
 
+    if (this->vSidConfig.is_null())
+    {
+        messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+        return;
+    }
+
+	// #dev
+	this->loadEse();
+	// end dev
+
     try
     {
         // import colors or set default values
@@ -369,7 +379,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
     std::vector<std::filesystem::path> files;
     std::set<std::string> aptConfig;
 
-   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further evaluation - can cause slow loading
+   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further #evaluation - can cause slow loading
     {
         if (!std::filesystem::is_directory(entry) && entry.extension() == ".json")
         {
@@ -1272,6 +1282,97 @@ void vsid::ConfigParser::loadRnavList()
     }
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
+
+// #dev
+void vsid::ConfigParser::loadEse()
+{
+    if (this->vSidConfig.is_null())
+    {
+		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+		return;
+    }
+
+	if (!this->vSidConfig.contains("esePath") || this->vSidConfig.at("esePath") == "")
+	{
+		messageHandler->writeMessage("ERROR", "No path to .ese file set in main config or it couldn't be loaded.");
+		return;
+	}
+
+	char path[MAX_PATH + 1] = { 0 };
+	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+	PathRemoveFileSpecA(path);
+	std::filesystem::path basePath = path;
+
+    std::string esePath = this->vSidConfig.at("esePath");
+
+    basePath.append(esePath).make_preferred();
+
+    messageHandler->writeMessage("DEBUG", "loadEse called, basePath: " + basePath.string(), vsid::MessageHandler::DebugArea::Dev);
+
+    std::ofstream debugLog(basePath / "debug_ese_output.txt");
+    debugLog.clear();
+
+	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+	{
+		messageHandler->writeMessage("DEBUG", "File: " + entry.string(), vsid::MessageHandler::DebugArea::Dev);
+        if (entry.extension() == ".ese")
+        {
+            std::ifstream eseFile(entry.string());
+
+            if (!eseFile.is_open())
+            {
+                messageHandler->writeMessage("WARNING", "Failed to open .ese file in: " + basePath.string());
+                break;
+            }
+
+            std::string newLine = "";
+            std::vector<std::string> vecLine = {};
+            bool sectionPosition = false;
+
+            while (std::getline(eseFile, newLine))
+            {
+                if (newLine.find("[POSITIONS]") != std::string::npos) sectionPosition = true;
+                if (newLine.empty() && sectionPosition) break;
+                if (!sectionPosition) continue;
+
+                if (newLine.find("[POSITIONS]") != std::string::npos) continue; // skip begin of section
+
+                vecLine = vsid::utils::split(newLine, ':', true);
+
+                try
+                {
+                    std::string callsign = vecLine.at(0);
+                    std::string freq = vecLine.at(2);
+                    std::string si = vecLine.at(3);
+                }
+                catch (std::out_of_range& e)
+                {
+                    messageHandler->writeMessage("ERROR", "Failed to retrieve station from .ese file: " + std::string(e.what()));
+                }
+
+                for (auto it = vecLine.begin(); it != vecLine.end(); ++it)
+                {
+                    int pos = std::distance(vecLine.begin(), it);
+
+                    debugLog << "[" << pos << "] " << *it << " | ";
+                }
+
+				debugLog << '\n';
+
+                vecLine.clear();
+            }
+
+            eseFile.close();
+
+            messageHandler->writeMessage("DEBUG", "File should be closed.", vsid::MessageHandler::DebugArea::Dev);
+
+            break; // no further checks necessary
+        }
+	}
+
+    debugLog.close();
+}
+// end dev
 
 const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
