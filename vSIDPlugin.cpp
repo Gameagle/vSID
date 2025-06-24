@@ -60,6 +60,8 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	RegisterTagItemFunction("Set CRF and SID", TAG_FUNC_VSID_CLR_SID);
 	RegisterTagItemFunction("Set CRF, SID and Startup state", TAG_FUNC_VSID_CLR_SID_SU);
 
+	RegisterTagItemFunction("Auto-Assign Squawk (TopSky)", TAG_FUNC_VSID_TSSQUAWK);
+
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
@@ -2242,7 +2244,16 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				(atcSid == "" || atcSid == adep))
 				this->processFlightplan(fpln, false, atcRwy);
 
-			if (std::string(fpln.GetGroundState()) == "") vsid::fplnhelper::setScratchPad(fpln, "STUP");
+			if (std::string(fpln.GetGroundState()) == "") vsid::fplnhelper::setScratchPad(fpln, "STUP"); // #refactor - consider STBY state and use own stored info
+		}
+
+		if (FunctionId == TAG_FUNC_VSID_TSSQUAWK)
+		{
+			if (this->topskyLoaded)
+			{
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+			}
+			else messageHandler->writeMessage("ERROR", "TopSky auto-assign squawk called, but TopSky was not detected.");
 		}
 	}
 
