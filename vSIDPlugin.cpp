@@ -1458,17 +1458,21 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		std::string squawk = FlightPlan.GetControllerAssignedData().GetSquawk();
 		if ((squawk == "" || squawk == "0000") && !this->activeAirports[icao].settings["auto"])
 		{
-			if (this->ccamsLoaded && !this->preferTopsky)
+			if (this->ccamsLoaded && !this->getConfigParser().preferTopsky)
 			{
 				// DEV - see OnTime for further usage
 				// this->sqwkQueue.insert(callsign);
 				// END DEV
 				
 				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
+
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS squawk", vsid::MessageHandler::DebugArea::Dev);
 			}
 			else if (this->topskyLoaded)
 			{
 				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TopSky squawk", vsid::MessageHandler::DebugArea::Dev);
 			}
 		}
 	}

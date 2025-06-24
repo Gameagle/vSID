@@ -314,7 +314,6 @@ namespace vsid
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;
 		std::set<std::string> ignoreAtc;
-		bool preferTopsky = false;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
 		/**

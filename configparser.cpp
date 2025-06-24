@@ -51,6 +51,10 @@ void vsid::ConfigParser::loadMainConfig()
 	this->loadEse();
 	// end dev
 
+    // set topsky preference
+
+    this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
+
     try
     {
         // import colors or set default values

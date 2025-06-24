@@ -145,6 +145,7 @@ namespace vsid
 		int getReqTime(std::string time);
 		json grpConfig;
 		std::set<std::string> rnavList;
+		bool preferTopsky;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;
