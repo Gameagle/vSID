@@ -1,4 +1,8 @@
-[Changelog v0.12.3]
+[Changelog v0.13.0]
+**NEW**
+*	FPLN - the sync command now queues the messages which are sent in sequence one by one after the previous message has been received from the servers (also applies to single scratch pad commands) !! Experimental !!
+*	FPLN - sender is now "remover" for any scratch pad commands. So not each client sends its own removal message but the one client that issued the messages also removes it !! Experimental !!
+
 **CHANGED**
 *	FPLN - Topsky is now the preferred method to issue new squawks while CCAMS is still available
 
