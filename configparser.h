@@ -108,6 +108,11 @@ namespace vsid
 		 * @brief load list of RNAV capable acft
 		 */
 		void loadRnavList();
+
+		// #dev
+		void loadEse();
+		// end dev
+		
 		//************************************
 		// Description: grants read-only access to vSID main config
 		// Method:    getMainConfig
@@ -140,6 +145,7 @@ namespace vsid
 		int getReqTime(std::string time);
 		json grpConfig;
 		std::set<std::string> rnavList;
+		bool preferTopsky;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;

@@ -50,6 +50,8 @@ const int TAG_ITEM_VSID_CLR = 648;
 const int TAG_FUNC_VSID_CLR_SID = 747;
 const int TAG_FUNC_VSID_CLR_SID_SU = 748;
 
+const int TAG_FUNC_VSID_TSSQUAWK = 940;
+
 // menues
 
 const int MENU = 100;
