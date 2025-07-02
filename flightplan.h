@@ -169,7 +169,7 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		// Parameter: const std::string & toAdd
 		//************************************
-		bool setScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toAdd);
+		std::string addScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd);
 
 		//************************************
 		// Description: Remove an entry from the scratchpad. Non matching entries are preserved.
@@ -181,7 +181,7 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		// Parameter: const std::string & toRemove
 		//************************************
-		bool removeScratchPad(EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toRemove);
+		std::string removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove);
 
 		//************************************
 		// Description: Get the filed equipment code for the flight plan. If the acft type is found in the

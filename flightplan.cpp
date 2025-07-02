@@ -221,22 +221,23 @@ bool vsid::fplnhelper::findScratchPad(const EuroScopePlugIn::CFlightPlan& Flight
 	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch));
 }
 
-bool vsid::fplnhelper::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
+std::string vsid::fplnhelper::addScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
 {
-	if (!FlightPlan.IsValid()) return false;
+	if (!FlightPlan.IsValid()) return ".vsid_error";
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 	std::string scratch = cad.GetScratchPadString();
+
+	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] old scratch: \"" + scratch + "\" - added: \"" + toAdd + "\"", vsid::MessageHandler::DebugArea::Dev);
+
 	scratch += toAdd;
 
-	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] Setting scratch: " + scratch, vsid::MessageHandler::DebugArea::Req);
-
-	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
+	return scratch;
 }
 
-bool vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
+std::string vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
 {
-	if (!FlightPlan.IsValid()) return false;
+	if (!FlightPlan.IsValid()) return ".vsid_error";
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 	std::string callsign = FlightPlan.GetCallsign();
@@ -245,14 +246,13 @@ bool vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan
 
 	if (pos != std::string::npos)
 	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] old scratch: \"" + scratch + "\" - removed: \"" + toRemove + "\"", vsid::MessageHandler::DebugArea::Dev);
+
 		vsid::utils::trim(scratch.erase(pos, toRemove.length()));
 
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
-			"\". New scratch : \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Req);
-
-		return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
+		return scratch;
 	}
-	return false; // default / fall back state
+	return ".vsid_error"; // default / fall back state
 }
 
 std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
