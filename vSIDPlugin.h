@@ -29,6 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <algorithm>
 #include <sstream>
+#include <deque>
 
 #include "include/es/EuroScopePlugIn.h"
 #include "airport.h"
@@ -38,11 +39,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "configparser.h"
 #include "utils.h"
 
-
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.12.3";
+	const std::string pluginVersion = "0.13.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -231,6 +231,8 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		//************************************
 		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
+
+		/*std::string syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);*/ // #dev - mutex sync
 		
 		
 		//************************************
@@ -332,5 +334,118 @@ namespace vsid
 		 *
 		 */
 		void UpdateActiveAirports();
+
+		//************************************
+		// Description: Tracks if multiple scratchpad entries for the same callsign are save to be sent
+		// Param 1: std::string - callsign
+		// Param 2: std::string - last entry processed
+		//************************************
+		std::unordered_map<std::string, bool> spReleased;
+		std::unordered_map<std::string, std::deque<std::string>> syncQueue;
+		bool spWorkerActive = false;
+		std::atomic_bool queueInProcess = false;
+		
+		inline void processSPQueue()
+		{
+			if (queueInProcess || this->syncQueue.empty()) return;
+			messageHandler->writeMessage("DEBUG", "Started sync processing queue... (size: " + std::to_string(this->syncQueue.size()) + ")", vsid::MessageHandler::DebugArea::Dev);
+
+			queueInProcess = true;
+
+			for (std::unordered_map<std::string, std::deque<std::string>>::iterator it = this->syncQueue.begin(); it != this->syncQueue.end();)
+			{
+				std::string callsign = it->first;
+
+				EuroScopePlugIn::CFlightPlan FlightPlan = FlightPlanSelect(callsign.c_str());
+
+				if (!FlightPlan.IsValid())
+				{
+					this->spReleased.erase(callsign);
+					it = this->syncQueue.erase(it);
+					continue;
+				}
+
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] queue processing... total msg queue size: " + std::to_string(it->second.size()), vsid::MessageHandler::DebugArea::Dev);
+
+				if (this->spReleased.contains(callsign) && this->spReleased[callsign])
+				{
+					std::string scratch = std::move(it->second.front());
+					it->second.pop_front();
+
+					// #evaluate - removing double entries - + 8 lines below
+
+					size_t pos = 0;
+					for (auto jt = it->second.begin(); jt != it->second.end(); ++jt)
+					{
+						if (*jt == scratch) ++pos;
+					}
+
+					if (pos != 0 && pos <= it->second.size())
+					{
+						it->second.erase(it->second.begin(), it->second.begin() + pos);
+					}
+
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] #1 (Queue) sync released... " + ((this->spReleased[callsign]) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Dev);
+					
+					this->spReleased[callsign] = false;
+					spWorkerActive = true; // reset on received update
+
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) scratchpad sending scratch \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Dev);
+
+					FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratch).c_str());
+
+					if (vsid::utils::tolower(scratch).find(".vsid") == std::string::npos)
+					{
+						messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) setting released inside worker... TRUE", vsid::MessageHandler::DebugArea::Dev);
+						this->spReleased[callsign] = true;
+					}
+				}
+				else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove only debugging
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] #2 (Queue) sync released... " + ((this->spReleased[callsign]) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Dev);
+				}
+				else if (!spReleased.contains(callsign))
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) release check not found...", vsid::MessageHandler::DebugArea::Dev);
+
+					this->spReleased.erase(callsign);
+					it = this->syncQueue.erase(it);
+					continue;
+				}
+
+				if (it->second.size() == 0)
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] no more messages in queue. Removing... ", vsid::MessageHandler::DebugArea::Dev);
+					it = this->syncQueue.erase(it);
+					continue;
+				}
+
+				++it;
+			}
+			queueInProcess = false;
+			messageHandler->writeMessage("DEBUG", "Finished sync processing queue...", vsid::MessageHandler::DebugArea::Dev);
+		}
+
+		inline void addSyncQueue(const std::string& callsign, const std::string& scratch)
+		{
+			if (scratch.find(".vsid_error") != std::string::npos)
+			{
+				messageHandler->writeMessage("ERROR", "Failed to get updated scratchpad entry for sync queue.");
+				return;
+			}
+
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] adding scratch to queue \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Dev);
+
+			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
+			this->syncQueue[callsign].push_back(scratch);
+		}
+		
+		inline void updateSPSyncRelease(std::string callsign)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] updating sync release", vsid::MessageHandler::DebugArea::Dev);
+
+			this->spReleased[callsign] = true;
+		}
+		// dev
 	};
 }
