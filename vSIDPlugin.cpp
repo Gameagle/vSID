@@ -59,6 +59,10 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	RegisterTagItemFunction("Set CRF and SID", TAG_FUNC_VSID_CLR_SID);
 	RegisterTagItemFunction("Set CRF, SID and Startup state", TAG_FUNC_VSID_CLR_SID_SU);
 
+	RegisterTagItemType("Intersection", TAG_ITEM_VSID_INTS);
+	RegisterTagItemFunction("Set runway intersection", TAG_FUNC_VSID_INTS_SET);
+	RegisterTagItemFunction("Select runway intersection as able", TAG_FUNC_VSID_INTS_ABLE);
+
 	RegisterTagItemFunction("Auto-Assign Squawk (TopSky)", TAG_FUNC_VSID_TSSQUAWK);
 
 	UpdateActiveAirports(); // preload rwy settings
@@ -2239,6 +2243,72 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (std::string(fpln.GetGroundState()) == "") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, "STUP")); // #refactor - consider STBY state and use own stored info // #dev - sync
 		}
 
+		if (FunctionId == TAG_FUNC_VSID_INTS_SET)
+		{
+			if (!this->activeAirports.contains(adep)) return;
+
+			if (strlen(sItemString) == 0)
+			{
+				this->OpenPopupList(Area, "Set Int", 1);
+
+				std::string depRwy = vsid::fplnhelper::getAtcBlock(fpln).second;
+				if (depRwy == "") this->AddPopupListElement("NO RWY", "NO RWY", TAG_FUNC_VSID_INTS_SET, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, true, false);
+				else if (this->activeAirports[adep].intsec.contains(depRwy))
+				{
+					for (std::string& intsec : this->activeAirports[adep].intsec[depRwy])
+					{
+						this->AddPopupListElement(intsec.substr(0, 3).c_str(), intsec.substr(0, 3).c_str(), TAG_FUNC_VSID_INTS_SET,
+												 false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+					}
+				}
+				else this->AddPopupListElement("NO INTS", "NO INTS", TAG_FUNC_VSID_INTS_SET, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, true, false);
+
+				this->AddPopupListElement("Custom", "Custom", TAG_FUNC_VSID_INTS_SET, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, true);
+				this->AddPopupListElement("Clear", "Clear", TAG_FUNC_VSID_INTS_SET, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, true);
+			}
+			else
+			{
+				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_SET, "");
+				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".vsid_int_none_false");
+				else if (std::string(sItemString) == "NO RWY") return;
+				else if (std::string(sItemString) == "NO INTS") return;
+				else this->addSyncQueue(callsign, ".vsid_int_" + std::string(sItemString).substr(0, 3) + "_true");
+			}
+		}
+
+		if (FunctionId == TAG_FUNC_VSID_INTS_ABLE)
+		{
+			if (!this->activeAirports.contains(adep)) return;
+
+			if (strlen(sItemString) == 0)
+			{
+				this->OpenPopupList(Area, "Able Int", 1);
+
+				std::string depRwy = vsid::fplnhelper::getAtcBlock(fpln).second;
+				if (depRwy == "") this->AddPopupListElement("NO RWY", "NO RWY", TAG_FUNC_VSID_INTS_ABLE, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, true, false);
+				else if (this->activeAirports[adep].intsec.contains(depRwy))
+				{
+					for (std::string& intsec : this->activeAirports[adep].intsec[depRwy])
+					{
+						this->AddPopupListElement(intsec.substr(0, 3).c_str(), intsec.substr(0, 3).c_str(), TAG_FUNC_VSID_INTS_ABLE,
+												 false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+					}
+				}
+				else this->AddPopupListElement("NO INTS", "NO INTS", TAG_FUNC_VSID_INTS_ABLE, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, true, false);
+
+				this->AddPopupListElement("Custom", "Custom", TAG_FUNC_VSID_INTS_ABLE, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, true);
+				this->AddPopupListElement("Clear", "Clear", TAG_FUNC_VSID_INTS_ABLE, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, true);
+			}
+			else
+			{
+				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_ABLE, "");
+				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".VSID_INT_NONE_false");
+				else if (std::string(sItemString) == "NO RWY") return;
+				else if (std::string(sItemString) == "NO INTS") return;
+				else this->addSyncQueue(callsign, ".VSID_INT_" + std::string(sItemString).substr(0, 3) + "_FALSE");
+			}
+		}
+
 		if (FunctionId == TAG_FUNC_VSID_TSSQUAWK)
 		{
 			if (this->topskyLoaded)
@@ -2994,6 +3064,19 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			if(FlightPlan.GetClearenceFlag()) strcpy_s(sItemString, 16, "\xA4");
 			else strcpy_s(sItemString, 16, "\xAC");
 		}
+
+		if (ItemCode == TAG_ITEM_VSID_INTS)
+		{
+			if (this->processed.contains(callsign))
+			{
+				*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+				
+				if(this->processed[callsign].intsec.second) *pRGB = this->configParser.getColor("intsecSet");
+				else *pRGB = this->configParser.getColor("intsecAble");
+
+				strcpy_s(sItemString, 16, this->processed[callsign].intsec.first.c_str());
+			}
+		}
 	}
 
 	if (ItemCode == TAG_ITEM_VSID_CLRF)
@@ -3573,6 +3656,8 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					this->syncStates(FlightPlan);
 				}
 
+				// sync cleared to land flag
+
 				if (this->activeAirports.contains(ades))
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing ctlf.", vsid::MessageHandler::DebugArea::Dev);
@@ -3580,6 +3665,20 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					std::string scratch = ".VSID_CTL_" + std::string((fpln.ctl) ? "TRUE" : "FALSE");
 
 					this->addSyncQueue(callsign, scratch);
+				}
+
+				// sync intersections
+
+				if (this->activeAirports.contains(adep))
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] syncing intersection.", vsid::MessageHandler::DebugArea::Dev);
+
+					if (std::string intersection = fpln.intsec.first; intersection != "")
+					{
+						std::string scratch = ".VSID_INT_" + intersection + "_" + ((fpln.intsec.second) ? "TRUE" : "FALSE");
+
+						this->addSyncQueue(callsign, scratch);
+					}
 				}
 			}
 			return true;
@@ -4035,6 +4134,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			}
 			if (scratchpad.find("LINEUP") != std::string::npos)
 			{
+				this->processed[callsign].intsec = { "", false }; // reset intersection clearance
+
 				if (this->spReleased.contains(callsign))
 				{
 					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "LINEUP")); // #dev - sync
@@ -4180,7 +4281,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					}
 					else messageHandler->writeMessage("DEBUG", "[" + callsign + "] apt " + adep + " is not an active airport in req setting", vsid::MessageHandler::DebugArea::Dev);
 
-					if (this->spReleased.contains(callsign))
+					if (this->spReleased.contains(callsign)) // #refactor - move scratch pad clearing out of try-catch block - check other occurrences
 					{
 						this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()))); // #dev - sync
 						this->updateSPSyncRelease(callsign);
@@ -4207,6 +4308,36 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 				if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
 					callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
+
+				if (this->spReleased.contains(callsign))
+				{
+					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, scratchpad.substr(pos, scratchpad.size()))); // #dev - sync
+					this->updateSPSyncRelease(callsign);
+				}
+			}
+
+			if (scratchpad.find(".VSID_INT_") != std::string::npos)
+			{
+				std::string toFind = ".VSID_INT_";
+				size_t pos = scratchpad.find(toFind);
+
+				try
+				{
+					std::vector<std::string> intersection = vsid::utils::split(scratchpad.substr(pos + toFind.size(), scratchpad.size()), '_');
+
+					if (intersection.at(0) == "NONE") this->processed[callsign].intsec = { "", false };
+					else this->processed[callsign].intsec = { intersection.at(0), ((intersection.at(1) == "TRUE") ? true : false) };
+
+					messageHandler->removeFplnError(callsign, ERROR_FPLN_INTSET);
+				}
+				catch (std::out_of_range)
+				{
+					if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_INTSET))
+					{
+						messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to set the intersection. Code: " + ERROR_FPLN_INTSET);
+						messageHandler->addFplnError(callsign, ERROR_FPLN_INTSET);
+					}
+				}
 
 				if (this->spReleased.contains(callsign))
 				{
@@ -4298,6 +4429,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				}
 				else if (state == "DEPA")
 				{
+					this->processed[callsign].intsec = { "", false }; // reset intersection clearance
+
 					for (auto& fp : this->activeAirports[adep].requests["departure"])
 					{
 						if (fp.first != callsign) continue;
