@@ -231,9 +231,6 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		//************************************
 		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
-
-		/*std::string syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);*/ // #dev - mutex sync
-		
 		
 		//************************************
 		// Description: Syncs saved gnd states and clearance flag
@@ -348,7 +345,7 @@ namespace vsid
 		inline void processSPQueue()
 		{
 			if (queueInProcess || this->syncQueue.empty()) return;
-			messageHandler->writeMessage("DEBUG", "Started sync processing queue... (size: " + std::to_string(this->syncQueue.size()) + ")", vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "Started sync processing queue...", vsid::MessageHandler::DebugArea::Dev);
 
 			queueInProcess = true;
 

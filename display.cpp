@@ -48,6 +48,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		std::string showReqOn = "";
 		bool enableRequest = false;
 
+		std::string showIntOn = "";
+		bool enableIntIndicator = false;
 
 		try
 		{
@@ -56,6 +58,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			showReqOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showRequestOn", "");
 			enableRequest = sharedPlugin->getConfigParser().getMainConfig().at("display").value("enableRequest", true);
+
+			showIntOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showIntIndicatorOn", "");
+			enableIntIndicator = sharedPlugin->getConfigParser().getMainConfig().at("display").value("enableIntIndicator", true);
 
 			messageHandler->removeGenError(ERROR_CONF_DISPLAY);
 		}
@@ -191,6 +196,38 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 						}
 					}
 					catch (std::out_of_range) {};
+				}
+			}
+
+			// intersection indicator
+
+			if (enableIntIndicator && showIntOn.find(this->name) != std::string::npos)
+			{
+				if (fplnInfo.intsec.first != "")
+				{
+					POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+
+					CRect area;
+					
+					// #dev - constant factor for zooming
+					const double factor = 472;
+
+					double offsetPx = factor / this->getZoomLevel() / 2;
+					// end dev
+
+					// position below target
+					/*area.bottom = targetPos.y + 20;*/
+					area.bottom = targetPos.y + 20 * offsetPx;
+					area.top = area.bottom - 15;
+					area.left = targetPos.x - 5;
+					area.right = area.left + 30; // original: 10
+
+					dc.SelectObject(&font);
+
+					if(fplnInfo.intsec.second) dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecSetIndicator"));
+					else dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecAbleIndicator"));
+
+					dc.DrawText(fplnInfo.intsec.first.c_str(), &area, DT_BOTTOM);
 				}
 			}
 		}
@@ -505,6 +542,18 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 			}
 			return true;
 		}
+	}
+
+	if (std::string(sCommandLine) == ".vsid zoom")
+	{
+		messageHandler->writeMessage("INFO", "vSID Zoom-Level: " + std::to_string(this->getZoomLevel()));
+		return true;
+	}
+
+	if (std::string(sCommandLine) == ".vsid screen nm")
+	{
+		messageHandler->writeMessage("INFO", "vSID Screen NM: " + std::to_string(this->getScreenNM()));
+		return true;
 	}
 	return false;
 }

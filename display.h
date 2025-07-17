@@ -29,6 +29,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
+// #dev - distance
+#include <cmath>
+// end dev
+
 namespace vsid
 {
 	class VSIDPlugin; // forward declaration
@@ -157,5 +161,26 @@ namespace vsid
 		int id;
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
 		std::string name;
+
+		inline double getScreenNM()
+		{
+			POINT topLeft = { this->GetRadarArea().top, this->GetRadarArea().left };
+			POINT botRight = { this->GetRadarArea().bottom, this->GetRadarArea().right };
+
+			EuroScopePlugIn::CPosition coordTL = this->ConvertCoordFromPixelToPosition(topLeft);
+			EuroScopePlugIn::CPosition coordBR = this->ConvertCoordFromPixelToPosition(botRight);
+
+			return coordTL.DistanceTo(coordBR);
+		}
+
+		inline int getZoomLevel()
+		{
+			// #dev - get display distance
+
+			/*return (std::round(coordTL.DistanceTo(coordBR) * 100.0) / 100.0) * 100.0;*/
+			return (std::round(getScreenNM() * 100.0) / 100.0) * 100.0;
+
+			// end dev - get display distance
+		}
 	};
 }

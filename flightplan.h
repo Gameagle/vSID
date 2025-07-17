@@ -41,6 +41,7 @@ namespace vsid
 		vsid::Sid customSid = {};
 		std::string sidWpt = "";
 		std::string transition = "";
+		std::pair<std::string, bool> intsec = {};
 		std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
 		int updateCounter = 0;
 		/*bool request = false;*/
