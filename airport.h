@@ -68,6 +68,12 @@ namespace vsid
 		std::set<std::string> arrRwys = {};
 		std::map<std::string, bool> customRules = {};
 		std::map<std::string, vsid::Area> areas = {};
+		//************************************
+		// Description: Stores rwy intersections for intsec menu
+		// Param 1: std::string - rwy
+		// Param 2 (vec): std::string - available intsec for the rwy
+		//************************************
+		std::map<std::string, std::vector<std::string>> intsec = {};
 		std::vector<vsid::Sid> sids = {};
 		std::vector<vsid::Sid> timeSids = {};
 		std::string timezone = "";
