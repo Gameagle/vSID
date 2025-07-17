@@ -279,6 +279,45 @@ void vsid::ConfigParser::loadMainConfig()
 		}
 		else this->colors["clrfWarning"] = RGB(200, 10, 10);
 
+		if (this->vSidConfig.at("colors").contains("intsecSet"))
+		{
+			this->colors["intsecSet"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSet").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSet").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSet").value("b", 50)
+			);
+		}
+		else this->colors["intsecSet"] = RGB(0, 150, 50);
+
+		if (this->vSidConfig.at("colors").contains("intsecAble"))
+		{
+			this->colors["intsecAble"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAble").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAble").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAble").value("b", 0)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecSetIndicator"))
+		{
+			this->colors["intsecSetIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("b", 50)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecAbleIndicator"))
+		{
+			this->colors["intsecAbleIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("b", 0)
+			);
+		}
+
+		else this->colors["intsecSetIndicator"] = RGB(200, 150, 0);
+
 		if (this->vSidConfig.at("colors").contains("pbIndicator"))
 		{
 			this->colors["pbIndicator"] = RGB(
@@ -435,6 +474,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
                             customRules.insert(rule);
                         }
+
                         // overwrite loaded rule settings from config with current values at the apt
 
                         if (savedCustomRules.contains(icao))
@@ -457,7 +497,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             appSIPrio++;
                         }
                         
-                        //areas
+                        // areas
 
                         if (this->parsedConfig.at(icao).contains("areas"))
                         {
@@ -507,7 +547,21 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             }
                         }
 
+                        // intersections
+
+                        if (this->parsedConfig.at(icao).contains("intersections"))
+                        {
+                            for (auto& intsecList : this->parsedConfig.at(icao).at("intersections").items())
+                            {
+                                std::string rwy = intsecList.key();
+                                std::vector<std::string> intsec = vsid::utils::split(intsecList.value(), ',');
+
+                                aptInfo.intsec.insert({ rwy, intsec });
+                            }
+                        }
+
                         // airport settings
+
                         if (savedSettings.contains(icao))
                         {
                             aptInfo.settings = savedSettings[icao];
