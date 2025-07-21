@@ -414,6 +414,7 @@ namespace vsid
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] no more messages in queue. Removing... ", vsid::MessageHandler::DebugArea::Dev);
 					it = this->syncQueue.erase(it);
+					this->spReleased.erase(callsign);
 					continue;
 				}
 
@@ -441,7 +442,8 @@ namespace vsid
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] updating sync release", vsid::MessageHandler::DebugArea::Dev);
 
-			this->spReleased[callsign] = true;
+			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
+			else messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to update sync release. Not held in release list.", vsid::MessageHandler::DebugArea::Dev);
 		}
 		// dev
 	};

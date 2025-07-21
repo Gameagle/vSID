@@ -1562,7 +1562,7 @@ void vsid::VSIDPlugin::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 					std::string scratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
 
-					this->addSyncQueue(callsign, scratch);
+					this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, scratch));
 
 					stop = true;
 					break;
@@ -1579,7 +1579,7 @@ void vsid::VSIDPlugin::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 				std::string scratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
 
-				this->addSyncQueue(callsign, scratch);
+				this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, scratch));
 
 				break;
 			}
@@ -1595,8 +1595,8 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 	if (this->processed.contains(callsign))
 	{
-		this->addSyncQueue(callsign, std::string(".vsid_state_") + ((FlightPlan.GetClearenceFlag()) ? "true" : "false"));
-		if (this->processed[callsign].gndState != "") this->addSyncQueue(callsign, this->processed[callsign].gndState);
+		this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, std::string(".vsid_state_") + ((FlightPlan.GetClearenceFlag()) ? "true" : "false")));
+		if (this->processed[callsign].gndState != "") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, this->processed[callsign].gndState));
 	}
 }
 
@@ -2240,7 +2240,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				(atcSid == "" || atcSid == adep))
 				this->processFlightplan(fpln, false, atcRwy);
 
-			if (std::string(fpln.GetGroundState()) == "") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, "STUP")); // #refactor - consider STBY state and use own stored info // #dev - sync
+			if (std::string(fpln.GetGroundState()) == "") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, "STUP"));
 		}
 
 		if (FunctionId == TAG_FUNC_VSID_INTS_SET)
@@ -2269,10 +2269,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			else
 			{
 				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_SET, "");
-				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".vsid_int_none_false");
+				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, ".vsid_int_none_false"));
 				else if (std::string(sItemString) == "NO RWY") return;
 				else if (std::string(sItemString) == "NO INTS") return;
-				else this->addSyncQueue(callsign, ".vsid_int_" + std::string(sItemString).substr(0, 3) + "_true");
+				else this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, ".vsid_int_" + std::string(sItemString).substr(0, 3) + "_true"));
 			}
 		}
 
@@ -2302,10 +2302,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			else
 			{
 				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_ABLE, "");
-				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".VSID_INT_NONE_false");
+				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, ".VSID_INT_NONE_false"));
 				else if (std::string(sItemString) == "NO RWY") return;
 				else if (std::string(sItemString) == "NO INTS") return;
-				else this->addSyncQueue(callsign, ".VSID_INT_" + std::string(sItemString).substr(0, 3) + "_FALSE");
+				else this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(fpln, ".VSID_INT_" + std::string(sItemString).substr(0, 3) + "_FALSE"));
 			}
 		}
 
@@ -3630,7 +3630,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			else messageHandler->writeMessage("INFO", vsid::utils::toupper(command[2]) + " not in active airports");
 			return true;
 		}
-		else if (vsid::utils::tolower(command[1]) == "sync") //#refactor - move active sync parts into syncStates function
+		else if (vsid::utils::tolower(command[1]) == "sync")
 		{
 			messageHandler->writeMessage("DEBUG", "Syncinc all requests.", vsid::MessageHandler::DebugArea::Req);
 
@@ -3664,7 +3664,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 					std::string scratch = ".VSID_CTL_" + std::string((fpln.ctl) ? "TRUE" : "FALSE");
 
-					this->addSyncQueue(callsign, scratch);
+					this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, scratch));
 				}
 
 				// sync intersections
@@ -3677,7 +3677,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 					{
 						std::string scratch = ".VSID_INT_" + intersection + "_" + ((fpln.intsec.second) ? "TRUE" : "FALSE");
 
-						this->addSyncQueue(callsign, scratch);
+						this->addSyncQueue(callsign, vsid::fplnhelper::addScratchPad(FlightPlan, scratch));
 					}
 				}
 			}
@@ -4104,43 +4104,42 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				this->updateSPSyncRelease(callsign);
 			}
 
-			// GRP does not alway delete states so we delete if present
+			// GRP does not alway delete states so we delete if present #monitor - removed GRP state removal
+
 			if (scratchpad.find("NOSTATE") != std::string::npos)
 			{
-				if (this->spReleased.contains(callsign))
-				{
-					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "NOSTATE")); // #dev - sync
-					this->updateSPSyncRelease(callsign);
-				}
+				//if (this->spReleased.contains(callsign))
+				//{
+				//	this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "NOSTATE")); // #dev - sync
+				//	this->updateSPSyncRelease(callsign);
+				//}
 				this->processed[callsign].gndState = "NOSTATE";
 			}
 			if (scratchpad.find("ONFREQ") != std::string::npos)
 			{
-				if (this->spReleased.contains(callsign))
-				{
-					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "ONFREQ")); // #dev - sync
-					this->updateSPSyncRelease(callsign);
-				}
+				//if (this->spReleased.contains(callsign))
+				//{
+				//	this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "ONFREQ")); // #dev - sync
+				//	this->updateSPSyncRelease(callsign);
+				//}
 				this->processed[callsign].gndState = "ONFREQ";
 			}
 			if (scratchpad.find("DE-ICE") != std::string::npos)
 			{
-				if (this->spReleased.contains(callsign))
-				{
-					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "DE-ICE")); // #dev - sync
-					this->updateSPSyncRelease(callsign);
-				}
+				//if (this->spReleased.contains(callsign))
+				//{
+				//	this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "DE-ICE")); // #dev - sync
+				//	this->updateSPSyncRelease(callsign);
+				//}
 				this->processed[callsign].gndState = "DE-ICE";
 			}
 			if (scratchpad.find("LINEUP") != std::string::npos)
 			{
-				this->processed[callsign].intsec = { "", false }; // reset intersection clearance
-
-				if (this->spReleased.contains(callsign))
-				{
-					this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "LINEUP")); // #dev - sync
-					this->updateSPSyncRelease(callsign);
-				}
+				//if (this->spReleased.contains(callsign))
+				//{
+				//	this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "LINEUP")); // #dev - sync
+				//	this->updateSPSyncRelease(callsign);
+				//}
 				this->processed[callsign].gndState = "LINEUP";
 			}
 
@@ -4352,9 +4351,11 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 	{
 		// get ES gnd states
 
-		if (this->processed.contains(callsign))
+		if (this->processed.contains(callsign) && DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE)
 		{
-			if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) this->processed[callsign].gndState = FlightPlan.GetGroundState(); // #refactor - move second if up
+			this->processed[callsign].gndState = FlightPlan.GetGroundState();
+
+			if (this->processed[callsign].gndState == "DEPA") this->processed[callsign].intsec = { "", false };
 		}
 
 		// remove requests if present - might also trigger without a present scratchpad
@@ -4429,8 +4430,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				}
 				else if (state == "DEPA")
 				{
-					this->processed[callsign].intsec = { "", false }; // reset intersection clearance
-
 					for (auto& fp : this->activeAirports[adep].requests["departure"])
 					{
 						if (fp.first != callsign) continue;
@@ -4513,6 +4512,10 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 			}
 			else messageHandler->removeFplnError(callsign, ERROR_FPLN_AMEND);
 		}
+
+		// remove from intersections that might still be present
+
+		this->processed[callsign].intsec = { "", false };
 	}
 
 	// remove arriving tfc
@@ -4814,9 +4817,42 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 					if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
 					{
-						sid.number = name[name.length() - 2];
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-							") mastered", vsid::MessageHandler::DebugArea::Conf);
+						if (sid.number == "")
+						{
+							sid.number = name[name.length() - 2];
+							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+								") mastered", vsid::MessageHandler::DebugArea::Conf);
+						}
+						else // health check for possible errors in .sct / .ese config
+						{
+							int currNumber = std::stoi(sid.number);
+							int newNumber = name[name.length() - 2] - '0';
+							std::string rwyName = "";
+
+							if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
+							else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);
+
+							if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
+							{
+								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+									" - (Runway: " + rwyName + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
+							}
+							else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
+							{
+								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+									" - (Runway: " + rwyName + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
+
+								sid.number = name[name.length() - 2];
+							}
+							else if (currNumber != newNumber)
+							{
+								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+									" - (Runway: " + rwyName + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+							}
+						}
 					}
 				}
 				else

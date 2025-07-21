@@ -1,13 +1,16 @@
 [Changelog v0.13.0]
 **NEW**
 *	FPLN - the sync command now queues the messages which are sent in sequence one by one after the previous message has been received from the servers (also applies to single scratch pad commands) !! Experimental !!
+	* [pre-release only - will be included in stable] - fixed removal of scratch pad entries when using .sync (or other functions where scratch pad preserve was missing)
 *	FPLN - sender is now "remover" for any scratch pad commands. So not each client sends its own removal message but the one client that issued the messages also removes it !! Experimental !!
 *	FPLN - added function to call the Topsky Squawk assignement directly (skips the Topsky menu)
 *	FPLN - new intersections menu, configurable per airport with two options - a) set the intersection as cleared, b) set the intersection as able. A custom intersection can be entered. Intersections are cut off after 3 characters
 *	FPLN - intersections are shown below the target similar to request and pushback indicators
+*	CONF - add health check for SID number mismatches in .sct or .ese files
 
 **CHANGED**
 *	FPLN - Topsky is now the preferred method to issue new squawks while CCAMS is still available
+*	FPLN - removed own GRP ground state cleanup
 
 [Changelog v0.12.2]
 
