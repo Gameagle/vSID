@@ -5,12 +5,22 @@
 *	FPLN - sender is now "remover" for any scratch pad commands. So not each client sends its own removal message but the one client that issued the messages also removes it !! Experimental !!
 *	FPLN - added function to call the Topsky Squawk assignement directly (skips the Topsky menu)
 *	FPLN - new intersections menu, configurable per airport with two options - a) set the intersection as cleared, b) set the intersection as able. A custom intersection can be entered. Intersections are cut off after 3 characters
+	Example in airport config (intersections is a new section like sids or areas):
+	```json
+	"intersections": {
+				"25C": "L1, L3, L6"
+			}
+	```
 *	FPLN - intersections are shown below the target similar to request and pushback indicators
 *	CONF - add health check for SID number mismatches in .sct or .ese files
 
 **CHANGED**
 *	FPLN - Topsky is now the preferred method to issue new squawks while CCAMS is still available
 *	FPLN - removed own GRP ground state cleanup
+*	FPLN - if a flight plan contains a valid SID/RWY entry (default SID) but the initial climb is set to the requested level another click on "auto" SID sets the IC again (for cases a flight plan reconnects after reconnection time)
+
+**FIXED**
+*	FPLN - initial climb wasn't always correctly reset when a flight plan reconnected within reconnection time with new info storage
 
 [Changelog v0.12.2]
 
