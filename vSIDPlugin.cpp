@@ -1149,6 +1149,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 	vsid::Sid sidCustomSuggestion = {};
 	std::string setRwy = "";
 	vsid::Fpln fpln = {};
+	bool resetIC = false;
 
 	if (!this->activeAirports.contains(icao))
 	{
@@ -1169,6 +1170,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		vsid::fplnhelper::restoreFplnInfo(callsign, this->processed, this->savedFplnInfo))
 	{
 		fpln = this->processed[callsign];
+		resetIC = true;
 
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] re-syncing req and states for reconnected flight plan.",
 			vsid::MessageHandler::DebugArea::Fpln);
@@ -1442,7 +1444,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 			this->processed[callsign].atcRWY = true;
 		}
 
-		if (sidSuggestion.base != "" && sidCustomSuggestion.base == "" && sidSuggestion.initialClimb)
+		if (sidSuggestion.base != "" && sidCustomSuggestion.base == "" && sidSuggestion.initialClimb) // #evaluate - custom kept if same as std - might remove one branch
 		{
 			int initialClimb = (sidSuggestion.initialClimb > fplnData.GetFinalAltitude()) ? fplnData.GetFinalAltitude() : sidSuggestion.initialClimb;
 			if (!cad.SetClearedAltitude(initialClimb))
@@ -1480,6 +1482,10 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 			}
 		}
 	}
+
+	// reset IC if it doesn't match
+
+	if (resetIC && this->processed.contains(callsign)) vsid::fplnhelper::restoreIC(this->processed[callsign], FlightPlan, ControllerMyself());
 }
 
 void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std::string& icao)
@@ -1834,33 +1840,30 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		{
 			if (!this->activeAirports.contains(adep)) return;
 
-			if (this->processed.contains(callsign)) // #checkforremoval - new check is above FunctionId block
+			std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
+			std::pair<std::string, std::string> atcBlock = vsid::fplnhelper::getAtcBlock(fpln);
+
+			if (std::string(fplnData.GetPlanType()) == "I")
 			{
-				std::vector<std::string> filedRoute = vsid::utils::split(fplnData.GetRoute(), ' ');
-				std::pair<std::string, std::string> atcBlock = vsid::fplnhelper::getAtcBlock(fpln);
-
-				if (std::string(fplnData.GetPlanType()) == "I")
+				// if a non standard SID is detected reset the SID to the standard SID
+				if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()))
 				{
-					// if a non standard SID is detected reset the SID to the standard SID
-					if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()))
+					if (std::find(atcBlock.first.begin(), atcBlock.first.end(), 'x') != atcBlock.first.end() ||
+						std::find(atcBlock.first.begin(), atcBlock.first.end(), 'X') != atcBlock.first.end())
 					{
-						if (std::find(atcBlock.first.begin(), atcBlock.first.end(), 'x') != atcBlock.first.end() ||
-							std::find(atcBlock.first.begin(), atcBlock.first.end(), 'X') != atcBlock.first.end())
-						{
-							atcBlock.first = vsid::fplnhelper::splitTransition(atcBlock.first);
-						}
+						atcBlock.first = vsid::fplnhelper::splitTransition(atcBlock.first);
+					}
 
-						if (atcBlock.first != this->processed[callsign].sid.name())
-							this->processFlightplan(fpln, false);
-					}
-					// if only a rwy is detected set the SID based on that RWY
-					else if (this->processed[callsign].atcRWY && atcBlock.second != "")
-					{
-						this->processFlightplan(fpln, false, atcBlock.second);
-					}
-					// if nothing is detected set the default SID
-					else this->processFlightplan(fpln, false);
+					if (atcBlock.first != this->processed[callsign].sid.name()) this->processFlightplan(fpln, false);
+					else vsid::fplnhelper::restoreIC(this->processed[callsign], fpln, ControllerMyself());
 				}
+				// if only a rwy is detected set the SID based on that RWY
+				else if (this->processed[callsign].atcRWY && atcBlock.second != "")
+				{
+					this->processFlightplan(fpln, false, atcBlock.second);
+				}
+				// if nothing is detected set the default SID
+				else this->processFlightplan(fpln, false);
 			}
 		}
 
@@ -2348,67 +2351,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		{
 			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 			auto [blockSid, blockRwy] = vsid::fplnhelper::getAtcBlock(FlightPlan);
-
-			if (this->removeProcessed.size() > 0 &&
-				this->removeProcessed.contains(callsign) &&
-				this->removeProcessed[callsign].second)
-			{
-				this->removeProcessed.erase(callsign);
-
-				if (this->processed.contains(callsign))
-				{
-					if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
-						std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
-					{
-						blockSid = vsid::fplnhelper::splitTransition(blockSid);
-					}
-
-					if (blockSid == "")
-					{
-						vsid::fplnhelper::saveFplnInfo(callsign, this->processed[callsign], this->savedFplnInfo); // #monitor - save fpln info
-						this->processed.erase(callsign);
-						return;
-					}
-
-					EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
-					if (cad.GetClearedAltitude() == cad.GetFinalAltitude() &&
-						blockSid != "" &&
-						ControllerMyself().IsController() &&
-						(blockSid == this->processed[callsign].sid.name() ||
-							blockSid == this->processed[callsign].customSid.name())
-						)
-					{
-						if (!this->processed[callsign].customSid.empty())
-						{
-							int initialClimb = (this->processed[callsign].customSid.initialClimb > fplnData.GetFinalAltitude()) ?
-								fplnData.GetFinalAltitude() : this->processed[callsign].customSid.initialClimb;
-							if (!cad.SetClearedAltitude(initialClimb))
-							{
-								if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
-								{
-									messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
-									messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
-								}
-							}
-							else messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
-						}
-						else if (!this->processed[callsign].sid.empty())
-						{
-							int initialClimb = (this->processed[callsign].sid.initialClimb > fplnData.GetFinalAltitude()) ?
-								fplnData.GetFinalAltitude() : this->processed[callsign].sid.initialClimb;
-							if (!cad.SetClearedAltitude(initialClimb))
-							{
-								if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
-								{
-									messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
-									messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
-								}
-							}
-							else messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
-						}
-					}
-				}
-			}
 
 			if (this->processed.contains(callsign))
 			{
@@ -4481,7 +4423,7 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 		if (alt <= std::abs(this->processed[callsign].ldgAlt - 200)) this->processed[callsign].ldgAlt = alt;
 		else if (alt >= this->processed[callsign].ldgAlt + 200)
 		{
-			this->processed[callsign].mapp = true;
+			this->processed[callsign].mapp = true; // #continue - send mapp to network if not already set
 			this->processed[callsign].ctl = false;
 		}
 	}
