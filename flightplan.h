@@ -241,5 +241,7 @@ namespace vsid
 		//************************************
 		bool restoreFplnInfo(const std::string& callsign, std::map<std::string, vsid::Fpln>& processed,
 			std::map<std::string, vsid::Fpln>& savedFplnInfo);
+
+		bool restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CController atcMyself);
 	}
 }

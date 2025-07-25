@@ -380,3 +380,67 @@ bool vsid::fplnhelper::restoreFplnInfo(const std::string& callsign, std::map<std
 		return false;
 	}
 }
+
+bool vsid::fplnhelper::restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CController atcMyself)
+{
+	if (!FlightPlan.IsValid()) return false;
+
+	auto [blockSid, blockRwy] = vsid::fplnhelper::getAtcBlock(FlightPlan);
+	std::string callsign = FlightPlan.GetCallsign();
+	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
+	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
+
+	if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+		std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
+	{
+		blockSid = vsid::fplnhelper::splitTransition(blockSid);
+	}
+
+	if (cad.GetClearedAltitude() == 0 &&
+		blockSid != "" &&
+		atcMyself.IsController() &&
+		(blockSid == fplnInfo.sid.name() ||
+			blockSid == fplnInfo.customSid.name())
+		)
+	{
+		if (!fplnInfo.customSid.empty())
+		{
+			int initialClimb = (fplnInfo.customSid.initialClimb > fplnData.GetFinalAltitude()) ?
+				fplnData.GetFinalAltitude() : fplnInfo.customSid.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
+			{
+				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				}
+				return false;
+			}
+			else
+			{
+				messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				return true;
+			}
+		}
+		else if (!fplnInfo.sid.empty())
+		{
+			int initialClimb = (fplnInfo.sid.initialClimb > fplnData.GetFinalAltitude()) ?
+				fplnData.GetFinalAltitude() : fplnInfo.sid.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
+			{
+				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				}
+				return false;
+			}
+			else
+			{
+				messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				return true;
+			}
+		}
+	}
+	return false;
+}
