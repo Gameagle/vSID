@@ -11,6 +11,7 @@
 				"25C": "L1, L3, L6"
 			}
 	```
+	* for pre-configured intersections the scratch pad can be used to set them ("+": set, "-": able; e.g. +L6). The intersection needs to be exclusive, so no other entries can be present in the scratch pad
 *	FPLN - intersections are shown below the target similar to request and pushback indicators
 *	CONF - add health check for SID number mismatches in .sct or .ese files
 
