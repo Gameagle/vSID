@@ -3996,7 +3996,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 	std::string callsign = FlightPlan.GetCallsign();
 	std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
 	std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
-	std::string fplnRwy = FlightPlan.GetFlightPlanData().GetDepartureRwy();
+	std::string fplnRwy = vsid::fplnhelper::getAtcBlock(FlightPlan).second;
 
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
 	{
@@ -4028,6 +4028,32 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 		if (this->processed.contains(callsign) && scratchpad.size() > 0)
 		{
+			if (scratchpad.size() <= 4 && this->activeAirports.contains(adep))
+			{
+				if (size_t pos = scratchpad.find("+"); pos != std::string::npos)
+				{
+					std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+
+					if (this->activeAirports[adep].intsec.contains(fplnRwy) && vsid::utils::contains(this->activeAirports[adep].intsec[fplnRwy], intsec))
+					{
+						this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "+" + intsec));
+						this->processed[callsign].intsec = { intsec, true };
+					}
+				}
+				else if (size_t pos = scratchpad.find("-"); pos != std::string::npos)
+				{
+					std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+
+					if (this->activeAirports[adep].intsec.contains(fplnRwy) && vsid::utils::contains(this->activeAirports[adep].intsec[fplnRwy], intsec))
+					{
+						this->addSyncQueue(callsign, vsid::fplnhelper::removeScratchPad(FlightPlan, "-" + intsec));
+						this->processed[callsign].intsec = { intsec, false };
+					}
+				}
+			}
+
+			// check for multiple auto-mode users
+
 			if (scratchpad.find(".VSID_AUTO_") != std::string::npos)
 			{
 				std::string toFind = ".VSID_AUTO_";
@@ -4085,7 +4111,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				this->processed[callsign].gndState = "LINEUP";
 			}
 
-			/* the following states are internally saved by ES gnd state changes, we just remove here */
+			// the following states are internally saved by ES gnd state changes, we just remove here
 
 			if (scratchpad.find(".VSID_REQ_") == std::string::npos) // #evaluate for possible removal
 			{
@@ -4122,6 +4148,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					}
 				} // #dev - mutex sync
 			}
+
+			// request entries
 
 			if (scratchpad.find(".VSID_REQ_") != std::string::npos)
 			{
@@ -4240,6 +4268,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				}
 			}
 
+			// clearance flag
+
 			if (scratchpad.find(".VSID_STATE_") != std::string::npos)
 			{
 				std::string toFind = ".VSID_STATE_";
@@ -4256,6 +4286,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					this->updateSPSyncRelease(callsign);
 				}
 			}
+
+			// intersections
 
 			if (scratchpad.find(".VSID_INT_") != std::string::npos)
 			{
