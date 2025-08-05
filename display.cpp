@@ -73,7 +73,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				messageHandler->addGenError(ERROR_CONF_DISPLAY);
 			}
 		}
-		CFont font;
+
+		// #dev - old font order
+		/*CFont font;
 		LOGFONT lgfont;
 		memset(&lgfont, 0, sizeof(LOGFONT));
 
@@ -83,7 +85,24 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		lgfont.lfHeight = 15;
 		lgfont.lfWeight = FW_BOLD;
 
+		font.CreateFontIndirectA(&lgfont);*/
+		// end dev
+
+		LOGFONT lgfont;
+		memset(&lgfont, 0, sizeof(LOGFONT));
+		strcpy_s(lgfont.lfFaceName, LF_FACESIZE, _TEXT("EuroScope"));
+		lgfont.lfHeight = 15;
+		lgfont.lfWeight = FW_BOLD;
+		lgfont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+
+		CFont font;
 		font.CreateFontIndirectA(&lgfont);
+		CFont* oldFont = dc.SelectObject(&font);
+
+		// stroke pen - initializiation
+		dc.SetBkMode(TRANSPARENT);
+		CPen pen(PS_SOLID, 1, RGB(255, 255, 255));
+		CPen* oldPen = dc.SelectObject(&pen);
 
 		for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
 		{
@@ -208,30 +227,39 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 					POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 
 					CRect area;
-					
-					// #dev - constant factor for zooming
-					const double factor = 472;
-
-					double offsetPx = factor / this->getZoomLevel() / 2;
-					// end dev
 
 					// position below target
-					/*area.bottom = targetPos.y + 20;*/
-					area.bottom = targetPos.y + 20 * offsetPx;
+					area.bottom = targetPos.y + this->getLabelOffset();
+					/*messageHandler->writeMessage("DEBUG", "[" + callsign + "] bot-pos: " + std::to_string(area.bottom) +
+												" with offset: " + std::to_string(this->getLabelOffset()), vsid::MessageHandler::DebugArea::Dev);*/
 					area.top = area.bottom - 15;
 					area.left = targetPos.x - 5;
 					area.right = area.left + 30; // original: 10
 
-					dc.SelectObject(&font);
-
-					if(fplnInfo.intsec.second) dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecSetIndicator"));
+					if (fplnInfo.intsec.second) dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecSetIndicator"));
 					else dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecAbleIndicator"));
 
-					dc.DrawText(fplnInfo.intsec.first.c_str(), &area, DT_BOTTOM);
+					
+
+					// stroke pen draw
+					dc.SelectObject(&pen);
+
+					if (dc.BeginPath()) // #continue - maybe check for clipping options
+					{
+						dc.TextOutA(area.left, area.top, fplnInfo.intsec.first.c_str());
+						dc.EndPath();
+						dc.StrokePath();
+					}
+					else messageHandler->writeMessage("DEBUG", "Failed to draw border", vsid::MessageHandler::DebugArea::Dev);
+
+					// painted text
+					dc.SelectObject(&font);
+					dc.TextOutA(area.left, area.top, fplnInfo.intsec.first.c_str());
 				}
 			}
 		}
 		dc.SelectObject(oldFont);
+		dc.SelectObject(oldPen);
 	}
 
 	for (auto &[title, mMenu] : this->menues) // #continue - optimization: .lock() is called above, integrate loop there
@@ -553,6 +581,12 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 	if (std::string(sCommandLine) == ".vsid screen nm")
 	{
 		messageHandler->writeMessage("INFO", "vSID Screen NM: " + std::to_string(this->getScreenNM()));
+		return true;
+	}
+
+	if (std::string(sCommandLine) == ".vsid screen diagonal")
+	{
+		messageHandler->writeMessage("INFO", "vSID Screen Diagonal: " + std::to_string(this->getScreenDiagonalPx()));
 		return true;
 	}
 	return false;
