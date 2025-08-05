@@ -173,6 +173,11 @@ namespace vsid
 			return coordTL.DistanceTo(coordBR);
 		}
 
+		inline double getScreenDiagonalPx()
+		{
+			return std::hypot(this->GetRadarArea().right, this->GetRadarArea().bottom);
+		}
+
 		inline int getZoomLevel()
 		{
 			// #dev - get display distance
@@ -181,6 +186,28 @@ namespace vsid
 			return (std::round(getScreenNM() * 100.0) / 100.0) * 100.0;
 
 			// end dev - get display distance
+		}
+
+		inline double getLabelOffset()
+		{
+			// #dev - constant factor for zooming
+			const double refOffset = 20;
+			const double refNM = 417;
+			const double refDiagPx = 2144.40;
+
+			// double refPxPerNm = refNM / this->getScreenDiagonalPx();
+			double refPxPerNm = refDiagPx / refNM;
+
+			double gapNM = refOffset / refPxPerNm;
+
+			double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
+			// double offsetPx = factor / this->getZoomLevel() / 2;
+
+			// double offset = refOffset * (refPxPerNm / pxPerNm); - without log scale
+			//double beta = 1.0;
+			/*double offset = refOffset * std::log2(1.0 + beta * (refPxPerNm / pxPerNm));*/
+			return gapNM * pxPerNm;
+			// end dev
 		}
 	};
 }
