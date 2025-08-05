@@ -422,7 +422,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
     std::vector<std::filesystem::path> files;
     std::set<std::string> aptConfig;
 
-   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further #evaluation - can cause slow loading
+   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further #evaluate - can cause slow loading
     {
         if (!std::filesystem::is_directory(entry) && entry.extension() == ".json")
         {
