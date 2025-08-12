@@ -99,11 +99,6 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		font.CreateFontIndirectA(&lgfont);
 		CFont* oldFont = dc.SelectObject(&font);
 
-		// stroke pen - initializiation
-		dc.SetBkMode(TRANSPARENT);
-		CPen pen(PS_SOLID, 1, RGB(255, 255, 255));
-		CPen* oldPen = dc.SelectObject(&pen);
-
 		for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
 		{
 			EuroScopePlugIn::CRadarTarget target = sharedPlugin->RadarTargetSelect(callsign.c_str());
@@ -220,7 +215,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			// intersection indicator
 
-			if (enableIntIndicator && showIntOn.find(this->name) != std::string::npos)
+			if (enableIntIndicator && showIntOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				if (fplnInfo.intsec.first != "")
 				{
@@ -236,30 +232,17 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 					area.left = targetPos.x - 5;
 					area.right = area.left + 30; // original: 10
 
+					// painted text
+					dc.SelectObject(&font);
+
 					if (fplnInfo.intsec.second) dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecSetIndicator"));
 					else dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecAbleIndicator"));
 
-					
-
-					// stroke pen draw
-					dc.SelectObject(&pen);
-
-					if (dc.BeginPath()) // #continue - maybe check for clipping options
-					{
-						dc.TextOutA(area.left, area.top, fplnInfo.intsec.first.c_str());
-						dc.EndPath();
-						dc.StrokePath();
-					}
-					else messageHandler->writeMessage("DEBUG", "Failed to draw border", vsid::MessageHandler::DebugArea::Dev);
-
-					// painted text
-					dc.SelectObject(&font);
-					dc.TextOutA(area.left, area.top, fplnInfo.intsec.first.c_str());
+					dc.DrawText(fplnInfo.intsec.first.c_str(), &area, DT_BOTTOM);
 				}
 			}
 		}
 		dc.SelectObject(oldFont);
-		dc.SelectObject(oldPen);
 	}
 
 	for (auto &[title, mMenu] : this->menues) // #continue - optimization: .lock() is called above, integrate loop there
@@ -766,4 +749,25 @@ void vsid::Display::closeMenu(const std::string &title)
 	if (this->menues.contains(title)) this->menues[title].toggleRender();
 	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title +
 		" because it is not in the menu list. Code: " + ERROR_DSP_RMMENU);
+}
+
+double vsid::Display::getLabelOffset()
+{
+	if (std::shared_ptr shared_plugin = this->plugin.lock())
+	{
+		// double refPxPerNm = refNM / this->getScreenDiagonalPx();
+		double refPxPerNm = shared_plugin->getConfigParser().getIndicatorDefaultValues().refDiagPx / shared_plugin->getConfigParser().getIndicatorDefaultValues().refZoom;
+
+		double gapNM = shared_plugin->getConfigParser().getIndicatorDefaultValues().refOffset / refPxPerNm;
+
+		double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
+		// double offsetPx = factor / this->getZoomLevel() / 2;
+
+		// double offset = refOffset * (refPxPerNm / pxPerNm); - without log scale
+		//double beta = 1.0;
+		/*double offset = refOffset * std::log2(1.0 + beta * (refPxPerNm / pxPerNm));*/
+		return gapNM * pxPerNm;
+		// end dev
+	}
+	return 0; // fallback state
 }
