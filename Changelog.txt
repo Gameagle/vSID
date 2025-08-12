@@ -14,6 +14,8 @@
 	* for pre-configured intersections the scratch pad can be used to set them ("+": set, "-": able; e.g. +L6). The intersection needs to be exclusive, so no other entries can be present in the scratch pad
 *	FPLN - intersections are shown below the target similar to request and pushback indicators
 *	CONF - add health check for SID number mismatches in .sct or .ese files
+*	CONF - default reference values for indicators offset calculation added (currently intersection indicator only)
+*	CONF - zoom level below which indicators are shown added (currently intersection indicator only)
 
 **CHANGED**
 *	FPLN - Topsky is now the preferred method to issue new squawks while CCAMS is still available

@@ -41,6 +41,14 @@ namespace vsid
 		int altCaution = 0;
 	};
 
+	struct Indicator
+	{
+		int refOffset = 20;
+		int refZoom = 417;
+		double refDiagPx = 2144.40;
+		int showBelowZoom = 600;
+	};
+
 	struct tmpSidSettings
 	{
 		std::string base = "";
@@ -142,6 +150,16 @@ namespace vsid
 		//************************************
 		inline Clrf& getClrfMinimums() { return this->clrf; };
 
+
+		//************************************
+		// Method:    getIndicatorDefaultValues
+		// FullName:  vsid::ConfigParser::getIndicatorDefaultValues
+		// Access:    public 
+		// Returns:   vsid::Indicator&
+		// Qualifier:
+		//************************************
+		inline Indicator& getIndicatorDefaultValues() { return this->indicator; };
+
 		int getReqTime(std::string time);
 		json grpConfig;
 		std::set<std::string> rnavList;
@@ -152,6 +170,7 @@ namespace vsid
 		std::map<std::string, COLORREF> colors;
 		std::map<std::string, int> reqTimes;
 		Clrf clrf;
+		Indicator indicator;
 		json parsedConfig;
 		json vSidConfig;
 
