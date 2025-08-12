@@ -162,6 +162,15 @@ namespace vsid
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
 		std::string name;
 
+
+		//************************************
+		// Description: Gets the current diagonal distance of the ES instance in NM
+		// Method:    getScreenNM
+		// FullName:  vsid::Display::getScreenNM
+		// Access:    private 
+		// Returns:   double
+		// Qualifier:
+		//************************************
 		inline double getScreenNM()
 		{
 			POINT topLeft = { this->GetRadarArea().top, this->GetRadarArea().left };
@@ -173,11 +182,27 @@ namespace vsid
 			return coordTL.DistanceTo(coordBR);
 		}
 
+		//************************************
+		// Description: Gets the current diagonal distance of the ES instance in pixels
+		// Method:    getScreenDiagonalPx
+		// FullName:  vsid::Display::getScreenDiagonalPx
+		// Access:    private 
+		// Returns:   double
+		// Qualifier:
+		//************************************
 		inline double getScreenDiagonalPx()
 		{
 			return std::hypot(this->GetRadarArea().right, this->GetRadarArea().bottom);
 		}
 
+		//************************************
+		// Description: Gets the current "zoom level" of the ES instance rounded to a base of hundreds
+		// Method:    getZoomLevel
+		// FullName:  vsid::Display::getZoomLevel
+		// Access:    private 
+		// Returns:   int
+		// Qualifier:
+		//************************************
 		inline int getZoomLevel()
 		{
 			// #dev - get display distance
@@ -188,26 +213,15 @@ namespace vsid
 			// end dev - get display distance
 		}
 
-		inline double getLabelOffset()
-		{
-			// #dev - constant factor for zooming
-			const double refOffset = 20;
-			const double refNM = 417;
-			const double refDiagPx = 2144.40;
 
-			// double refPxPerNm = refNM / this->getScreenDiagonalPx();
-			double refPxPerNm = refDiagPx / refNM;
-
-			double gapNM = refOffset / refPxPerNm;
-
-			double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
-			// double offsetPx = factor / this->getZoomLevel() / 2;
-
-			// double offset = refOffset * (refPxPerNm / pxPerNm); - without log scale
-			//double beta = 1.0;
-			/*double offset = refOffset * std::log2(1.0 + beta * (refPxPerNm / pxPerNm));*/
-			return gapNM * pxPerNm;
-			// end dev
-		}
+		//************************************
+		// Description: Calculates the indicator label offset based on current and reference screen values
+		// Method:    getLabelOffset
+		// FullName:  vsid::Display::getLabelOffset
+		// Access:    private 
+		// Returns:   double
+		// Qualifier:
+		//************************************
+		double getLabelOffset();
 	};
 }
