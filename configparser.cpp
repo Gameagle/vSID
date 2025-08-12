@@ -387,6 +387,20 @@ void vsid::ConfigParser::loadMainConfig()
     {
         messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
     }
+
+    // get indicator reference values
+
+    try
+    {
+        this->indicator.refDiagPx = this->vSidConfig.at("display").value("indicatorRefDiagPx", 2144.40);
+        this->indicator.refOffset = this->vSidConfig.at("display").value("indicatorRefOffset", 20);
+        this->indicator.refZoom = this->vSidConfig.at("display").value("indicatorRefZoom", 417);
+        this->indicator.showBelowZoom = this->vSidConfig.at("display").value("indicatorShowBelowZoom", 600);
+    }
+    catch (json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to get indicator default reference values: " + std::string(e.what()));
+    }
 }
 
 void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
