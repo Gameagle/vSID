@@ -1608,6 +1608,9 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
 {
+	// assume target is in vis range if radar target is invalid (= uncorrelated in S/C-Mode in ES settings)
+	if (!FlightPlan.GetCorrelatedRadarTarget().IsValid()) return false;
+
 	return ControllerMyself().GetPosition().DistanceTo(FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetPosition()) > ControllerMyself().GetRange();
 }
 /*
