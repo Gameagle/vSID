@@ -1605,9 +1605,19 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
 {
-	// assume target is in vis range if radar target is invalid (= uncorrelated in S/C-Mode in ES settings)
-	if (!FlightPlan.GetCorrelatedRadarTarget().IsValid()) return false;
+	if (!FlightPlan.IsValid()) return true; // if the flight plan is invalid it cannot be in vis range
 
+	std::string callsign = FlightPlan.GetCallsign();
+
+	// assume target is in vis range if RT is invalid (= uncorrelated in S/C-Mode in ES settings) and if callsign selected RT is also invalid
+	if (!FlightPlan.GetCorrelatedRadarTarget().IsValid())
+	{
+		if (!this->RadarTargetSelect(FlightPlan.GetCallsign()).IsValid()) return false;
+		else
+		{
+			return ControllerMyself().GetPosition().DistanceTo(this->RadarTargetSelect(FlightPlan.GetCallsign()).GetPosition().GetPosition()) > ControllerMyself().GetRange();
+		}
+	}
 	return ControllerMyself().GetPosition().DistanceTo(FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetPosition()) > ControllerMyself().GetRange();
 }
 
@@ -4267,7 +4277,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 							{
 								rwys[fplnRwy].insert({ callsign, reqTime });
 							}
-							else if (fplnRwy == "") messageHandler->writeMessage("WARNING", "[" + callsign + "] to be set in runway requests, but runway hasn't been set in the flight plan.");
+							else if (type == reqType && fplnRwy == "")
+								messageHandler->writeMessage("WARNING", "[" + callsign + "] to be set in runway requests, but runway hasn't been set in the flight plan.");
 						}
 					}
 					else messageHandler->writeMessage("DEBUG", "[" + callsign + "] apt " + adep + " is not an active airport in req setting", vsid::MessageHandler::DebugArea::Dev);
