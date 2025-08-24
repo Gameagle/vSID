@@ -1355,7 +1355,7 @@ void vsid::ConfigParser::loadRnavList()
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
-// #dev
+// #dev - load Ese
 void vsid::ConfigParser::loadEse()
 {
     if (this->vSidConfig.is_null())

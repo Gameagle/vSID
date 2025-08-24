@@ -242,7 +242,15 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		//************************************
 		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
-
+		//************************************
+		// Description: Checks if a flight plan (or radar target) is inside the vis range of the controller
+		// Method:    outOfVis
+		// FullName:  vsid::VSIDPlugin::outOfVis
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		//************************************
 		bool outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		
 		/**
