@@ -47,8 +47,8 @@ void vsid::ConfigParser::loadMainConfig()
         return;
     }
 
-	// #dev
-	this->loadEse();
+	// #dev - load ESE
+	// this->loadEse(); - DISABLED FOR CURRENT RELEASE
 	// end dev
 
     // set topsky preference
@@ -1200,7 +1200,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] lvp: " + std::to_string(newSid.lvp), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeFrom: " + std::to_string(newSid.timeFrom), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeTo: " + std::to_string(newSid.timeTo), vsid::MessageHandler::DebugArea::Conf);
-												// end dev
+												// end dev - debugging msgs for sid restriction levels
                                             }
                                         }
                                     }
@@ -1355,7 +1355,7 @@ void vsid::ConfigParser::loadRnavList()
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
 
-// #dev
+// #dev - load Ese
 void vsid::ConfigParser::loadEse()
 {
     if (this->vSidConfig.is_null())

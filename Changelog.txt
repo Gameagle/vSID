@@ -2,6 +2,7 @@
 **NEW**
 *	FPLN - the sync command now queues the messages which are sent in sequence one by one after the previous message has been received from the servers (also applies to single scratch pad commands) !! Experimental !!
 	* [pre-release only - will be included in stable] - fixed removal of scratch pad entries when using .sync (or other functions where scratch pad preserve was missing)
+*	FPLN - sync messages are no longer added or removed from present scratch pad entries, but the present scratch pad is restored after a sync message has been sent
 *	FPLN - sender is now "remover" for any scratch pad commands. So not each client sends its own removal message but the one client that issued the messages also removes it !! Experimental !!
 *	FPLN - added function to call the Topsky Squawk assignement directly (skips the Topsky menu)
 *	FPLN - new intersections menu, configurable per airport with two options - a) set the intersection as cleared, b) set the intersection as able. A custom intersection can be entered. Intersections are cut off after 3 characters
