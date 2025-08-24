@@ -218,41 +218,7 @@ bool vsid::fplnhelper::findScratchPad(const EuroScopePlugIn::CFlightPlan& Flight
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 
-	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch));
-}
-
-std::string vsid::fplnhelper::addScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
-{
-	if (!FlightPlan.IsValid()) return ".vsid_error";
-
-	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
-	std::string scratch = cad.GetScratchPadString();
-
-	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] old scratch: \"" + scratch + "\" - added: \"" + toAdd + "\"", vsid::MessageHandler::DebugArea::Dev);
-
-	scratch += toAdd;
-
-	return scratch;
-}
-
-std::string vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
-{
-	if (!FlightPlan.IsValid()) return ".vsid_error";
-
-	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
-	std::string callsign = FlightPlan.GetCallsign();
-	std::string scratch = cad.GetScratchPadString();
-	size_t pos = vsid::utils::toupper(scratch).find(vsid::utils::toupper(toRemove));
-
-	if (pos != std::string::npos)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] old scratch: \"" + scratch + "\" - removed: \"" + toRemove + "\"", vsid::MessageHandler::DebugArea::Dev);
-
-		vsid::utils::trim(scratch.erase(pos, toRemove.length()));
-
-		return scratch;
-	}
-	return ".vsid_error"; // default / fall back state
+	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch)); // #refactor - string_view
 }
 
 std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
