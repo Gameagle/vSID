@@ -333,111 +333,60 @@ namespace vsid
 		void UpdateActiveAirports();
 
 		//************************************
-		// Description: Tracks if multiple scratchpad entries for the same callsign are save to be sent
+		// Description: Tracks if multiple scratch pad entries for the same callsign are save to be sent
 		// Param 1: std::string - callsign
 		// Param 2: std::string - last entry processed
 		//************************************
 		std::unordered_map<std::string, bool> spReleased;
-		std::unordered_map<std::string, std::deque<std::string>> syncQueue;
+		//************************************
+		// Description: List of messages to be send for syncing infos for different callsigns
+		// Param 1: std::string - callsign
+		// Param 2: std::deque - messages list
+		// Param 2a: std::string - new scratch pad msg
+		// Param 2b: std::string - old scratch pad msg (to be restored)
+		//************************************
+		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
 		bool spWorkerActive = false;
 		std::atomic_bool queueInProcess = false;
 		
-		inline void processSPQueue()
+		//************************************
+		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
+		// for new msgs
+		// Method:    processSPQueue
+		// FullName:  vsid::VSIDPlugin::processSPQueue
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		void processSPQueue();
+		//************************************
+		// Description: Adds a new msg pair to the sync queue
+		// Method:    addSyncQueue
+		// FullName:  vsid::VSIDPlugin::addSyncQueue
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: const std::string & newScratch
+		// Parameter: const std::string & oldScratch
+		//************************************
+		inline void addSyncQueue(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch)
 		{
-			if (queueInProcess || this->syncQueue.empty()) return;
-			messageHandler->writeMessage("DEBUG", "Started sync processing queue...", vsid::MessageHandler::DebugArea::Dev);
-
-			queueInProcess = true;
-
-			for (std::unordered_map<std::string, std::deque<std::string>>::iterator it = this->syncQueue.begin(); it != this->syncQueue.end();)
-			{
-				std::string callsign = it->first;
-
-				EuroScopePlugIn::CFlightPlan FlightPlan = FlightPlanSelect(callsign.c_str());
-
-				if (!FlightPlan.IsValid())
-				{
-					this->spReleased.erase(callsign);
-					it = this->syncQueue.erase(it);
-					continue;
-				}
-
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] queue processing... total msg queue size: " + std::to_string(it->second.size()), vsid::MessageHandler::DebugArea::Dev);
-
-				if (this->spReleased.contains(callsign) && this->spReleased[callsign])
-				{
-					std::string scratch = std::move(it->second.front());
-					it->second.pop_front();
-
-					// #evaluate - removing double entries - + 8 lines below
-
-					size_t pos = 0;
-					for (auto jt = it->second.begin(); jt != it->second.end(); ++jt)
-					{
-						if (*jt == scratch) ++pos;
-					}
-
-					if (pos != 0 && pos <= it->second.size())
-					{
-						it->second.erase(it->second.begin(), it->second.begin() + pos);
-					}
-
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] #1 (Queue) sync released... " + ((this->spReleased[callsign]) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Dev);
-					
-					this->spReleased[callsign] = false;
-					spWorkerActive = true; // reset on received update
-
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) scratchpad sending scratch \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Dev);
-
-					FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratch).c_str());
-
-					if (vsid::utils::tolower(scratch).find(".vsid") == std::string::npos)
-					{
-						messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) setting released inside worker... TRUE", vsid::MessageHandler::DebugArea::Dev);
-						this->spReleased[callsign] = true;
-					}
-				}
-				else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove only debugging
-				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] #2 (Queue) sync released... " + ((this->spReleased[callsign]) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Dev);
-				}
-				else if (!spReleased.contains(callsign))
-				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] (Queue) release check not found...", vsid::MessageHandler::DebugArea::Dev);
-
-					this->spReleased.erase(callsign);
-					it = this->syncQueue.erase(it);
-					continue;
-				}
-
-				if (it->second.size() == 0)
-				{
-					messageHandler->writeMessage("DEBUG", "[" + callsign + "] no more messages in queue. Removing... ", vsid::MessageHandler::DebugArea::Dev);
-					it = this->syncQueue.erase(it);
-					this->spReleased.erase(callsign);
-					continue;
-				}
-
-				++it;
-			}
-			queueInProcess = false;
-			messageHandler->writeMessage("DEBUG", "Finished sync processing queue...", vsid::MessageHandler::DebugArea::Dev);
-		}
-
-		inline void addSyncQueue(const std::string& callsign, const std::string& scratch)
-		{
-			if (scratch.find(".vsid_error") != std::string::npos)
-			{
-				messageHandler->writeMessage("ERROR", "Failed to get updated scratchpad entry for sync queue.");
-				return;
-			}
-
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] adding scratch to queue \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] adding scratch to queue. New: \"" +
+				newScratch + "\" | Old: \"" + oldScratch + "\"", vsid::MessageHandler::DebugArea::Dev);
 
 			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			this->syncQueue[callsign].push_back(scratch);
-		}
-		
+			this->syncQueue[callsign].push_back({newScratch, oldScratch});
+		}		
+		//************************************
+		// Description: Updates a callsign to be released for new scratch pad messages to be sent
+		// Method:    updateSPSyncRelease
+		// FullName:  vsid::VSIDPlugin::updateSPSyncRelease
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: std::string callsign
+		//************************************
 		inline void updateSPSyncRelease(std::string callsign)
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] updating sync release", vsid::MessageHandler::DebugArea::Dev);
@@ -445,6 +394,5 @@ namespace vsid
 			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
 			else messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to update sync release. Not held in release list.", vsid::MessageHandler::DebugArea::Dev);
 		}
-		// dev
 	};
 }
