@@ -4125,6 +4125,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					if (this->activeAirports[adep].intsec.contains(fplnRwy) && vsid::utils::contains(this->activeAirports[adep].intsec[fplnRwy], intsec)) // #continue - check for spReleased
 					{
 						this->processed[callsign].intsec = { intsec, true };
+						FlightPlan.GetControllerAssignedData().SetScratchPadString("");
 					}
 				}
 				else if (size_t pos = scratchpad.find("-"); pos != std::string::npos)
@@ -4134,6 +4135,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					if (this->activeAirports[adep].intsec.contains(fplnRwy) && vsid::utils::contains(this->activeAirports[adep].intsec[fplnRwy], intsec))
 					{
 						this->processed[callsign].intsec = { intsec, false };
+						FlightPlan.GetControllerAssignedData().SetScratchPadString("");
 					}
 				}
 			}
