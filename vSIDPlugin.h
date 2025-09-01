@@ -49,10 +49,6 @@ namespace vsid
 
 	class Display; // forward declaration
 
-	/**
-	 * @brief Main class communicating with ES
-	 *
-	 */
 	class VSIDPlugin : public EuroScopePlugIn::CPlugIn
 	{
 	public:
@@ -68,40 +64,66 @@ namespace vsid
 			}
 			else return {};
 		}
-		
+
+		//************************************
+		// Description: Returns all stored active airports
+		// Method:    getActiveApts
+		// FullName:  vsid::VSIDPlugin::getActiveApts
+		// Access:    public 
+		// Returns:   const std::map<std::string, vsid::Airport>&
+		// Qualifier: const
+		//************************************
 		inline const std::map<std::string, vsid::Airport>& getActiveApts() const { return this->activeAirports; };
 
-		/**
-		 * @brief Extract a sid waypoint. If ES doesn't find a SID the route is compared to available SID waypoints
-		 * 
-		 * @param FlightPlanData 
-		 * @return
-		 */
+		//************************************
+		// Description: Returns the SID waypoint found in the route or empty if none was found. Checks ES determined SID first.
+		// Considers transition waypoints
+		// Method:    findSidWpt
+		// FullName:  vsid::VSIDPlugin::findSidWpt
+		// Access:    public 
+		// Returns:   std::string
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		//************************************
 		std::string findSidWpt(EuroScopePlugIn::CFlightPlan FlightPlan);
-		/**
-		 * @brief Iterate over loaded .dll and check for topsky and ccams
-		 * 
-		 */
+
+		//************************************
+		// Description: Iterates over all loaded plugins in search for TopSky and CCAMS
+		// Method:    detectPlugins
+		// FullName:  vsid::VSIDPlugin::detectPlugins
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
 		void detectPlugins();
 
-		/**
-		 * @brief Search for a matching SID depending on current RWYs in use, SID wpt
-		 * and configured SIDs in config
-		 * 
-		 * @param FlightPlan - Flightplan data from ES
-		 * @param atcRwy - The rwy assigned by ATC which shall be considered
-		 */
+		//************************************
+		// Description: Search for a matching SID depending on current RWYs in use, SID wpt
+		// and configured values in config
+		// Method:    processSid
+		// FullName:  vsid::VSIDPlugin::processSid
+		// Access:    public 
+		// Returns:   vsid::Sid
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		// Parameter: std::string atcRwy
+		//************************************
 		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan& FlightPlan, std::string atcRwy = "");
 
-		/**
-		 * @brief Tries to set a clean route without SID. SID will then be placed in front
-		 * and color codes for the TagItem set. Processed flight plans are stored.
-		 * 
-		 * @param FlightPlan - Flightplan data from ES
-		 * @param checkOnly - If the flight plan should only be validated
-		 * @param atcRwy - The rwy assigned by ATC which shall be considered
-		 * @param manualSid - manual Sid that has been selected and should be processed
-		 */
+
+		//************************************
+		// Description Tries to set a clean route without SID. SID will then be placed as first item
+		// Processed flight plans are stored.
+		// Method:    processFlightplan
+		// FullName:  vsid::VSIDPlugin::processFlightplan
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		// Parameter: bool checkOnly
+		// Parameter: std::string atcRwy
+		// Parameter: vsid::Sid manualSid
+		//************************************
 		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
 
 		//************************************
@@ -124,101 +146,137 @@ namespace vsid
 		// Returns:   const vsid::ConfigParser
 		// Qualifier: const
 		//************************************
-		inline vsid::ConfigParser& getConfigParser()
-		{	
-			return this->configParser;
-		}
-
-		/**
-		 * @brief Called with every function call (list interaction) inside ES
-		 *
-		 * @param FunctionId - registered TagItemFunction Id
-		 * @param sItemString
-		 * @param Pt
-		 * @param Area
-		 */
+		inline vsid::ConfigParser& getConfigParser() { return this->configParser; }
+		
+		//************************************
+		// Description: Called with every function call (list interaction) inside ES
+		// Method:    OnFunctionCall
+		// FullName:  vsid::VSIDPlugin::OnFunctionCall
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: int FunctionId
+		// Parameter: const char * sItemString
+		// Parameter: POINT Pt
+		// Parameter: RECT Area
+		//************************************
 		void OnFunctionCall(int FunctionId, const char* sItemString, POINT Pt, RECT Area);
 
-		/**
-		 * @brief Handles events on plane position updates if the flightplan is present in a tagItem
-		 * 
-		 * @param FlightPlan 
-		 * @param RadarTarget 
-		 * @param ItemCode 
-		 * @param TagData 
-		 * @param sItemString 
-		 * @param pColorCode 
-		 * @param pRGB 
-		 * @param pFontSize 
-		 */
+		//************************************
+		// Description: Handles events on tag item updates
+		// Method:    OnGetTagItem
+		// FullName:  vsid::VSIDPlugin::OnGetTagItem
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		// Parameter: EuroScopePlugIn::CRadarTarget RadarTarget
+		// Parameter: int ItemCode
+		// Parameter: int TagData
+		// Parameter: char sItemString[16]
+		// Parameter: int * pColorCode
+		// Parameter: COLORREF * pRGB
+		// Parameter: double * pFontSize
+		//************************************
 		void OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize);
 		
-		/**
-		 * @brief Called when a dot command is used and ES couldn't resolve it.
-		 * ES then checks this functions to evaluate the command
-		 *
-		 * @param sCommandLine
-		 * @return
-		 */
+		//************************************
+		// Description: Called when a command is used in chat and ES couldn't resolve it.
+		// Method:    OnCompileCommand
+		// FullName:  vsid::VSIDPlugin::OnCompileCommand
+		// Access:    public 
+		// Returns:   bool - always needs to be true if a matching command should be removed from the chat area
+		// Qualifier:
+		// Parameter: const char * sCommandLine
+		//************************************
 		bool OnCompileCommand(const char* sCommandLine);
-
-		/*EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);*/
-
-		/**
-		 * @brief Called when something is changed in the flight plan (used for route updates)
-		 * 
-		 * @param FlightPlan 
-		 */
 		
+		//************************************
+		// Description: Called when something is changed in the flight plan (e.g. route)
+		// Method:    OnFlightPlanFlightPlanDataUpdate
+		// FullName:  vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		//************************************
 		void OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan);
-		/**
-		 * @brief Called when something is changed in the controller assigned data
-		 *
-		 * @param FlightPlan - the flight plan reference whose controller assigned data is updated
-		 * @param DataType - the type of the data updated (CTR_DATA_TYPE ...)
-		 */
 		
+		//************************************
+		// Description: Called when something is changed in the controller assigned data
+		// Method:    OnFlightPlanControllerAssignedDataUpdate
+		// FullName:  vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		// Parameter: int DataType
+		//************************************
 		void OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan, int DataType);
-		/**
-		 * @brief Called when a flight plan disconnects from the network
-		 * 
-		 * @param FlightPlan 
-		 */
 		
+		//************************************
+		// Description: Called when a flight plan disconnects from the network
+		// Method:    OnFlightPlanDisconnect
+		// FullName:  vsid::VSIDPlugin::OnFlightPlanDisconnect
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		//************************************
 		void OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan FlightPlan);
-		/**
-		 * @brief Called when a position for radar target is updated
-		 * 
-		 * @param RadarTarget
-		 */
-		
+
+		//************************************
+		// Description: Called when a position for radar target is updated
+		// Method:    OnRadarTargetPositionUpdate
+		// FullName:  vsid::VSIDPlugin::OnRadarTargetPositionUpdate
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CRadarTarget RadarTarget
+		//************************************
 		void OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget RadarTarget);
-		/**
-		 * @brief Called whenever a controller position is updated. ~ every 5 seconds
-		 * 
-		 * @param Controller 
-		 */
 		
+		//************************************
+		// Description: Called whenever a controller position is updated. ~ every 5 seconds
+		// Method:    OnControllerPositionUpdate
+		// FullName:  vsid::VSIDPlugin::OnControllerPositionUpdate
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CController Controller
+		//************************************
 		void OnControllerPositionUpdate(EuroScopePlugIn::CController Controller);
-		/**
-		 * @brief Called if a controller disconnects
-		 * 
-		 * @param Controller 
-		 */
 		
+		//************************************
+		// Description: Called if a controller disconnects
+		// Method:    OnControllerDisconnect
+		// FullName:  vsid::VSIDPlugin::OnControllerDisconnect
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CController Controller
+		//************************************
 		void OnControllerDisconnect(EuroScopePlugIn::CController Controller);
-		/**
-		 * @brief Called when the user clicks on the ok button of the runway selection dialog
-		 *
-		 */
 		
+		//************************************
+		// Description: Called when the user clicks on the ok button of the runway selection dialog
+		// Method:    OnAirportRunwayActivityChanged
+		// FullName:  vsid::VSIDPlugin::OnAirportRunwayActivityChanged
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
 		void OnAirportRunwayActivityChanged();
-		/**
-		 * @brief Called once a second
-		 * 
-		 * @param Counter 
-		 * @return * void 
-		 */
+		
+		//************************************
+		// Description: Called once a second
+		// Method:    OnTimer
+		// FullName:  vsid::VSIDPlugin::OnTimer
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: int Counter
+		//************************************
 		void OnTimer(int Counter);
 		
 		//************************************
@@ -242,6 +300,7 @@ namespace vsid
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		//************************************
 		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
+
 		//************************************
 		// Description: Checks if a flight plan (or radar target) is inside the vis range of the controller
 		// Method:    outOfVis
@@ -253,36 +312,58 @@ namespace vsid
 		//************************************
 		bool outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan);
 		
-		/**
-		 * @brief Radar Screen.
-		 */
+		//************************************
+		// Description: Called when a new radar screen is created (e.g. opening a new .asr file)
+		// Method:    OnRadarScreenCreated
+		// FullName:  vsid::VSIDPlugin::OnRadarScreenCreated
+		// Access:    public 
+		// Returns:   EuroScopePlugIn::CRadarScreen*
+		// Qualifier:
+		// Parameter: const char * sDisplayName
+		// Parameter: bool NeedRadarContent
+		// Parameter: bool GeoReferenced
+		// Parameter: bool CanBeSaved
+		// Parameter: bool CanBeCreated
+		//************************************
 		EuroScopePlugIn::CRadarScreen* OnRadarScreenCreated(const char* sDisplayName, bool NeedRadarContent, bool GeoReferenced, bool CanBeSaved, bool CanBeCreated);
-		
-		/**
-		 * @brief Resets and deletes stored pointers to radar screens
-		 * 
-		 * @param id of the pointer
-		 */
+
+		//************************************
+		// Description: Resets and deletes stored pointers to radar screens
+		// Method:    deleteScreen
+		// FullName:  vsid::VSIDPlugin::deleteScreen
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: int id
+		//************************************
 		void deleteScreen(int id);
 
-		/**
-		 * @brief missing explanation
-		 * 
-		 */
+		//************************************
+		// Description: Cleanup work before the plugin is unloaded or ES is exited
+		// Method:    exit
+		// FullName:  vsid::VSIDPlugin::exit
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
 		void exit();
 
-		/**
-		 * @brief Calling ES StartTagFunction with a reference to any of the stored (valid) screens
-		 * 
-		 * @param sCallsign - acft which TAG is clicked
-		 * @param sItemPlugInName - item provider plugin (for base ES use NULL)
-		 * @param ItemCode - the item code
-		 * @param sItemString - string of the selected item
-		 * @param sFunctionPlugInName - item provider plugin (for base ES use NULL)
-		 * @param FunctionId - id of the function
-		 * @param Pt - mouse position
-		 * @param Area - area covered by tag item
-		 */
+		//************************************
+		// Description: Calling ES StartTagFunction with a reference to any of the stored (valid) screens. A radar screen is needed for execution.
+		// Method:    callExtFunc
+		// FullName:  vsid::VSIDPlugin::callExtFunc
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const char * sCallsign - acft which TAG is clicked
+		// Parameter: const char * sItemPlugInName - item provider plugin (for base ES use NULL)
+		// Parameter: int ItemCode - the item code
+		// Parameter: const char * sItemString - string of the selected item
+		// Parameter: const char * sFunctionPlugInName - item provider plugin (for base ES use NULL)
+		// Parameter: int FunctionId - id of the function
+		// Parameter: POINT Pt - mouse position
+		// Parameter: RECT Area - area covered by tag item
+		//************************************
 		void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
 			int FunctionId, POINT Pt, RECT Area);
 		
@@ -323,21 +404,24 @@ namespace vsid
 		std::set<std::string> ignoreAtc;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
-		/**
-		 * @param key - id of the saved screen pointer (always increased during runtime)
-		 * @param value - derived class of CRadarScreens
-		 */
+		//************************************
+		// Description: Stores runway requests during airport updates
+		// Param 1: int - id of the saved screen pointer (always increased during runtime)
+		// Param 2: shared_ptr - derived class of CRadarScreens
+		//************************************
 		std::map<int, std::shared_ptr<vsid::Display>> radarScreens = {};
 		int screenId = 0;
-		/**
-		 * @brief pointer to plugin itself for data exchange and control of loading/unloading
-		 */
+		// pointer to plugin itself for data exchange and control of loading/unloading
 		std::shared_ptr<vsid::VSIDPlugin> shared;
 
-		/**
-		 * @brief Loads and updates the active airports with available configs
-		 *
-		 */
+		//************************************
+		// Description: Loads and updates the active airports with available configs
+		// Method:    UpdateActiveAirports
+		// FullName:  vsid::VSIDPlugin::UpdateActiveAirports
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		//************************************
 		void UpdateActiveAirports();
 
 		//************************************
@@ -367,6 +451,7 @@ namespace vsid
 		// Qualifier:
 		//************************************
 		void processSPQueue();
+
 		//************************************
 		// Description: Adds a new msg pair to the sync queue
 		// Method:    addSyncQueue
@@ -386,6 +471,7 @@ namespace vsid
 			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
 			this->syncQueue[callsign].push_back({newScratch, oldScratch});
 		}		
+		
 		//************************************
 		// Description: Updates a callsign to be released for new scratch pad messages to be sent
 		// Method:    updateSPSyncRelease

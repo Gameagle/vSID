@@ -95,12 +95,6 @@ namespace vsid
 		//************************************
 		std::string splitTransition(std::string atcSid);
 
-		/**
-		 * @brief Get only the assigned rwy extracted from the flight plan
-		 * 
-		 * @param CFlightPlan - FlightPlan as stored by Euroscope
-		 * @return pair if ICAO/RWY or SID/RWY was found (split by '/')
-		 */
 		//************************************
 		// Description: Retrieves the "atc block" from a route (SID/RWY or ICAO/RWY)
 		// Method:    getAtcBlock
@@ -225,7 +219,6 @@ namespace vsid
 		void saveFplnInfo(const std::string& callsign, vsid::Fpln fplnInfo,
 			std::map<std::string, vsid::Fpln>& savedFplnInfo);
 
-
 		//************************************
 		// Description: Restores flight plan info if callsign has stored info
 		// Method:    restoreFplnInfo
@@ -242,6 +235,18 @@ namespace vsid
 		bool restoreFplnInfo(const std::string& callsign, std::map<std::string, vsid::Fpln>& processed,
 			std::map<std::string, vsid::Fpln>& savedFplnInfo);
 
+
+		//************************************
+		// Description: Restores initial climb if this info was lost (e.g. during a reconnect of a pilot)
+		// Method:    restoreIC
+		// FullName:  vsid::fplnhelper::restoreIC
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: const vsid::Fpln & fplnInfo
+		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
+		// Parameter: EuroScopePlugIn::CController atcMyself
+		//************************************
 		bool restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CController atcMyself);
 	}
 }
