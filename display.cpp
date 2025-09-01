@@ -105,7 +105,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			// pushback indicator 
 
-			if (enablePbIndicator && showPbOn.find(this->name) != std::string::npos)
+			if (enablePbIndicator && showPbOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				if (fplnInfo.gndState == "PUSH")
 				{
@@ -119,7 +120,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 					// arrow position left of target
 
-					area.bottom = targetPos.y + 10;
+					area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 					area.top = area.bottom - 15;
 					area.left = targetPos.x - 15;
 					area.right = area.left + 10;
@@ -134,7 +135,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			// request indicator
 
-			if (enableRequest && showReqOn.find(this->name) != std::string::npos)
+			if (enableRequest && showReqOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				std::string adep = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
 				std::string fplnRwy = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetDepartureRwy();
@@ -158,14 +160,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 
 								CRect area;
-								/*area.bottom = pos.y + 20; -- arrow position below target
-								area.top = area.bottom - 15;
-								area.left = pos.x - 5;
-								area.right = area.left + 10;*/
 
-								// arrow position left of target
-
-								area.bottom = targetPos.y + 10;
+								area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 								area.top = area.bottom - 15;
 								area.right = targetPos.x + 30;
 								area.left = area.right - 25;
@@ -195,7 +191,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 									CRect area;
 
-									area.bottom = targetPos.y + 10;
+									area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 									area.top = area.bottom - 15;
 									area.right = targetPos.x + 30;
 									area.left = area.right - 25;
@@ -226,8 +222,6 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 					// position below target
 					area.bottom = targetPos.y + this->getLabelOffset();
-					/*messageHandler->writeMessage("DEBUG", "[" + callsign + "] bot-pos: " + std::to_string(area.bottom) +
-												" with offset: " + std::to_string(this->getLabelOffset()), vsid::MessageHandler::DebugArea::Dev);*/
 					area.top = area.bottom - 15;
 					area.left = targetPos.x - 5;
 					area.right = area.left + 30; // original: 10
@@ -555,21 +549,9 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 		}
 	}
 
-	if (std::string(sCommandLine) == ".vsid zoom")
+	if (std::string(sCommandLine) == ".vsid display config")
 	{
-		messageHandler->writeMessage("INFO", "vSID Zoom-Level: " + std::to_string(this->getZoomLevel()));
-		return true;
-	}
-
-	if (std::string(sCommandLine) == ".vsid screen nm")
-	{
-		messageHandler->writeMessage("INFO", "vSID Screen NM: " + std::to_string(this->getScreenNM()));
-		return true;
-	}
-
-	if (std::string(sCommandLine) == ".vsid screen diagonal")
-	{
-		messageHandler->writeMessage("INFO", "vSID Screen Diagonal: " + std::to_string(this->getScreenDiagonalPx()));
+		messageHandler->writeMessage("INFO", "Zoom-Level: " + std::to_string(this->getZoomLevel()) + " | screen diagonal: " + std::to_string(this->getScreenDiagonalPx()));
 		return true;
 	}
 	return false;
@@ -755,19 +737,13 @@ double vsid::Display::getLabelOffset()
 {
 	if (std::shared_ptr shared_plugin = this->plugin.lock())
 	{
-		// double refPxPerNm = refNM / this->getScreenDiagonalPx();
 		double refPxPerNm = shared_plugin->getConfigParser().getIndicatorDefaultValues().refDiagPx / shared_plugin->getConfigParser().getIndicatorDefaultValues().refZoom;
 
 		double gapNM = shared_plugin->getConfigParser().getIndicatorDefaultValues().refOffset / refPxPerNm;
 
 		double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
-		// double offsetPx = factor / this->getZoomLevel() / 2;
 
-		// double offset = refOffset * (refPxPerNm / pxPerNm); - without log scale
-		//double beta = 1.0;
-		/*double offset = refOffset * std::log2(1.0 + beta * (refPxPerNm / pxPerNm));*/
 		return gapNM * pxPerNm;
-		// end dev
 	}
 	return 0; // fallback state
 }
