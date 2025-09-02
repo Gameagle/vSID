@@ -4,6 +4,7 @@
         "runways": "06,24",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
+        "intersections": {"06": "W,C", "24":"E,N,D,C"},
         "appSI": "ILR,SWA,FUE,ZUG,TRU,RDG",
         "timeMode": true,
 		"timezone": "Europe/Berlin",

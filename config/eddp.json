@@ -4,6 +4,7 @@
         "runways": "08L,08R,26L,26R",
         "transAlt": 5000,
         "maxInitialClimb": 8000,
+        "intersections": {"08R": "S1,H1,S2,S3,S4.S5", "08L":"A1,A2,A3,A4", "26L": "S10,S9,S8,S7;H8,H7", "26R":"A9,A8,A7,A6"},
         "appSI": "TRS,TRN,GER,MEI,HAL,HOF,EDMM",
         "timeMode": true,
 		"timezone": "Europe/Berlin",

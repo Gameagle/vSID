@@ -4,6 +4,7 @@
         "runways": "06,24",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
+        "intersections": {"06": "F,E,D", "24":"A,B,C,D"},
         "appSI": "ARFA,ZUG,TRU,RDG,EDMM",
         "sids": {
             "initial": 4000,

@@ -4,6 +4,7 @@
         "runways": "04,22",
         "transAlt": 5000,
         "maxInitialClimb": 8000,
+        "intersections": {"04": "A,B,C", "22":"E,D,C"},
 		"appSI": "SAS,TRS,MEI,GER,HAL,HOF,EDMM",
         "sids": {
             "initial": 7000,

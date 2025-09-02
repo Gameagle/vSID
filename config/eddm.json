@@ -4,6 +4,7 @@
         "runways": "26R,26L,08R,08L",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
+        "intersections": {"26R": "A15,A14,A13,A12,A10", "26L":"B15,B14,B13,B12,B10", "08L": "A1,A2,A3,A4,A5", "08R": "B1,B2,B3,B4,B5"},
         "customRules" : {"traalg":false},
 		"appSI": "NDG,WLD,ZUG,RDG,EDMM",
         "timeMode": true,
@@ -690,17 +691,16 @@
                         "timeTo": 6
                     }
                 },
-				"7":{
-					"designator":"W",
-                    "rwy": "26L",
-                    "initial": 7000,
-                    "climbvia": true,
-					"equip": {"RNAV": true, "NON-RNAV": true},
-                    "prio": 2,
-                    "wtc": "HJ",
-                    "engineType": "J",
-                    "timeFrom": 22,
-                    "timeTo": 6
+				"W":{
+                    "1":{
+                        "rwy": "26L",
+                        "equip": {"RNAV": true, "NON-RNAV": true},
+                        "prio": 2,
+                        "wtc": "HJ",
+                        "engineType": "J",
+                        "timeFrom": 22,
+                        "timeTo": 6
+                        }
                 }
             },
 			"VAVOR": {
