@@ -41,6 +41,20 @@ void vsid::ConfigParser::loadMainConfig()
         messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
     }
 
+    if (this->vSidConfig.is_null())
+    {
+        messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+        return;
+    }
+
+	// #dev - load ESE
+	// this->loadEse(); - DISABLED FOR CURRENT RELEASE
+	// end dev
+
+    // set topsky preference
+
+    this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
+
     try
     {
         // import colors or set default values
@@ -265,6 +279,45 @@ void vsid::ConfigParser::loadMainConfig()
 		}
 		else this->colors["clrfWarning"] = RGB(200, 10, 10);
 
+		if (this->vSidConfig.at("colors").contains("intsecSet"))
+		{
+			this->colors["intsecSet"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSet").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSet").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSet").value("b", 50)
+			);
+		}
+		else this->colors["intsecSet"] = RGB(0, 150, 50);
+
+		if (this->vSidConfig.at("colors").contains("intsecAble"))
+		{
+			this->colors["intsecAble"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAble").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAble").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAble").value("b", 0)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecSetIndicator"))
+		{
+			this->colors["intsecSetIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("b", 50)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecAbleIndicator"))
+		{
+			this->colors["intsecAbleIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("b", 0)
+			);
+		}
+
+		else this->colors["intsecSetIndicator"] = RGB(200, 150, 0);
+
 		if (this->vSidConfig.at("colors").contains("pbIndicator"))
 		{
 			this->colors["pbIndicator"] = RGB(
@@ -334,6 +387,20 @@ void vsid::ConfigParser::loadMainConfig()
     {
         messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
     }
+
+    // get indicator reference values
+
+    try
+    {
+        this->indicator.refDiagPx = this->vSidConfig.at("display").value("indicatorRefDiagPx", 2144.40);
+        this->indicator.refOffset = this->vSidConfig.at("display").value("indicatorRefOffset", 20);
+        this->indicator.refZoom = this->vSidConfig.at("display").value("indicatorRefZoom", 417);
+        this->indicator.showBelowZoom = this->vSidConfig.at("display").value("indicatorShowBelowZoom", 600);
+    }
+    catch (json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to get indicator default reference values: " + std::string(e.what()));
+    }
 }
 
 void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
@@ -369,7 +436,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
     std::vector<std::filesystem::path> files;
     std::set<std::string> aptConfig;
 
-   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further evaluation - can cause slow loading
+   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further #evaluate - can cause slow loading
     {
         if (!std::filesystem::is_directory(entry) && entry.extension() == ".json")
         {
@@ -421,6 +488,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
                             customRules.insert(rule);
                         }
+
                         // overwrite loaded rule settings from config with current values at the apt
 
                         if (savedCustomRules.contains(icao))
@@ -443,7 +511,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             appSIPrio++;
                         }
                         
-                        //areas
+                        // areas
 
                         if (this->parsedConfig.at(icao).contains("areas"))
                         {
@@ -493,7 +561,21 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             }
                         }
 
+                        // intersections
+
+                        if (this->parsedConfig.at(icao).contains("intersections"))
+                        {
+                            for (auto& intsecList : this->parsedConfig.at(icao).at("intersections").items())
+                            {
+                                std::string rwy = intsecList.key();
+                                std::vector<std::string> intsec = vsid::utils::split(intsecList.value(), ',');
+
+                                aptInfo.intsec.insert({ rwy, intsec });
+                            }
+                        }
+
                         // airport settings
+
                         if (savedSettings.contains(icao))
                         {
                             aptInfo.settings = savedSettings[icao];
@@ -1118,7 +1200,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] lvp: " + std::to_string(newSid.lvp), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeFrom: " + std::to_string(newSid.timeFrom), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeTo: " + std::to_string(newSid.timeTo), vsid::MessageHandler::DebugArea::Conf);
-												// end dev
+												// end dev - debugging msgs for sid restriction levels
                                             }
                                         }
                                     }
@@ -1272,6 +1354,97 @@ void vsid::ConfigParser::loadRnavList()
     }
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
+
+// #dev - load Ese
+void vsid::ConfigParser::loadEse()
+{
+    if (this->vSidConfig.is_null())
+    {
+		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+		return;
+    }
+
+	if (!this->vSidConfig.contains("esePath") || this->vSidConfig.at("esePath") == "")
+	{
+		messageHandler->writeMessage("ERROR", "No path to .ese file set in main config or it couldn't be loaded.");
+		return;
+	}
+
+	char path[MAX_PATH + 1] = { 0 };
+	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+	PathRemoveFileSpecA(path);
+	std::filesystem::path basePath = path;
+
+    std::string esePath = this->vSidConfig.at("esePath");
+
+    basePath.append(esePath).make_preferred();
+
+    messageHandler->writeMessage("DEBUG", "loadEse called, basePath: " + basePath.string(), vsid::MessageHandler::DebugArea::Dev);
+
+    std::ofstream debugLog(basePath / "debug_ese_output.txt");
+    debugLog.clear();
+
+	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+	{
+		messageHandler->writeMessage("DEBUG", "File: " + entry.string(), vsid::MessageHandler::DebugArea::Dev);
+        if (entry.extension() == ".ese")
+        {
+            std::ifstream eseFile(entry.string());
+
+            if (!eseFile.is_open())
+            {
+                messageHandler->writeMessage("WARNING", "Failed to open .ese file in: " + basePath.string());
+                break;
+            }
+
+            std::string newLine = "";
+            std::vector<std::string> vecLine = {};
+            bool sectionPosition = false;
+
+            while (std::getline(eseFile, newLine))
+            {
+                if (newLine.find("[POSITIONS]") != std::string::npos) sectionPosition = true;
+                if (newLine.empty() && sectionPosition) break;
+                if (!sectionPosition) continue;
+
+                if (newLine.find("[POSITIONS]") != std::string::npos) continue; // skip begin of section
+
+                vecLine = vsid::utils::split(newLine, ':', true);
+
+                try
+                {
+                    std::string callsign = vecLine.at(0);
+                    std::string freq = vecLine.at(2);
+                    std::string si = vecLine.at(3);
+                }
+                catch (std::out_of_range& e)
+                {
+                    messageHandler->writeMessage("ERROR", "Failed to retrieve station from .ese file: " + std::string(e.what()));
+                }
+
+                for (auto it = vecLine.begin(); it != vecLine.end(); ++it)
+                {
+                    int pos = std::distance(vecLine.begin(), it);
+
+                    debugLog << "[" << pos << "] " << *it << " | ";
+                }
+
+				debugLog << '\n';
+
+                vecLine.clear();
+            }
+
+            eseFile.close();
+
+            messageHandler->writeMessage("DEBUG", "File should be closed.", vsid::MessageHandler::DebugArea::Dev);
+
+            break; // no further checks necessary
+        }
+	}
+
+    debugLog.close();
+}
+// end dev
 
 const COLORREF vsid::ConfigParser::getColor(std::string color)
 {

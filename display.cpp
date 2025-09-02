@@ -48,6 +48,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		std::string showReqOn = "";
 		bool enableRequest = false;
 
+		std::string showIntOn = "";
+		bool enableIntIndicator = false;
 
 		try
 		{
@@ -56,6 +58,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			showReqOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showRequestOn", "");
 			enableRequest = sharedPlugin->getConfigParser().getMainConfig().at("display").value("enableRequest", true);
+
+			showIntOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showIntIndicatorOn", "");
+			enableIntIndicator = sharedPlugin->getConfigParser().getMainConfig().at("display").value("enableIntIndicator", true);
 
 			messageHandler->removeGenError(ERROR_CONF_DISPLAY);
 		}
@@ -68,7 +73,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				messageHandler->addGenError(ERROR_CONF_DISPLAY);
 			}
 		}
-		CFont font;
+
+		// #dev - old font order
+		/*CFont font;
 		LOGFONT lgfont;
 		memset(&lgfont, 0, sizeof(LOGFONT));
 
@@ -78,7 +85,19 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		lgfont.lfHeight = 15;
 		lgfont.lfWeight = FW_BOLD;
 
+		font.CreateFontIndirectA(&lgfont);*/
+		// end dev
+
+		LOGFONT lgfont;
+		memset(&lgfont, 0, sizeof(LOGFONT));
+		strcpy_s(lgfont.lfFaceName, LF_FACESIZE, _TEXT("EuroScope"));
+		lgfont.lfHeight = 15;
+		lgfont.lfWeight = FW_BOLD;
+		lgfont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+
+		CFont font;
 		font.CreateFontIndirectA(&lgfont);
+		CFont* oldFont = dc.SelectObject(&font);
 
 		for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
 		{
@@ -86,7 +105,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			// pushback indicator 
 
-			if (enablePbIndicator && showPbOn.find(this->name) != std::string::npos)
+			if (enablePbIndicator && showPbOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				if (fplnInfo.gndState == "PUSH")
 				{
@@ -100,7 +120,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 					// arrow position left of target
 
-					area.bottom = targetPos.y + 10;
+					area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 					area.top = area.bottom - 15;
 					area.left = targetPos.x - 15;
 					area.right = area.left + 10;
@@ -115,7 +135,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 			// request indicator
 
-			if (enableRequest && showReqOn.find(this->name) != std::string::npos)
+			if (enableRequest && showReqOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				std::string adep = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
 				std::string fplnRwy = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetDepartureRwy();
@@ -139,14 +160,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 
 								CRect area;
-								/*area.bottom = pos.y + 20; -- arrow position below target
-								area.top = area.bottom - 15;
-								area.left = pos.x - 5;
-								area.right = area.left + 10;*/
 
-								// arrow position left of target
-
-								area.bottom = targetPos.y + 10;
+								area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 								area.top = area.bottom - 15;
 								area.right = targetPos.x + 30;
 								area.left = area.right - 25;
@@ -176,7 +191,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
 									CRect area;
 
-									area.bottom = targetPos.y + 10;
+									area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
 									area.top = area.bottom - 15;
 									area.right = targetPos.x + 30;
 									area.left = area.right - 25;
@@ -191,6 +206,33 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 						}
 					}
 					catch (std::out_of_range) {};
+				}
+			}
+
+			// intersection indicator
+
+			if (enableIntIndicator && showIntOn.find(this->name) != std::string::npos &&
+				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
+			{
+				if (fplnInfo.intsec.first != "")
+				{
+					POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+
+					CRect area;
+
+					// position below target
+					area.bottom = targetPos.y + this->getLabelOffset();
+					area.top = area.bottom - 15;
+					area.left = targetPos.x - 5;
+					area.right = area.left + 30; // original: 10
+
+					// painted text
+					dc.SelectObject(&font);
+
+					if (fplnInfo.intsec.second) dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecSetIndicator"));
+					else dc.SetTextColor(sharedPlugin->getConfigParser().getColor("intsecAbleIndicator"));
+
+					dc.DrawText(fplnInfo.intsec.first.c_str(), &area, DT_BOTTOM);
 				}
 			}
 		}
@@ -506,6 +548,12 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 			return true;
 		}
 	}
+
+	if (std::string(sCommandLine) == ".vsid display config")
+	{
+		messageHandler->writeMessage("INFO", "Zoom-Level: " + std::to_string(this->getZoomLevel()) + " | screen diagonal: " + std::to_string(this->getScreenDiagonalPx()));
+		return true;
+	}
 	return false;
 }
 
@@ -683,4 +731,19 @@ void vsid::Display::closeMenu(const std::string &title)
 	if (this->menues.contains(title)) this->menues[title].toggleRender();
 	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title +
 		" because it is not in the menu list. Code: " + ERROR_DSP_RMMENU);
+}
+
+double vsid::Display::getLabelOffset()
+{
+	if (std::shared_ptr shared_plugin = this->plugin.lock())
+	{
+		double refPxPerNm = shared_plugin->getConfigParser().getIndicatorDefaultValues().refDiagPx / shared_plugin->getConfigParser().getIndicatorDefaultValues().refZoom;
+
+		double gapNM = shared_plugin->getConfigParser().getIndicatorDefaultValues().refOffset / refPxPerNm;
+
+		double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
+
+		return gapNM * pxPerNm;
+	}
+	return 0; // fallback state
 }

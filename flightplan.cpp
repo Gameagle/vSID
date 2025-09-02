@@ -218,41 +218,7 @@ bool vsid::fplnhelper::findScratchPad(const EuroScopePlugIn::CFlightPlan& Flight
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 
-	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch));
-}
-
-bool vsid::fplnhelper::setScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd)
-{
-	if (!FlightPlan.IsValid()) return false;
-
-	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
-	std::string scratch = cad.GetScratchPadString();
-	scratch += toAdd;
-
-	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) + "] Setting scratch: " + scratch, vsid::MessageHandler::DebugArea::Req);
-
-	return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
-}
-
-bool vsid::fplnhelper::removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove)
-{
-	if (!FlightPlan.IsValid()) return false;
-
-	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
-	std::string callsign = FlightPlan.GetCallsign();
-	std::string scratch = cad.GetScratchPadString();
-	size_t pos = vsid::utils::toupper(scratch).find(vsid::utils::toupper(toRemove));
-
-	if (pos != std::string::npos)
-	{
-		vsid::utils::trim(scratch.erase(pos, toRemove.length()));
-
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Removing scratchpad entry \"" + toRemove +
-			"\". New scratch : \"" + scratch + "\"", vsid::MessageHandler::DebugArea::Req);
-
-		return cad.SetScratchPadString(vsid::utils::trim(scratch).c_str());
-	}
-	return false; // default / fall back state
+	return std::string(cad.GetScratchPadString()).find(vsid::utils::toupper(toSearch)); // #refactor - string_view
 }
 
 std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& FlightPlan, const std::set<std::string>& rnav)
@@ -379,4 +345,68 @@ bool vsid::fplnhelper::restoreFplnInfo(const std::string& callsign, std::map<std
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to restore from saved info.", vsid::MessageHandler::DebugArea::Fpln); 
 		return false;
 	}
+}
+
+bool vsid::fplnhelper::restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CController atcMyself)
+{
+	if (!FlightPlan.IsValid()) return false;
+
+	auto [blockSid, blockRwy] = vsid::fplnhelper::getAtcBlock(FlightPlan);
+	std::string callsign = FlightPlan.GetCallsign();
+	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
+	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
+
+	if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+		std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
+	{
+		blockSid = vsid::fplnhelper::splitTransition(blockSid);
+	}
+
+	if (cad.GetClearedAltitude() == 0 &&
+		blockSid != "" &&
+		atcMyself.IsController() &&
+		(blockSid == fplnInfo.sid.name() ||
+			blockSid == fplnInfo.customSid.name())
+		)
+	{
+		if (!fplnInfo.customSid.empty())
+		{
+			int initialClimb = (fplnInfo.customSid.initialClimb > fplnData.GetFinalAltitude()) ?
+				fplnData.GetFinalAltitude() : fplnInfo.customSid.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
+			{
+				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				}
+				return false;
+			}
+			else
+			{
+				messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				return true;
+			}
+		}
+		else if (!fplnInfo.sid.empty())
+		{
+			int initialClimb = (fplnInfo.sid.initialClimb > fplnData.GetFinalAltitude()) ?
+				fplnData.GetFinalAltitude() : fplnInfo.sid.initialClimb;
+			if (!cad.SetClearedAltitude(initialClimb))
+			{
+				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
+				{
+					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				}
+				return false;
+			}
+			else
+			{
+				messageHandler->removeFplnError(callsign, ERROR_FPLN_SETALT_RESET);
+				return true;
+			}
+		}
+	}
+	return false;
 }
