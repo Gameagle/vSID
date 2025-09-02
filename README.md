@@ -1,6 +1,6 @@
 ## vSID
 
-vSID is a powerfull plugin for Euroscope that assists controllers with SID selection, clearances and some additional features.
+vSID is a powerful plugin for Euroscope that assists controllers with SID selection, clearances and some additional features.
 
 The plugin is used within several vACCs by default.
 
@@ -12,7 +12,8 @@ The plugin is used within several vACCs by default.
 * Optimized menus für SIDs, runways, climbs, etc.
 * Request menu for different requests as clearance, startup, pushback, taxi, vfr.
 * Startup counter per runway (all "active" flights with startup approval).
-* Optional pushback and request indicator next to the radar target.
+* Intersection menu to set pre-defined or custom runway intersections as "cleared" or "able for" (also available as text entry in the scratch pad - see the wiki for details)
+* Optional pushback, request and intersection indicator next to the radar target.
 
 ## Default colors
 * SID

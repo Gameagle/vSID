@@ -50,6 +50,12 @@ const int TAG_ITEM_VSID_CLR = 648;
 const int TAG_FUNC_VSID_CLR_SID = 747;
 const int TAG_FUNC_VSID_CLR_SID_SU = 748;
 
+const int TAG_ITEM_VSID_INTS = 649;
+const int TAG_FUNC_VSID_INTS_ABLE = 749;
+const int TAG_FUNC_VSID_INTS_SET = 750;
+
+const int TAG_FUNC_VSID_TSSQUAWK = 940;
+
 // menues
 
 const int MENU = 100;
@@ -79,6 +85,7 @@ const std::string ERROR_FPLN_REMARKRMV = "E022-2";
 const std::string ERROR_FPLN_REQSET = "E023";
 const std::string ERROR_FPLN_CLNFIRST = "E024-1";
 const std::string ERROR_FPLN_CLNSPDLVL = "E024-2";
+const std::string ERROR_FPLN_INTSET = "E025";
 
 const std::string ERROR_DSP_SCREENCREATE = "E030-1";
 const std::string ERROR_DSP_MENUSUCREATE = "E030-2";
