@@ -36,19 +36,307 @@ void vsid::ConfigParser::loadMainConfig()
     {
         messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
     }
+    catch (const json::other_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
+    }
+
+    if (this->vSidConfig.is_null())
+    {
+        messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+        return;
+    }
+
+	// #dev - load ESE
+	// this->loadEse(); - DISABLED FOR CURRENT RELEASE
+	// end dev
+
+    // set topsky preference
+
+    this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
 
     try
     {
-        for (auto &elem : this->vSidConfig.at("colors").items())
+        // import colors or set default values
+
+        if (this->vSidConfig.at("colors").contains("sidSuggestion"))
         {
-            // default values are blue to signal if the import went wrong
-            COLORREF rgbColor = RGB(
-                this->vSidConfig.at("colors").at(elem.key()).value("r", 60),
-                this->vSidConfig.at("colors").at(elem.key()).value("g", 80),
-                this->vSidConfig.at("colors").at(elem.key()).value("b", 240)
-                );
-            this->colors[elem.key()] = rgbColor;
+			this->colors["sidSuggestion"] = RGB(
+				this->vSidConfig.at("colors").at("sidSuggestion").value("r", 255),
+				this->vSidConfig.at("colors").at("sidSuggestion").value("g", 255),
+				this->vSidConfig.at("colors").at("sidSuggestion").value("b", 255)
+			);
         }
+        else this->colors["sidSuggestion"] = RGB(255, 255, 255);
+		
+		if (this->vSidConfig.at("colors").contains("suggestedSidSet"))
+		{
+			this->colors["suggestedSidSet"] = RGB(
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("r", 0),
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("g", 255),
+				this->vSidConfig.at("colors").at("suggestedSidSet").value("b", 0)
+			);
+		}
+		else this->colors["suggestedSidSet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("customSidSuggestion"))
+		{
+			this->colors["customSidSuggestion"] = RGB(
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("r", 255),
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("g", 255),
+				this->vSidConfig.at("colors").at("customSidSuggestion").value("b", 180)
+			);
+		}
+		else this->colors["customSidSuggestion"] = RGB(255, 255, 180);
+
+		if (this->vSidConfig.at("colors").contains("customSidSet"))
+		{
+			this->colors["customSidSet"] = RGB(
+				this->vSidConfig.at("colors").at("customSidSet").value("r", 255),
+				this->vSidConfig.at("colors").at("customSidSet").value("g", 120),
+				this->vSidConfig.at("colors").at("customSidSet").value("b", 30)
+			);
+		}
+		else this->colors["customSidSet"] = RGB(255, 120, 30);
+
+		if (this->vSidConfig.at("colors").contains("noSid"))
+		{
+			this->colors["noSid"] = RGB(
+				this->vSidConfig.at("colors").at("noSid").value("r", 220),
+				this->vSidConfig.at("colors").at("noSid").value("g", 30),
+				this->vSidConfig.at("colors").at("noSid").value("b", 20)
+			);
+		}
+		else this->colors["noSid"] = RGB(220, 30, 20);
+
+		if (this->vSidConfig.at("colors").contains("sidHighlight"))
+		{
+			this->colors["sidHighlight"] = RGB(
+				this->vSidConfig.at("colors").at("sidHighlight").value("r", 240),
+				this->vSidConfig.at("colors").at("sidHighlight").value("g", 90),
+				this->vSidConfig.at("colors").at("sidHighlight").value("b", 190)
+			);
+		}
+		else this->colors["sidHighlight"] = RGB(240, 90, 190);
+
+		if (this->vSidConfig.at("colors").contains("suggestedClmb"))
+		{
+			this->colors["suggestedClmb"] = RGB(
+				this->vSidConfig.at("colors").at("suggestedClmb").value("r", 255),
+				this->vSidConfig.at("colors").at("suggestedClmb").value("g", 255),
+				this->vSidConfig.at("colors").at("suggestedClmb").value("b", 255)
+			);
+		}
+		else this->colors["suggestedClmb"] = RGB(255, 255, 255);
+
+		if (this->vSidConfig.at("colors").contains("customClmbSet"))
+		{
+			this->colors["customClmbSet"] = RGB(
+				this->vSidConfig.at("colors").at("customClmbSet").value("r", 255),
+				this->vSidConfig.at("colors").at("customClmbSet").value("g", 120),
+				this->vSidConfig.at("colors").at("customClmbSet").value("b", 30)
+			);
+		}
+		else this->colors["customClmbSet"] = RGB(255, 120, 30);
+
+		if (this->vSidConfig.at("colors").contains("clmbSet"))
+		{
+			this->colors["clmbSet"] = RGB(
+				this->vSidConfig.at("colors").at("clmbSet").value("r", 50),
+				this->vSidConfig.at("colors").at("clmbSet").value("g", 240),
+				this->vSidConfig.at("colors").at("clmbSet").value("b", 210)
+			);
+		}
+		else this->colors["clmbSet"] = RGB(50, 240, 210);
+
+		if (this->vSidConfig.at("colors").contains("clmbViaSet"))
+		{
+			this->colors["clmbViaSet"] = RGB(
+				this->vSidConfig.at("colors").at("clmbViaSet").value("r", 0),
+				this->vSidConfig.at("colors").at("clmbViaSet").value("g", 255),
+				this->vSidConfig.at("colors").at("clmbViaSet").value("b", 0)
+			);
+		}
+		else this->colors["clmbViaSet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("clmbHighlight"))
+		{
+			this->colors["clmbHighlight"] = RGB(
+				this->vSidConfig.at("colors").at("clmbHighlight").value("r", 240),
+				this->vSidConfig.at("colors").at("clmbHighlight").value("g", 90),
+				this->vSidConfig.at("colors").at("clmbHighlight").value("b", 190)
+			);
+		}
+		else this->colors["clmbHighlight"] = RGB(240, 90, 190);
+
+		if (this->vSidConfig.at("colors").contains("rwyNotSet"))
+		{
+			this->colors["rwyNotSet"] = RGB(
+				this->vSidConfig.at("colors").at("rwyNotSet").value("r", 255),
+				this->vSidConfig.at("colors").at("rwyNotSet").value("g", 255),
+				this->vSidConfig.at("colors").at("rwyNotSet").value("b", 255)
+			);
+		}
+		else this->colors["rwyNotSet"] = RGB(255, 255, 255);
+
+		if (this->vSidConfig.at("colors").contains("rwySet"))
+		{
+			this->colors["rwySet"] = RGB(
+				this->vSidConfig.at("colors").at("rwySet").value("r", 0),
+				this->vSidConfig.at("colors").at("rwySet").value("g", 255),
+				this->vSidConfig.at("colors").at("rwySet").value("b", 0)
+			);
+		}
+		else this->colors["rwySet"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("notDepRwySet"))
+		{
+			this->colors["notDepRwySet"] = RGB(
+				this->vSidConfig.at("colors").at("notDepRwySet").value("r", 230),
+				this->vSidConfig.at("colors").at("notDepRwySet").value("g", 230),
+				this->vSidConfig.at("colors").at("notDepRwySet").value("b", 60)
+			);
+		}
+		else this->colors["notDepRwySet"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("squawkSet"))
+		{
+			this->colors["squawkSet"] = RGB(
+				this->vSidConfig.at("colors").at("squawkSet").value("r", 255),
+				this->vSidConfig.at("colors").at("squawkSet").value("g", 255),
+				this->vSidConfig.at("colors").at("squawkSet").value("b", 255)
+			);
+		}
+		// no else case for squawk set due to special values following below
+
+		if (this->vSidConfig.at("colors").contains("squawkNotSet"))
+		{
+			this->colors["squawkNotSet"] = RGB(
+				this->vSidConfig.at("colors").at("squawkNotSet").value("r", 230),
+				this->vSidConfig.at("colors").at("squawkNotSet").value("g", 230),
+				this->vSidConfig.at("colors").at("squawkNotSet").value("b", 60)
+			);
+		}
+		else this->colors["squawkNotSet"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("requestNeutral"))
+		{
+			this->colors["requestNeutral"] = RGB(
+				this->vSidConfig.at("colors").at("requestNeutral").value("r", 128),
+				this->vSidConfig.at("colors").at("requestNeutral").value("g", 128),
+				this->vSidConfig.at("colors").at("requestNeutral").value("b", 128)
+			);
+		}
+		else this->colors["requestNeutral"] = RGB(128, 128, 128);
+
+		if (this->vSidConfig.at("colors").contains("requestCaution"))
+		{
+			this->colors["requestCaution"] = RGB(
+				this->vSidConfig.at("colors").at("requestCaution").value("r", 230),
+				this->vSidConfig.at("colors").at("requestCaution").value("g", 230),
+				this->vSidConfig.at("colors").at("requestCaution").value("b", 60)
+			);
+		}
+		else this->colors["requestCaution"] = RGB(230, 230, 60);
+
+		if (this->vSidConfig.at("colors").contains("requestWarning"))
+		{
+			this->colors["requestWarning"] = RGB(
+				this->vSidConfig.at("colors").at("requestWarning").value("r", 220),
+				this->vSidConfig.at("colors").at("requestWarning").value("g", 30),
+				this->vSidConfig.at("colors").at("requestWarning").value("b", 20)
+			);
+		}
+		else this->colors["requestWarning"] = RGB(220, 30, 20);
+
+		if (this->vSidConfig.at("colors").contains("clrfSet"))
+		{
+			this->colors["clrfSet"] = RGB(
+				this->vSidConfig.at("colors").at("clrfSet").value("r", 0),
+				this->vSidConfig.at("colors").at("clrfSet").value("g", 160),
+				this->vSidConfig.at("colors").at("clrfSet").value("b", 30)
+			);
+		}
+		else this->colors["clrfSet"] = RGB(0, 160, 30);
+
+		if (this->vSidConfig.at("colors").contains("clrfCaution"))
+		{
+			this->colors["clrfCaution"] = RGB(
+				this->vSidConfig.at("colors").at("clrfCaution").value("r", 250),
+				this->vSidConfig.at("colors").at("clrfCaution").value("g", 160),
+				this->vSidConfig.at("colors").at("clrfCaution").value("b", 0)
+			);
+		}
+		else this->colors["clrfCaution"] = RGB(250, 160, 0);
+
+		if (this->vSidConfig.at("colors").contains("clrfWarning"))
+		{
+			this->colors["clrfWarning"] = RGB(
+				this->vSidConfig.at("colors").at("clrfWarning").value("r", 200),
+				this->vSidConfig.at("colors").at("clrfWarning").value("g", 10),
+				this->vSidConfig.at("colors").at("clrfWarning").value("b", 10)
+			);
+		}
+		else this->colors["clrfWarning"] = RGB(200, 10, 10);
+
+		if (this->vSidConfig.at("colors").contains("intsecSet"))
+		{
+			this->colors["intsecSet"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSet").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSet").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSet").value("b", 50)
+			);
+		}
+		else this->colors["intsecSet"] = RGB(0, 150, 50);
+
+		if (this->vSidConfig.at("colors").contains("intsecAble"))
+		{
+			this->colors["intsecAble"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAble").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAble").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAble").value("b", 0)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecSetIndicator"))
+		{
+			this->colors["intsecSetIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("r", 0),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecSetIndicator").value("b", 50)
+			);
+		}
+
+		if (this->vSidConfig.at("colors").contains("intsecAbleIndicator"))
+		{
+			this->colors["intsecAbleIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("r", 200),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("g", 150),
+				this->vSidConfig.at("colors").at("intsecAbleIndicator").value("b", 0)
+			);
+		}
+
+		else this->colors["intsecSetIndicator"] = RGB(200, 150, 0);
+
+		if (this->vSidConfig.at("colors").contains("pbIndicator"))
+		{
+			this->colors["pbIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("pbIndicator").value("r", 0),
+				this->vSidConfig.at("colors").at("pbIndicator").value("g", 255),
+				this->vSidConfig.at("colors").at("pbIndicator").value("b", 0)
+			);
+		}
+		else this->colors["pbIndicator"] = RGB(0, 255, 0);
+
+		if (this->vSidConfig.at("colors").contains("reqIndicator"))
+		{
+			this->colors["reqIndicator"] = RGB(
+				this->vSidConfig.at("colors").at("reqIndicator").value("r", 255),
+				this->vSidConfig.at("colors").at("reqIndicator").value("g", 255),
+				this->vSidConfig.at("colors").at("reqIndicator").value("b", 255)
+			);
+		}
+		else this->colors["reqIndicator"] = RGB(255, 255, 255);
 
         // pseudo values for special color use cases
         if (!this->colors.contains("squawkSet")) this->colors["squawkSet"] = RGB(300, 300, 300);
@@ -56,6 +344,22 @@ void vsid::ConfigParser::loadMainConfig()
     catch (std::error_code& e)
     {
         messageHandler->writeMessage("ERROR", "Failed to import colors: " + e.message());
+    }
+    catch (const json::parse_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Parse Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::type_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Type Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::other_error& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Other Error] in color config section: " + std::string(e.what()));
+    }
+    catch (const json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "[Out of Range] in color config section: " + std::string(e.what()));
     }
 
     // get request times
@@ -82,6 +386,20 @@ void vsid::ConfigParser::loadMainConfig()
     catch (json::out_of_range& e)
     {
         messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
+    }
+
+    // get indicator reference values
+
+    try
+    {
+        this->indicator.refDiagPx = this->vSidConfig.at("display").value("indicatorRefDiagPx", 2144.40);
+        this->indicator.refOffset = this->vSidConfig.at("display").value("indicatorRefOffset", 20);
+        this->indicator.refZoom = this->vSidConfig.at("display").value("indicatorRefZoom", 417);
+        this->indicator.showBelowZoom = this->vSidConfig.at("display").value("indicatorShowBelowZoom", 600);
+    }
+    catch (json::out_of_range& e)
+    {
+        messageHandler->writeMessage("ERROR", "Failed to get indicator default reference values: " + std::string(e.what()));
     }
 }
 
@@ -118,7 +436,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
     std::vector<std::filesystem::path> files;
     std::set<std::string> aptConfig;
 
-   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further evaluation - can cause slow loading
+   /* for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(basePath)) // needs further #evaluate - can cause slow loading
     {
         if (!std::filesystem::is_directory(entry) && entry.extension() == ".json")
         {
@@ -170,6 +488,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
                             customRules.insert(rule);
                         }
+
                         // overwrite loaded rule settings from config with current values at the apt
 
                         if (savedCustomRules.contains(icao))
@@ -192,7 +511,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             appSIPrio++;
                         }
                         
-                        //areas
+                        // areas
 
                         if (this->parsedConfig.at(icao).contains("areas"))
                         {
@@ -242,7 +561,21 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             }
                         }
 
+                        // intersections
+
+                        if (this->parsedConfig.at(icao).contains("intersections"))
+                        {
+                            for (auto& intsecList : this->parsedConfig.at(icao).at("intersections").items())
+                            {
+                                std::string rwy = intsecList.key();
+                                std::vector<std::string> intsec = vsid::utils::split(intsecList.value(), ',');
+
+                                aptInfo.intsec.insert({ rwy, intsec });
+                            }
+                        }
+
                         // airport settings
+
                         if (savedSettings.contains(icao))
                         {
                             aptInfo.settings = savedSettings[icao];
@@ -867,7 +1200,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] lvp: " + std::to_string(newSid.lvp), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeFrom: " + std::to_string(newSid.timeFrom), vsid::MessageHandler::DebugArea::Conf);
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeTo: " + std::to_string(newSid.timeTo), vsid::MessageHandler::DebugArea::Conf);
-												// end dev
+												// end dev - debugging msgs for sid restriction levels
                                             }
                                         }
                                     }
@@ -1021,6 +1354,97 @@ void vsid::ConfigParser::loadRnavList()
     }
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
+
+// #dev - load Ese
+void vsid::ConfigParser::loadEse()
+{
+    if (this->vSidConfig.is_null())
+    {
+		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+		return;
+    }
+
+	if (!this->vSidConfig.contains("esePath") || this->vSidConfig.at("esePath") == "")
+	{
+		messageHandler->writeMessage("ERROR", "No path to .ese file set in main config or it couldn't be loaded.");
+		return;
+	}
+
+	char path[MAX_PATH + 1] = { 0 };
+	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+	PathRemoveFileSpecA(path);
+	std::filesystem::path basePath = path;
+
+    std::string esePath = this->vSidConfig.at("esePath");
+
+    basePath.append(esePath).make_preferred();
+
+    messageHandler->writeMessage("DEBUG", "loadEse called, basePath: " + basePath.string(), vsid::MessageHandler::DebugArea::Dev);
+
+    std::ofstream debugLog(basePath / "debug_ese_output.txt");
+    debugLog.clear();
+
+	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+	{
+		messageHandler->writeMessage("DEBUG", "File: " + entry.string(), vsid::MessageHandler::DebugArea::Dev);
+        if (entry.extension() == ".ese")
+        {
+            std::ifstream eseFile(entry.string());
+
+            if (!eseFile.is_open())
+            {
+                messageHandler->writeMessage("WARNING", "Failed to open .ese file in: " + basePath.string());
+                break;
+            }
+
+            std::string newLine = "";
+            std::vector<std::string> vecLine = {};
+            bool sectionPosition = false;
+
+            while (std::getline(eseFile, newLine))
+            {
+                if (newLine.find("[POSITIONS]") != std::string::npos) sectionPosition = true;
+                if (newLine.empty() && sectionPosition) break;
+                if (!sectionPosition) continue;
+
+                if (newLine.find("[POSITIONS]") != std::string::npos) continue; // skip begin of section
+
+                vecLine = vsid::utils::split(newLine, ':', true);
+
+                try
+                {
+                    std::string callsign = vecLine.at(0);
+                    std::string freq = vecLine.at(2);
+                    std::string si = vecLine.at(3);
+                }
+                catch (std::out_of_range& e)
+                {
+                    messageHandler->writeMessage("ERROR", "Failed to retrieve station from .ese file: " + std::string(e.what()));
+                }
+
+                for (auto it = vecLine.begin(); it != vecLine.end(); ++it)
+                {
+                    int pos = std::distance(vecLine.begin(), it);
+
+                    debugLog << "[" << pos << "] " << *it << " | ";
+                }
+
+				debugLog << '\n';
+
+                vecLine.clear();
+            }
+
+            eseFile.close();
+
+            messageHandler->writeMessage("DEBUG", "File should be closed.", vsid::MessageHandler::DebugArea::Dev);
+
+            break; // no further checks necessary
+        }
+	}
+
+    debugLog.close();
+}
+// end dev
 
 const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
