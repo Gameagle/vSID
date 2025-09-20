@@ -1,3 +1,7 @@
+[Changelog v0.13.1]
+**FIXED**
+*	FPLN - permanent sync entry present (probably only when using proxy instances - not reproducable without). Turned out usage of an ES internal function caused an issue that resembles a race-condition. Internal ES function was exchanged (#346)
+
 [Changelog v0.13.0]
 **NEW**
 *	FPLN - the sync command now queues the messages which are sent in sequence one by one after the previous message has been received from the servers (also applies to single scratch pad commands)
