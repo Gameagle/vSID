@@ -42,7 +42,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.13.0";
+	const std::string pluginVersion = "0.13.1";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -430,6 +430,7 @@ namespace vsid
 		// Param 2: std::string - last entry processed
 		//************************************
 		std::unordered_map<std::string, bool> spReleased;
+
 		//************************************
 		// Description: List of messages to be send for syncing infos for different callsigns
 		// Param 1: std::string - callsign
