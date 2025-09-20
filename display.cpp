@@ -314,7 +314,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 									// skip specific gnd states - also accounts for GRP gnd states
 									if (info.gndState == "ARR" || info.gndState == "DE-ICE" ||
-										info.gndState == "ONFREQ" || info.gndState == "ARR") continue;
+										info.gndState == "ONFREQ") continue;
 
 									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
 									std::string adep = fpln.GetFlightPlanData().GetOrigin();
