@@ -1197,7 +1197,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 			this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
-	else
+	else if(this->processed.contains(callsign))
 	{
 		fpln = this->processed[callsign];
 
@@ -1595,7 +1595,7 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 	if (this->processed.contains(callsign))
 	{
-		this->addSyncQueue(callsign, std::string(".vsid_state_") + ((FlightPlan.GetClearenceFlag()) ? "true" : "false"), FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		this->addSyncQueue(callsign, (FlightPlan.GetClearenceFlag() ? "CLEA" : "NOTC"), FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		if (this->processed[callsign].gndState != "")
 		{
 			this->addSyncQueue(callsign, this->processed[callsign].gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
@@ -1671,6 +1671,10 @@ void vsid::VSIDPlugin::processSPQueue()
 
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.first).c_str());
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.second).c_str());
+
+			// pre-release sync lock as mentioned ES msgs are never received
+			
+			if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
 		}
 		else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove (only debugging)
 		{
@@ -3679,7 +3683,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				
 				// sync states
 
-				if (this->activeAirports.contains(adep) && (FlightPlan.GetClearenceFlag() || fpln.gndState != ""))
+				if (this->activeAirports.contains(adep))
 				{
 					messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling sync state.", vsid::MessageHandler::DebugArea::Dev);
 					this->syncStates(FlightPlan);
@@ -4182,6 +4186,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
+			// clearance flag released while sending
+
 			// request entries
 
 			if (scratchpad.find(".VSID_REQ_") != std::string::npos)
@@ -4295,22 +4301,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						messageHandler->addFplnError(callsign, ERROR_FPLN_REQSET);
 					}
 				}
-
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
-			}
-
-			// clearance flag
-
-			if (scratchpad.find(".VSID_STATE_") != std::string::npos)
-			{
-				std::string toFind = ".VSID_STATE_";
-				size_t pos = scratchpad.find(toFind);
-
-				bool clrf = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
-
-				// #evaluate - vice versa condition to remove clearance flag
-				if (clrf && !FlightPlan.GetClearenceFlag()) this->callExtFunc(callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN,
-					callsign.c_str(), NULL, EuroScopePlugIn::TAG_ITEM_FUNCTION_SET_CLEARED_FLAG, POINT(), RECT());
 
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
