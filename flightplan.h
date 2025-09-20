@@ -155,30 +155,6 @@ namespace vsid
 		bool findScratchPad(const EuroScopePlugIn::CFlightPlan &FlightPlan, const std::string& toSearch);
 
 		//************************************
-		// Description: Set or update the scratchpad. If an entry is present the new entry will be added.
-		// Method:    setScratchPad
-		// FullName:  vsid::fplnhelper::setScratchPad
-		// Access:    public 
-		// Returns:   bool
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
-		// Parameter: const std::string & toAdd
-		//************************************
-		std::string addScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toAdd);
-
-		//************************************
-		// Description: Remove an entry from the scratchpad. Non matching entries are preserved.
-		// Method:    removeScratchPad
-		// FullName:  vsid::fplnhelper::removeScratchPad
-		// Access:    public 
-		// Returns:   bool
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
-		// Parameter: const std::string & toRemove
-		//************************************
-		std::string removeScratchPad(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& toRemove);
-
-		//************************************
 		// Description: Get the filed equipment code for the flight plan. If the acft type is found in the
 		// RNAV list a RNAV capable code is returned. If equipment is missing but capabilities are present
 		// they are converted from FAA to ICAO, defaulting to RNAV capable code if the entry isn't found in the
