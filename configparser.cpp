@@ -392,9 +392,8 @@ void vsid::ConfigParser::loadMainConfig()
 
     try
     {
-        this->indicator.refDiagPx = this->vSidConfig.at("display").value("indicatorRefDiagPx", 2144.40);
-        this->indicator.refOffset = this->vSidConfig.at("display").value("indicatorRefOffset", 20);
-        this->indicator.refZoom = this->vSidConfig.at("display").value("indicatorRefZoom", 417);
+        this->indicator.offset = this->vSidConfig.at("display").value("indicatorOffset", 20);
+        this->indicator.zoomScale = this->vSidConfig.at("display").value("indicatorZoomScale", 0.3);
         this->indicator.showBelowZoom = this->vSidConfig.at("display").value("indicatorShowBelowZoom", 600);
     }
     catch (json::out_of_range& e)

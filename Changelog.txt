@@ -1,6 +1,19 @@
 [Changelog v0.13.1]
+** Main config needs to be updated! **
+
+**NEW**
+*	CONFIG - value "indicatorZoomScale" (current default value: 0.3)
+
+**CHANGED**
+*	FPLN - indicator position calculation changed to be resolution independent with only 2 settings (offset in px and zoomScale). zoomScale values: = 0 - constant offset px gap, = 1 - constant meter gap (px offset grows on zoom in), < 0 - px shrink on zoom in (indicator moves to target), > 0 - px grow on zoom in (indicator moves away from target); zoomScale values techincally only valid in behaviour if internal pxPerMeter stays < 1, which should be guaranteed in normal use cases
+*	DISP - .vsid display config now only shows the zoom level and no diagPx anymore (config value was removed)
+*	CONFIG - renamed "indicatorRefOffset" to "indicatorOffset"
+
 **FIXED**
 *	FPLN - permanent sync entry present (probably only when using proxy instances - not reproducable without). Turned out usage of an ES internal function caused an issue that resembles a race-condition. Internal ES function was exchanged (#346)
+
+**REMOVED**
+*	CONFIG - removed value "indicatorRefDiagPx" and "indicatorRefZoom"
 
 [Changelog v0.13.0]
 **NEW**

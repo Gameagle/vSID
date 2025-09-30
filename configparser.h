@@ -43,9 +43,8 @@ namespace vsid
 
 	struct Indicator
 	{
-		int refOffset = 20;
-		int refZoom = 417;
-		double refDiagPx = 2144.40;
+		int offset = 20;
+		double zoomScale = 1.0;
 		int showBelowZoom = 600;
 	};
 
