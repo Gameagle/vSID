@@ -5,7 +5,7 @@
 *	CONFIG - value "indicatorZoomScale" (current default value: 0.3)
 
 **CHANGED**
-*	FPLN - indicator position calculation changed to be resolution independent with only 2 settings (offset in px and zoomScale). zoomScale values: = 0 - constant offset px gap, = 1 - constant meter gap (px offset grows on zoom in), < 0 - px shrink on zoom in (indicator moves to target), > 0 - px grow on zoom in (indicator moves away from target); zoomScale values techincally only valid in behaviour if internal pxPerMeter stays < 1, which should be guaranteed in normal use cases
+*	FPLN - indicator position calculation changed to be resolution independent with only 2 settings (offset in px and zoomScale). zoomScale values: = 0 - constant offset px gap, smaller (positive) values reduce the scaling effect (less extreme), larger (positive) values have a more extreme effect. Negative values flip the effect (further away on zoom out compared to closer on zoom out)
 *	DISP - .vsid display config now only shows the zoom level and no diagPx anymore (config value was removed)
 *	CONFIG - renamed "indicatorRefOffset" to "indicatorOffset"
 
