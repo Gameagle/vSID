@@ -142,7 +142,7 @@
         "showIntIndicatorOn": "Ground Radar display",
         "enableIntIndicator": true,
         "indicatorOffset": 20,
-        "indicatorZoomScale": 0.3,
+        "indicatorZoomScale": 0.5,
         "indicatorShowBelowZoom": 600
     }
 }
