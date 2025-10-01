@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "display.h"
 #include "vSIDPlugin.h" // forward declaration
@@ -858,9 +858,14 @@ EuroScopePlugIn::CPosition vsid::Display::getIndicatorOffset(EuroScopePlugIn::CP
 	// pixel per meter along direction
 
 	double pxPerMeter = alignment / probe;
-	pxPerMeter = std::max(pxPerMeter, eps); // ensure positive values before std::pow
 
-	offset *= std::pow(pxPerMeter, zoomScale); // enable zoom relative movement
+	// zoom scale and smoothing
+
+	const double baseScale = std::max(pxPerMeter, eps);
+	const double sharpness = 0.5; // how fast transition of zoom scale takes effect (bigger values - smoother)
+	const double smoothScale = std::tanh(std::log(baseScale) / sharpness);
+
+	offset *= std::exp(zoomScale * smoothScale);
 
 	// convert pixels to meters
 
