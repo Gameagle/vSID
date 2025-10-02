@@ -29,10 +29,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
-// #dev - distance
 #include <cmath>
 #include <numbers>
-// end dev
 
 namespace vsid
 {
@@ -206,12 +204,7 @@ namespace vsid
 		//************************************
 		inline int getZoomLevel()
 		{
-			// #dev - get display distance
-
-			/*return (std::round(coordTL.DistanceTo(coordBR) * 100.0) / 100.0) * 100.0;*/
 			return (std::round(getScreenNM() * 100.0) / 100.0) * 100.0;
-
-			// end dev - get display distance
 		}
 
 		// #dev - new indicator pos
