@@ -141,9 +141,8 @@
         "enableRequest":  true,
         "showIntIndicatorOn": "Ground Radar display",
         "enableIntIndicator": true,
-        "indicatorRefOffset": 20,
-        "indicatorRefZoom": 417,
-        "indicatorRefDiagPx": 2144.40,
+        "indicatorOffset": 20,
+        "indicatorZoomScale": 0.5,
         "indicatorShowBelowZoom": 600
     }
 }

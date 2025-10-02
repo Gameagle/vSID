@@ -29,9 +29,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
-// #dev - distance
 #include <cmath>
-// end dev
+#include <numbers>
 
 namespace vsid
 {
@@ -205,23 +204,38 @@ namespace vsid
 		//************************************
 		inline int getZoomLevel()
 		{
-			// #dev - get display distance
-
-			/*return (std::round(coordTL.DistanceTo(coordBR) * 100.0) / 100.0) * 100.0;*/
 			return (std::round(getScreenNM() * 100.0) / 100.0) * 100.0;
-
-			// end dev - get display distance
 		}
 
+		// #dev - new indicator pos
 
 		//************************************
-		// Description: Calculates the indicator label offset based on current and reference screen values
-		// Method:    getLabelOffset
-		// FullName:  vsid::Display::getLabelOffset
+		// Description: Calculates the offset for indicators in meters as geodatic values (lat/lon)
+		// Method:    calculateIndicatorMeterOffset
+		// FullName:  vsid::Display::calculateIndicatorMeterOffset
 		// Access:    private 
-		// Returns:   double
+		// Returns:   EuroScopePlugIn::CPosition
 		// Qualifier:
+		// Parameter: double lat - base lat
+		// Parameter: double lon - base lon
+		// Parameter: double offset - offset in meters
+		// Parameter: double deg - screen bearing (0.0 top of screen, 180.0 bottom of screen, etc)
 		//************************************
-		double getLabelOffset();
+		EuroScopePlugIn::CPosition calculateIndicatorMeterOffset(double lat, double lon, double offset, double deg);
+
+		//************************************
+		// Description: Get the actual offset as ES::CPosition for the drawing of an indicator (convert to PixelCoordinates after)
+		// Method:    getIndicatorPxOffset
+		// FullName:  vsid::Display::getIndicatorPxOffset
+		// Access:    private 
+		// Returns:   EuroScopePlugIn::CPosition
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CPosition basePos - radar target position
+		// Parameter: double offset - desired offset in px
+		// Parameter: double zoomScale - affects offset (0 - constant px gap, 1 - constant meter gap, < 0 - px shrink on zoom in, > 0 - pixel grow on zoom in)
+		//			  -> technically this behaviour is only valid if internal pxPerMeter stays < 1
+		// Parameter: double deg - screen bearing (0.0 top of screen, 180.0 bottom of screen, etc)
+		//************************************
+		EuroScopePlugIn::CPosition getIndicatorOffset(EuroScopePlugIn::CPosition basePos, double offset, double zoomScale, double deg);
 	};
 }
