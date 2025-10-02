@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "display.h"
 #include "vSIDPlugin.h" // forward declaration
@@ -51,6 +51,11 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		std::string showIntOn = "";
 		bool enableIntIndicator = false;
 
+		// get default value and offset value
+
+		double zoomScale = sharedPlugin->getConfigParser().getIndicatorDefaultValues().zoomScale;
+		double offset = sharedPlugin->getConfigParser().getIndicatorDefaultValues().offset;
+
 		try
 		{
 			showPbOn = sharedPlugin->getConfigParser().getMainConfig().at("display").value("showPbIndicatorOn", "");
@@ -102,6 +107,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
 		{
 			EuroScopePlugIn::CRadarTarget target = sharedPlugin->RadarTargetSelect(callsign.c_str());
+			EuroScopePlugIn::CPosition targetPos = target.GetPosition().GetPosition();
 
 			// pushback indicator 
 
@@ -110,7 +116,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			{
 				if (fplnInfo.gndState == "PUSH")
 				{
-					POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+					EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
+
+					POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
 
 					CRect area;
 					/*area.bottom = pos.y + 20; -- arrow position below target
@@ -120,10 +128,10 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 					// arrow position left of target
 
-					area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
-					area.top = area.bottom - 15;
-					area.left = targetPos.x - 15;
-					area.right = area.left + 10;
+					area.top = offsetPx.y; // 10; 10px fixed before
+					area.bottom = area.top + 15;
+					area.left = offsetPx.x;
+					area.right = area.left + 15;
 
 					dc.SelectObject(&font);
 
@@ -139,10 +147,14 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				std::string adep = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
-				std::string fplnRwy = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetDepartureRwy();
+				std::string fplnRwy = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetDepartureRwy(); // # refactor - use rwy from actual flight plan (icao block)
 
 				if (fplnInfo.request != "" && adep != "")
 				{
+					EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
+
+					POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
+
 					try
 					{
 						for (auto& [type, req] : sharedPlugin->getActiveApts().at(adep).requests)
@@ -157,14 +169,12 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 								std::string reqPos = vsid::utils::toupper(type).at(0) + std::to_string(pos);
 
-								POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
-
 								CRect area;
 
-								area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
-								area.top = area.bottom - 15;
-								area.right = targetPos.x + 30;
-								area.left = area.right - 25;
+								area.top = offsetPx.y; // 10; 10px fixed before
+								area.bottom = area.top + 15;
+								area.left = offsetPx.x;
+								area.right = area.left + 30;
 
 								dc.SelectObject(&font);
 
@@ -188,13 +198,13 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 									size_t pos = std::distance(it, rwyReq.end());
 									std::string reqPos = vsid::utils::toupper(type).at(0) + std::to_string(pos);
-									POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+
 									CRect area;
 
-									area.bottom = targetPos.y + this->getLabelOffset(); // 10; 10px fixed before
-									area.top = area.bottom - 15;
-									area.right = targetPos.x + 30;
-									area.left = area.right - 25;
+									area.top = offsetPx.y; // 10; 10px fixed before
+									area.bottom = area.top + 15;
+									area.left = offsetPx.x;
+									area.right = area.left + 30;
 
 									dc.SelectObject(&font);
 
@@ -216,14 +226,17 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 			{
 				if (fplnInfo.intsec.first != "")
 				{
-					POINT targetPos = this->ConvertCoordFromPositionToPixel(target.GetPosition().GetPosition());
+					EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
+
+					POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
+
+					// draw indicator
 
 					CRect area;
 
-					// position below target
-					area.bottom = targetPos.y + this->getLabelOffset();
-					area.top = area.bottom - 15;
-					area.left = targetPos.x - 5;
+					area.top = offsetPx.y;
+					area.bottom = area.top + 15;					
+					area.left = offsetPx.x;
 					area.right = area.left + 30; // original: 10
 
 					// painted text
@@ -314,7 +327,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 									// skip specific gnd states - also accounts for GRP gnd states
 									if (info.gndState == "ARR" || info.gndState == "DE-ICE" ||
-										info.gndState == "ONFREQ" || info.gndState == "ARR") continue;
+										info.gndState == "ONFREQ") continue;
 
 									std::string fplnRwy = fpln.GetFlightPlanData().GetDepartureRwy();
 									std::string adep = fpln.GetFlightPlanData().GetOrigin();
@@ -551,7 +564,7 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 	if (std::string(sCommandLine) == ".vsid display config")
 	{
-		messageHandler->writeMessage("INFO", "Zoom-Level: " + std::to_string(this->getZoomLevel()) + " | screen diagonal: " + std::to_string(this->getScreenDiagonalPx()));
+		messageHandler->writeMessage("INFO", "Zoom-Level: " + std::to_string(this->getZoomLevel()));
 		return true;
 	}
 	return false;
@@ -733,17 +746,145 @@ void vsid::Display::closeMenu(const std::string &title)
 		" because it is not in the menu list. Code: " + ERROR_DSP_RMMENU);
 }
 
-double vsid::Display::getLabelOffset()
+EuroScopePlugIn::CPosition vsid::Display::calculateIndicatorMeterOffset(double lat, double lon, double offset, double deg)
 {
-	if (std::shared_ptr shared_plugin = this->plugin.lock())
+	const double radius = 6378137.0;
+	auto toRad = [](double num) -> double { return num * std::numbers::pi / 180; };
+	auto toDeg = [](double num) -> double { return num * 180 / std::numbers::pi; };
+
+
+	const double latRad = toRad(lat);
+	const double lonRad = toRad(lon);
+	const double degRad = toRad(deg);
+
+	// meters to radians
+
+	const double delta = offset / radius;
+
+	// precompute sin and cos
+
+	const double sinLatRad = std::sin(latRad);
+	const double cosLatRad = std::cos(latRad);
+	const double sinDelta = std::sin(delta);
+	const double cosDelta = std::cos(delta);
+
+	// new lat via great-circle step
+
+	const double newLat = sinLatRad * cosDelta + cosLatRad * sinDelta * std::cos(degRad);
+	const double asinNewLat = std::asin(newLat);
+
+	// new lon via atan2 of east/north
+
+	const double y = std::sin(degRad) * sinDelta * cosLatRad;
+	const double x = cosDelta - sinLatRad * newLat;
+	double newLon = lonRad + std::atan2(y, x);
+
+	newLon = std::fmod(toDeg(newLon) + 540, 360) - 180; // normalize lon
+
+	EuroScopePlugIn::CPosition newPos;
+	newPos.m_Latitude = toDeg(asinNewLat);
+	newPos.m_Longitude = newLon;
+	return newPos;
+}
+
+EuroScopePlugIn::CPosition vsid::Display::getIndicatorOffset(EuroScopePlugIn::CPosition basePos, double offset, double zoomScale, double deg)
+{
+	double probe = 10.0;
+	const double eps = 1e-9;
+
+	auto p0 = this->ConvertCoordFromPositionToPixel(basePos);
+
+	// determine probes in all directions to reduce rounding bias
+
+	EuroScopePlugIn::CPosition probeNorth = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, 0.0);
+	EuroScopePlugIn::CPosition probeEast = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, 90.0);
+	EuroScopePlugIn::CPosition probeSouth = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, 180.0);
+	EuroScopePlugIn::CPosition probeWest = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, 270.0);
+
+	auto pN = this->ConvertCoordFromPositionToPixel(probeNorth);
+	auto pE = this->ConvertCoordFromPositionToPixel(probeEast);
+	auto pS = this->ConvertCoordFromPositionToPixel(probeSouth);
+	auto pW = this->ConvertCoordFromPositionToPixel(probeWest);
+
+	// pixel per meter for north and east movements
+
+	const double eastX = (static_cast<double>(pE.x) - static_cast<double>(pW.x)) / (2.0 * probe);
+	const double eastY = (static_cast<double>(pE.y) - static_cast<double>(pW.y)) / (2.0 * probe);
+	const double northX = (static_cast<double>(pN.x) - static_cast<double>(pS.x)) / (2.0 * probe);
+	const double northY = (static_cast<double>(pN.y) - static_cast<double>(pS.y)) / (2.0 * probe);
+
+	// get screen unit direction
+
+	const double rad = deg * std::numbers::pi / 180.0;
+	const double vecX = std::sin(rad);
+	const double vecY = -std::cos(rad);
+
+	const double metersEast = vecX * eastX + vecY * eastY;
+	const double metersNorth = vecX * northX + vecY * northY;
+
+	// transform ground components to geodetic bearing
+
+	double bearingDeg = std::atan2(metersEast, metersNorth) * 180.0 / std::numbers::pi;
+	bearingDeg = std::fmod(bearingDeg + 360.0, 360.0); // normalization
+
+	// get first probe to measure alignment
+
+	EuroScopePlugIn::CPosition probePos = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, bearingDeg);
+
+	auto p1 = this->ConvertCoordFromPositionToPixel(probePos);
+
+	// screen delta for probe steps
+
+	double deltaX = static_cast<double>(p1.x) - static_cast<double>(p0.x);
+	double deltaY = static_cast<double>(p1.y) - static_cast<double>(p0.y);
+	double alignment = deltaX * vecX + deltaY * vecY;
+
+	// flip 180 degrees if clearly opposite direction
+
+	const double flipThresholdPx = 1.0;
+	if (alignment < -flipThresholdPx)
 	{
-		double refPxPerNm = shared_plugin->getConfigParser().getIndicatorDefaultValues().refDiagPx / shared_plugin->getConfigParser().getIndicatorDefaultValues().refZoom;
-
-		double gapNM = shared_plugin->getConfigParser().getIndicatorDefaultValues().refOffset / refPxPerNm;
-
-		double pxPerNm = this->getScreenDiagonalPx() / this->getZoomLevel();
-
-		return gapNM * pxPerNm;
+		bearingDeg = std::fmod(bearingDeg + 180.0, 360.0);
+		probePos = this->calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, probe, bearingDeg);
+		p1 = this->ConvertCoordFromPositionToPixel(probePos);
+		deltaX = static_cast<double>(p1.x) - static_cast<double>(p0.x);
+		deltaY = static_cast<double>(p1.y) - static_cast<double>(p0.y);
+		alignment = deltaX * vecX + deltaY * vecY;
 	}
-	return 0; // fallback state
+	alignment = std::max(alignment, eps); // prevent negative values due to rounding
+
+	//const double pxPerMeter = std::hypot(p1.x - p0.x, p1.y - p0.y) / probe;
+
+	// pixel per meter along direction
+
+	double pxPerMeter = alignment / probe;
+
+	// zoom scale and smoothing
+
+	const double baseScale = std::max(pxPerMeter, eps);
+	const double sharpness = 0.5; // how fast transition of zoom scale takes effect (bigger values - smoother)
+	const double smoothScale = std::tanh(std::log(baseScale) / sharpness);
+
+	offset *= std::exp(zoomScale * smoothScale);
+
+	// convert pixels to meters
+
+	double targetMeters = (pxPerMeter > eps) ? (offset / pxPerMeter) : 0.0;
+
+	// 'correction pass' - second probe to measure alignment
+
+	EuroScopePlugIn::CPosition tempPos = calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, targetMeters, bearingDeg);
+
+	auto p2 = this->ConvertCoordFromPositionToPixel(tempPos);
+	const double deltaTempX = static_cast<double>(p2.x) - static_cast<double>(p0.x);
+	const double deltaTempY = static_cast<double>(p2.y) - static_cast<double>(p0.y);
+
+	//double pxDistance = std::hypot(p2.x - p0.x, p2.y - p0.y);
+	const double pxDistance = deltaTempX * vecX + deltaTempY * vecY;
+
+	// scale meters
+
+	if (std::abs(pxDistance) > eps) targetMeters *= (offset / pxDistance);
+
+	return calculateIndicatorMeterOffset(basePos.m_Latitude, basePos.m_Longitude, targetMeters, bearingDeg);
 }
