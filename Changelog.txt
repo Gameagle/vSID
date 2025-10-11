@@ -1,3 +1,11 @@
+[Changelog v0.14.0]
+**Main config needs to be updated!**
+
+**NEW**
+*	CONFIG - new setting "esePath" added to set the path to the .ese file (relative or absolute path - relative recommended)
+*	CONFIG - .ese file is parsed for atc stations as Euroscope sometimes sends sector identifiers as numbers which cannot be matched against airport configs (no further function implemented yet)
+*	CONFIG - .ese file is parsed for SIDs as Euroscope doesn't allow to distinguish between SID and STAR. Only SIDs are now parsed to match against the airport configs
+
 [Changelog v0.13.1]
 **Main config needs to be updated!**
 
