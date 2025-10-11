@@ -65,6 +65,8 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemFunction("Auto-Assign Squawk (TopSky)", TAG_FUNC_VSID_TSSQUAWK);
 
+	this->loadEse(); // load and parse ese file
+
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
@@ -1701,6 +1703,58 @@ void vsid::VSIDPlugin::processSPQueue()
 	}
 	queueInProcess = false;
 	messageHandler->writeMessage("DEBUG", "Finished sync processing queue...", vsid::MessageHandler::DebugArea::Dev);
+}
+
+void vsid::VSIDPlugin::loadEse()
+{
+	json& vSidConfig = this->configParser.getMainConfig();
+
+	if (vSidConfig.is_null())
+	{
+		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+		return;
+	}
+		
+	if (!vSidConfig.contains("esePath"))
+	{
+		messageHandler->writeMessage("ERROR", "Config value esePath is missing. (Critical!).");
+		return;
+	}
+
+	char path[MAX_PATH + 1] = { 0 };
+	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
+	PathRemoveFileSpecA(path);
+	std::filesystem::path basePath = path;
+	std::string esePath = vSidConfig.at("esePath");
+	std::filesystem::path fullEsePath;
+
+	basePath.append(esePath).make_preferred();
+	
+	try
+	{
+		for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
+		{
+			if (!std::filesystem::is_directory(entry) && entry.extension() == ".ese")
+			{
+				fullEsePath = entry;
+				fullEsePath = std::filesystem::canonical(fullEsePath.make_preferred());
+			}
+		}
+
+		if (fullEsePath.empty())
+		{
+			messageHandler->writeMessage("ERROR", "Couldn't find .ese file. Checked in: " + basePath.lexically_normal().string());
+			return;
+		}
+	}
+	catch (std::filesystem::filesystem_error& e)
+	{
+		messageHandler->writeMessage("ERROR", "Failed to validate ese path: " + std::string(e.what()));
+	}
+	
+
+	vsid::EseParser eseParser(this->sectionAtc, this->sectionSids);
+	eseParser.parseEse(fullEsePath);
 }
 /*
 * END OWN FUNCTIONS
@@ -3847,8 +3901,16 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		}
 		else if (vsid::utils::tolower(command[1]) == "reload")
 		{
-			messageHandler->writeMessage("INFO", "Reloading main config...");
-			this->configParser.loadMainConfig();
+			if (command.size() == 2)
+			{
+				messageHandler->writeMessage("INFO", "Reloading main config...");
+				this->configParser.loadMainConfig();
+			}
+			else if (command.size() == 3 && vsid::utils::tolower(command[2]) == "ese")
+			{
+				this->loadEse();
+			}
+			
 			return true;
 		}
 		else
@@ -4770,16 +4832,17 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		messageHandler->writeMessage("DEBUG", "Checking .ese file for SID mastering...", vsid::MessageHandler::DebugArea::Conf);
 
 		// if there are configured airports check for remaining sid data
-		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS);
-			sfe.IsValid();
-			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS)
-			)
-		{
-			if (!this->activeAirports.contains(vsid::utils::trim(sfe.GetAirportName()))) continue;
 
-			std::string name = sfe.GetName();
+		//for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS);
+		//	sfe.IsValid();
+		//	sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS)
+		//	)
+
+		for(auto &sectionSid : this->sectionSids)
+		{
+			if (!this->activeAirports.contains(sectionSid.apt)) continue;
 			
-			for (vsid::Sid& sid : this->activeAirports[vsid::utils::trim(sfe.GetAirportName())].sids)
+			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
 				if (sid.designator != "")
 				{					
@@ -4787,67 +4850,66 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					{
 						for (auto& [base, trans] : sid.transition)
 						{
-							if (base != name.substr(0, name.length() - 2)) continue;
-							if (trans.designator != std::string(1, name[name.length() - 1])) continue;
+							if (base != sectionSid.base) continue;
+							if (trans.designator != std::string(1, sectionSid.desig)) continue;
 
-							if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
+							if (std::isdigit(sectionSid.number))
 							{
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
 									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
 
-								trans.number = name[name.length() - 2];
+								trans.number = sectionSid.number;
 								break;
 							}
 						}
 					}
 
-					if (sid.base != name.substr(0, name.length() - 2)) continue;
-					if (sid.designator != std::string(1, name[name.length() - 1])) continue;
+					if (sid.base != sectionSid.base) continue;
+					if (sid.designator != std::string(1, sectionSid.desig)) continue;
 
-					if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
+					if (std::isdigit(sectionSid.number))
 					{
 						if (sid.number == "")
 						{
-							sid.number = name[name.length() - 2];
+							sid.number = sectionSid.number;
 							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
 								") mastered", vsid::MessageHandler::DebugArea::Conf);
 						}
 						else // health check for possible errors in .sct / .ese config
 						{
 							int currNumber = std::stoi(sid.number);
-							int newNumber = name[name.length() - 2] - '0';
-							std::string rwyName = "";
+							int newNumber = sectionSid.number - '0';
 
-							if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
-							else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);
+							/*if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
+							else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);*/
 
 							if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
 							{
 								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + rwyName + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
+									" - (Runway: " + sectionSid.rwy + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
 							}
 							else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
 							{
 								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + rwyName + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
+									" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
-								sid.number = name[name.length() - 2];
+								sid.number = sectionSid.number;
 							}
 							else if (currNumber != newNumber)
 							{
 								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + rwyName + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+									" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
 							}
 						}
 					}
 				}
 				else
 				{
-					if (name != sid.base) continue;
+					if (sectionSid.base != sid.base) continue;
 					sid.number = 'X';
 					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
 				}
@@ -5328,3 +5390,426 @@ void __declspec (dllexport) EuroScopePlugInExit(void)
 
 	vsidPlugin->exit();
 }
+
+
+// #dev - ese parsing backup code
+//void vsid::VSIDPlugin::UpdateActiveAirports()
+//{
+//	messageHandler->writeMessage("INFO", "Updating airports...");
+//	this->savedSettings.clear();
+//	this->savedRules.clear();
+//	this->savedAreas.clear();
+//	this->savedRequests.clear();
+//	this->savedRwyRequests.clear();
+//
+//	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
+//	{
+//		this->savedSettings.insert({ apt.first, apt.second.settings });
+//		this->savedRules.insert({ apt.first, apt.second.customRules });
+//		this->savedAreas.insert({ apt.first, apt.second.areas });
+//		this->savedRequests.insert({ apt.first, apt.second.requests });
+//		this->savedRwyRequests.insert({ apt.first, apt.second.rwyrequests });
+//	}
+//
+//	for (std::map<std::string, vsid::Fpln>::iterator it = this->processed.begin(); it != this->processed.end();)
+//	{
+//		vsid::fplnhelper::saveFplnInfo(it->first, it->second, this->savedFplnInfo);
+//		it = this->processed.erase(it);
+//	}
+//
+//	this->SelectActiveSectorfile();
+//	this->activeAirports.clear();
+//
+//	// get active airports
+//	for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT);
+//		sfe.IsValid();
+//		sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT)
+//		)
+//	{
+//		if (sfe.IsElementActive(true))
+//		{
+//			this->activeAirports[vsid::utils::trim(sfe.GetName())] = vsid::Airport{};
+//			this->activeAirports[vsid::utils::trim(sfe.GetName())].icao = vsid::utils::trim(sfe.GetName());
+//		}
+//	}
+//
+//	// get active rwys
+//	for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_RUNWAY);
+//		sfe.IsValid();
+//		sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_RUNWAY)
+//		)
+//	{
+//		if (this->activeAirports.contains(vsid::utils::trim(sfe.GetAirportName())))
+//		{
+//			std::string aptName = vsid::utils::trim(sfe.GetAirportName());
+//			if (sfe.IsElementActive(false, 0))
+//			{
+//				std::string rwyName = vsid::utils::trim(sfe.GetRunwayName(0));
+//				this->activeAirports[aptName].arrRwys.insert(rwyName);
+//			}
+//			if (sfe.IsElementActive(true, 0))
+//			{
+//				std::string rwyName = vsid::utils::trim(sfe.GetRunwayName(0));
+//				this->activeAirports[aptName].depRwys.insert(rwyName);
+//			}
+//			if (sfe.IsElementActive(false, 1))
+//			{
+//				std::string rwyName = vsid::utils::trim(sfe.GetRunwayName(1));
+//				this->activeAirports[aptName].arrRwys.insert(rwyName);
+//			}
+//			if (sfe.IsElementActive(true, 1))
+//			{
+//				std::string rwyName = vsid::utils::trim(sfe.GetRunwayName(1));
+//				this->activeAirports[aptName].depRwys.insert(rwyName);
+//			}
+//		}
+//	}
+//
+//	// only load configs if at least one airport has been selected
+//	if (this->activeAirports.size() > 0)
+//	{
+//		this->configParser.loadAirportConfig(this->activeAirports, this->savedRules, this->savedSettings, this->savedAreas, this->savedRequests, this->savedRwyRequests);
+//		messageHandler->writeMessage("DEBUG", "Checking .ese file for SID mastering...", vsid::MessageHandler::DebugArea::Conf);
+//
+//		// if there are configured airports check for remaining sid data
+//
+//		//for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS);
+//		//	sfe.IsValid();
+//		//	sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS)
+//		//	)
+//
+//		for (auto& sectionSid : this->sectionSids)
+//		{
+//			if (!this->activeAirports.contains(vsid::utils::trim(sfe.GetAirportName()))) continue;
+//
+//			std::string name = sfe.GetName();
+//
+//			for (vsid::Sid& sid : this->activeAirports[vsid::utils::trim(sfe.GetAirportName())].sids)
+//			{
+//				if (sid.designator != "")
+//				{
+//					if (!sid.transition.empty())
+//					{
+//						for (auto& [base, trans] : sid.transition)
+//						{
+//							if (base != name.substr(0, name.length() - 2)) continue;
+//							if (trans.designator != std::string(1, name[name.length() - 1])) continue;
+//
+//							if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
+//							{
+//								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
+//									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
+//									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
+//
+//								trans.number = name[name.length() - 2];
+//								break;
+//							}
+//						}
+//					}
+//
+//					if (sid.base != name.substr(0, name.length() - 2)) continue;
+//					if (sid.designator != std::string(1, name[name.length() - 1])) continue;
+//
+//					if (std::string("0123456789").find_first_of(name[name.length() - 2]) != std::string::npos)
+//					{
+//						if (sid.number == "")
+//						{
+//							sid.number = name[name.length() - 2];
+//							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+//								") mastered", vsid::MessageHandler::DebugArea::Conf);
+//						}
+//						else // health check for possible errors in .sct / .ese config
+//						{
+//							int currNumber = std::stoi(sid.number);
+//							int newNumber = name[name.length() - 2] - '0';
+//							std::string rwyName = "";
+//
+//							if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
+//							else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);
+//
+//							if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
+//							{
+//								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+//									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+//									" - (Runway: " + rwyName + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
+//							}
+//							else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
+//							{
+//								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+//									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+//									" - (Runway: " + rwyName + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
+//
+//								sid.number = name[name.length() - 2];
+//							}
+//							else if (currNumber != newNumber)
+//							{
+//								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+//									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+//									" - (Runway: " + rwyName + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+//							}
+//						}
+//					}
+//				}
+//				else
+//				{
+//					if (name != sid.base) continue;
+//					sid.number = 'X';
+//					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
+//				}
+//			}
+//		}
+//	}
+//
+//	//// DOCUMENTATION
+//			//if (!sidSection)
+//			//{
+//			//	if (std::string(sfe.GetAirportName()) == "EDDF")
+//			//	{
+//
+//			//		continue;
+//			//	}
+//			//	else
+//			//	{
+//			//		sidSection = true;
+//			//	}
+//			//}
+//			//if (std::string(sfe.GetAirportName()) == "EDDF")
+//			//{
+//			//	messageHandler->writeMessage("DEBUG", "sfe elem: " + std::string(sfe.GetName()));
+//			//}
+//
+//	// health check in case SIDs in config do not match sector file
+//
+//	//************************************
+//	// Parameter:	<std::string, - ICAO
+//	// Parameter:	, std::set<std::string> - incompatible SID names
+//	//************************************
+//	std::map<std::string, std::set<std::string>> incompSids;
+//	//************************************
+//	// Parameter:	<std::string, - ICAO
+//	// Parameter:	, std::map<std::string, - SID Name
+//	// Parameter:	, std::set<std::string> - incompatible transition - full name with ? as number
+//	//************************************
+//	std::map<std::string, std::map<std::string, std::set<std::string>>> incompTrans;
+//
+//	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
+//	{
+//		for (vsid::Sid& sid : apt.second.sids)
+//		{
+//			if (sid.designator != "")
+//			{
+//				if (std::string("0123456789").find_first_of(sid.number) == std::string::npos)
+//					incompSids[apt.first].insert(sid.base + '?' + sid.designator);
+//				else
+//				{
+//					//int removedTrans = 0;
+//
+//					//for (auto it = sid.transition.begin(); it != sid.transition.end();)
+//					for (auto& [_, trans] : sid.transition)
+//					{
+//						//auto& [_, trans] = *it;
+//
+//						if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
+//						{
+//							/*std::string number = (std::string("0123456789").find_first_of(sid.number) == std::string::npos) ?
+//								"?" : sid.number;*/
+//
+//							incompTrans[apt.first][sid.base + sid.number + sid.designator].insert(trans.base + '?' + trans.designator);
+//							//removedTrans++;
+//
+//							/*messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
+//								sid.id + ") removed transition [" + trans.base + "?" + trans.designator +
+//								"] (health check failed)", vsid::MessageHandler::DebugArea::Conf);*/
+//
+//								/*it = sid.transition.erase(it);*/
+//								//continue;
+//						}
+//						//++it;
+//					}
+//
+//					/*if (removedTrans > 0 && sid.transition.size() == 0)
+//					{
+//						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
+//							sid.id + ") all transitions removed.", vsid::MessageHandler::DebugArea::Dev);
+//						incompSids[apt.first].insert(sid.base + sid.number + sid.designator);
+//					}*/
+//				}
+//			}
+//			else
+//			{
+//				if (sid.number != "X") incompSids[apt.first].insert(sid.base);
+//			}
+//		}
+//	}
+//
+//	// fallback check if incompatible SIDs remain after checking .ese file. Now .sct is checked
+//
+//	if (incompSids.size() > 0 || incompTrans.size() > 0)
+//	{
+//		messageHandler->writeMessage("DEBUG", "Incompatible SIDs found. Rechecking in .sct file...", vsid::MessageHandler::DebugArea::Conf);
+//		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SID);
+//			sfe.IsValid();
+//			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SID))
+//		{
+//			std::vector<std::string> components = vsid::utils::split(std::string(sfe.GetName()), ' ');
+//			std::string compIcao = "";
+//			std::string compSid = "";
+//
+//			if (components.size() == 4)
+//			{
+//				compIcao = components.at(0);
+//				compSid = components.at(3);
+//			}
+//			else continue;
+//
+//			if (!incompSids.contains(compIcao) && !incompTrans.contains(compIcao)) continue;
+//			if (!this->activeAirports.contains(compIcao)) continue;
+//
+//			for (vsid::Sid& sid : this->activeAirports[compIcao].sids)
+//			{
+//				if (sid.number != "" && sid.transition.size() == 0) continue;
+//
+//				if (sid.designator != "")
+//				{
+//					for (auto& [base, trans] : sid.transition)
+//					{
+//						if (base != compSid.substr(0, compSid.length() - 2)) continue;
+//						if (trans.designator != std::string(1, compSid[compSid.length() - 1])) continue;
+//
+//						if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
+//						{
+//							trans.number = compSid[compSid.length() - 2];
+//
+//							if (sid.number != "" && incompTrans[compIcao].contains(sid.base + sid.number + sid.designator))
+//								incompTrans[compIcao][sid.base + sid.number + sid.designator].erase(base + '?' + trans.designator);
+//
+//							messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
+//								sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
+//								trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
+//
+//							break;
+//						}
+//					}
+//
+//					if (sid.base != compSid.substr(0, compSid.length() - 2)) continue;
+//					if (sid.designator != std::string(1, compSid[compSid.length() - 1])) continue;
+//
+//					if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
+//					{
+//						sid.number = compSid[compSid.length() - 2];
+//						incompSids[compIcao].erase(sid.base + '?' + sid.designator);
+//						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
+//					}
+//				}
+//				else
+//				{
+//					if (sid.base != compSid) continue;
+//					incompSids[compIcao].erase(sid.base);
+//					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
+//				}
+//			}
+//
+//			if (incompSids[compIcao].size() == 0) incompSids.erase(compIcao);
+//
+//			if (incompSids.size() == 0)
+//			{
+//				messageHandler->writeMessage("DEBUG", "All incompatible SIDs mastered, stopping fallback checks...", vsid::MessageHandler::DebugArea::Conf);
+//				break;
+//			}
+//		}
+//	}
+//
+//	// if incompatible SIDs (not in sector file) have been found remove them
+//
+//	for (std::pair<const std::string, std::set<std::string>>& incompSidPair : incompSids)
+//	{
+//		messageHandler->writeMessage("WARNING", "Check config for [" + incompSidPair.first +
+//			"] - Could not master sids with .sct or .ese file: " + vsid::utils::join(incompSidPair.second, ','));
+//
+//		for (const std::string& incompSid : incompSidPair.second)
+//		{
+//			if (!this->activeAirports.contains(incompSidPair.first)) continue; // #monitor - if incomp sids get deleted
+//
+//			for (auto it = this->activeAirports[incompSidPair.first].sids.begin(); it != this->activeAirports[incompSidPair.first].sids.end();)
+//			{
+//				if (incompTrans.contains(incompSidPair.first) && incompTrans[incompSidPair.first].contains(it->base + it->number + it->designator) &&
+//					it->transition.size() == 0)
+//				{
+//					messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->waypoint + it->number + it->designator +
+//						"] (ID: " + it->id + ") lost all transitions and erased", vsid::MessageHandler::DebugArea::Conf);
+//
+//					it = this->activeAirports[incompSidPair.first].sids.erase(it);
+//					continue;
+//				}
+//
+//				if (it->designator != "")
+//				{
+//					if (it->waypoint == incompSid.substr(0, incompSid.length() - 2) && it->designator == std::string(1, incompSid[incompSid.length() - 1]))
+//					{
+//						if (std::string("0123456789").find_first_of(it->number) != std::string::npos)
+//						{
+//							messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->waypoint + it->number + it->designator +
+//								"] (ID: " + it->id + ") has a number. Skipping removal (other SID with same base failed to master)", vsid::MessageHandler::DebugArea::Conf);
+//							++it;
+//							continue;
+//						}
+//
+//						if (!it->transition.empty())
+//						{
+//							messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->waypoint +
+//								((it->number != "") ? it->number : "?") + it->designator + "] (ID: " + it->id +
+//								") incompatible and erased. Transition present, double check them for validity.",
+//								vsid::MessageHandler::DebugArea::Conf);
+//						}
+//						else
+//						{
+//							messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->waypoint +
+//								((it->number != "") ? it->number : "?") + it->designator + "] (ID: " + it->id +
+//								") incompatible and erased. No transition present.", vsid::MessageHandler::DebugArea::Conf);
+//						}
+//
+//						it = this->activeAirports[incompSidPair.first].sids.erase(it);
+//						continue;
+//					}
+//				}
+//				else
+//				{
+//					if (it->base == incompSid)
+//					{
+//						messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->base +
+//							"] (ID: " + it->id + ") (base only) incompatible and erased", vsid::MessageHandler::DebugArea::Conf);
+//						it = this->activeAirports[incompSidPair.first].sids.erase(it);
+//						continue;
+//					}
+//				}
+//				++it;
+//			}
+//		}
+//	}
+//
+//	for (auto& [icao, sidMap] : incompTrans)
+//	{
+//		messageHandler->writeMessage("WARNING", "Check config for [" + icao +
+//			"] - Could not master following SIDs with transitions: ");
+//
+//		for (auto& [sidName, transitions] : sidMap)
+//		{
+//			messageHandler->writeMessage("WARNING", "SID [" + sidName +
+//				"]: " + vsid::utils::join(transitions, ','));
+//		}
+//	}
+//
+//	// remove dummy value for SIDs without designator
+//
+//	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
+//	{
+//		for (vsid::Sid& sid : apt.second.sids)
+//		{
+//			if (sid.number != "X") continue;
+//			sid.number = "";
+//		}
+//	}
+//
+//	messageHandler->writeMessage("INFO", "Airports updated. [" + std::to_string(this->activeAirports.size()) + "] active.");
+//}
+// end ev
