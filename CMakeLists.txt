@@ -21,6 +21,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES 
     area.cpp
     configparser.cpp
+    eseparser.cpp
     display.cpp
     flightplan.cpp
     menu.cpp
