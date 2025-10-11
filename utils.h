@@ -142,5 +142,10 @@ namespace vsid
 		{
 			return std::ranges::find(range, value) != std::ranges::end(range);
 		}
+
+		inline bool lastIsDigit(std::string_view s)
+		{
+			return std::isdigit(s.back());
+		}
 	}
 }
