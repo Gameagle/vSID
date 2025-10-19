@@ -4871,25 +4871,27 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 					if (std::isdigit(sectionSid.number))
 					{
-						if (sid.number == "")
+						if (sid.number == "" && vsid::utils::contains(sid.rwys, sectionSid.rwy))
 						{
 							sid.number = sectionSid.number;
 
 							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-								") mastered with master rwy " + sectionSid.rwy, vsid::MessageHandler::DebugArea::Conf);
+								") mastered. Master rwy: " + sectionSid.rwy, vsid::MessageHandler::DebugArea::Conf);
 						}
-						else if (sid.number != "" && sid.allowDiffNumbers)
+						else if (sid.number != "" && sid.number != std::string(1, sectionSid.number) && sid.allowDiffNumbers)
 						{
-							if(vsid::utils::contains(sid.rwys, sectionSid.rwy)) {
+							if (vsid::utils::contains(sid.rwys, sectionSid.rwy))
+							{
 								std::string oldNumber = sid.number; // debugging value
 								sid.number = sectionSid.number;
 
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-									") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed",
+									") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
+									" Master rwy: " + sectionSid.rwy,
 									vsid::MessageHandler::DebugArea::Conf);
 							}
 						}
-						else // health check for possible errors in .sct / .ese config
+						else if(sid.number != "") // health check for possible errors in .sct / .ese config
 						{
 							int currNumber = std::stoi(sid.number);
 							int newNumber = sectionSid.number - '0';
