@@ -607,7 +607,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                         for (auto &sidField : this->parsedConfig.at(icao).at("sids").items())
                         {
-                            if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            if (sidField.key() == "allowDiffNumbers") fieldSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
@@ -708,7 +709,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                                 for (auto& sidWpt : this->parsedConfig.at(icao).at("sids").at(sidField.key()).items())
                                 {
-                                    if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    if (sidWpt.key() == "allowDiffNumbers") wptSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    else if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if(sidWpt.key() == "climbvia") wptSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if (sidWpt.key() == "wpt") wptSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "trans")
@@ -829,7 +831,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                         {
                                             if (sidDes.key() == "rwy")
                                                 desSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()), ',');
-											else if (sidDes.key() == "initial")
+											else if (sidDes.key() == "allowDiffNumbers")
+												desSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+                                            else if (sidDes.key() == "initial")
                                                 desSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "climbvia")
                                                 desSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
@@ -981,6 +985,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                         idSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()), ',');
                                                     else if (sidId.key() == "prio")
                                                         idSetting.prio = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "allowDiffNumbers")
+														idSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "initial")
                                                         idSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "climbvia")
@@ -1133,11 +1139,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                                                 // save new sid
 
-												vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition, idSetting.equip,
-                                                                    idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled, idSetting.actArrRwy,
-                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType, idSetting.acftType, idSetting.engineCount,
-																	idSetting.mtow, idSetting.dest, idSetting.route, idSetting.customRule, idSetting.area, idSetting.lvp,
-																	idSetting.timeFrom, idSetting.timeTo, idSetting.sidHighlight, idSetting.clmbHighlight };
+                                                vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition,
+                                                                    idSetting.allowDiffNumbers, idSetting.equip, idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled,
+                                                                    idSetting.actArrRwy, idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType,
+                                                                    idSetting.acftType, idSetting.engineCount, idSetting.mtow, idSetting.dest, idSetting.route,
+                                                                    idSetting.customRule, idSetting.area, idSetting.lvp, idSetting.timeFrom, idSetting.timeTo,
+                                                                    idSetting.sidHighlight, idSetting.clmbHighlight };
 												aptInfo.sids.push_back(newSid);
 												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
 

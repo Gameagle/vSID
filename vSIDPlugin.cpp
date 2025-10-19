@@ -4855,11 +4855,12 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 							if (std::isdigit(sectionSid.number))
 							{
+								trans.number = sectionSid.number;
+
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
 									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
-
-								trans.number = sectionSid.number;
+				
 								break;
 							}
 						}
@@ -4873,8 +4874,20 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 						if (sid.number == "")
 						{
 							sid.number = sectionSid.number;
+
 							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-								") mastered", vsid::MessageHandler::DebugArea::Conf);
+								") mastered with master rwy " + sectionSid.rwy, vsid::MessageHandler::DebugArea::Conf);
+						}
+						else if (sid.number != "" && sid.allowDiffNumbers)
+						{
+							if(vsid::utils::contains(sid.rwys, sectionSid.rwy)) {
+								std::string oldNumber = sid.number; // debugging value
+								sid.number = sectionSid.number;
+
+								messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+									") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed",
+									vsid::MessageHandler::DebugArea::Conf);
+							}
 						}
 						else // health check for possible errors in .sct / .ese config
 						{
