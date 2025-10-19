@@ -55,6 +55,7 @@ namespace vsid
 		std::string id = "";
 		std::string desig = "";
 		std::map<std::string, vsid::Transition> transition = {};
+		bool allowDiffNumbers = false;
 		std::vector<std::string> rwys = {};
 		int prio = 99;
 		int initial = 0;
@@ -169,13 +170,13 @@ namespace vsid
 		json parsedConfig;
 		json vSidConfig;
 
+		std::set<std::string> configValues = { "rwy", "prio", "allowDiffNumbers", "initial", "climbvia", "wpt", "trans", "pilotfiled", "wingType", "acftType",
+				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
+				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight" };
+
 		inline bool isConfigValue(const std::string& value) const
 		{
-			std::set<std::string> configValues = { "rwy", "prio", "initial", "climbvia", "wpt", "trans", "pilotfiled", "wingType", "acftType",
-				"dest", "route", "wtc", "engineType", "engineCount", "mtow", "customRule", "area", "equip", "lvp", "actArrRwy",
-				"actDepRwy", "timeFrom", "timeTo", "sidHighlight", "clmbHighlight"};
-
-			return configValues.contains(value);
+			return this->configValues.contains(value);
 		}
 	};
 }
