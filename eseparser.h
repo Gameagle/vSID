@@ -37,7 +37,7 @@ namespace vsid
 	{
 		std::string callsign;
 		std::string si;
-		std::string freq;
+		double freq;
 
 		bool operator<(const SectionAtc& other) const noexcept
 		{
