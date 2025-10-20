@@ -446,6 +446,8 @@ namespace vsid
 		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
 		bool spWorkerActive = false;
 		std::atomic_bool queueInProcess = false;
+
+		std::map<std::string, int> atcSiFailCounter;
 		
 		//************************************
 		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
