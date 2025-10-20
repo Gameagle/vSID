@@ -69,7 +69,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 		try
 		{
-			this->sectionAtc_.insert({ .callsign = atcVec.at(0), .si = atcVec.at(3), .freq = atcVec.at(2) });
+			this->sectionAtc_.insert({ .callsign = atcVec.at(0), .si = atcVec.at(3), .freq = std::stod(atcVec.at(2)) });
 		}
 		catch (std::out_of_range& e)
 		{

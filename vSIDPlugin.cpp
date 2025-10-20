@@ -4608,43 +4608,82 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	}
 
 	if (atcCallsign == ControllerMyself().GetCallsign()) return;
-	else if (this->actAtc.contains(atcSI) ||
-		this->ignoreAtc.contains(atcSI))
+	if (this->actAtc.contains(atcSI) || this->ignoreAtc.contains(atcSI)) return;
+
+	// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
+
+	if (this->atcSiFailCounter.contains(atcCallsign) && this->atcSiFailCounter[atcCallsign] > 2 && this->atcSiFailCounter[atcCallsign] < 6)
+	{
+		for (const vsid::SectionAtc &sAtc : this->sectionAtc)
 		{
-			return;
+			if (atcCallsign == sAtc.callsign || atcFreq == sAtc.freq)
+			{
+				atcSI = sAtc.si;
+
+				messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] match found in parsed stations. Setting SI: " + atcSI,
+					vsid::MessageHandler::DebugArea::Atc);
+
+				break;
+			}
+		}
 	}
-	else if (!Controller.IsController())
+	
+	if (!Controller.IsController())
 	{
 		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because it is not a controller.",
-									vsid::MessageHandler::DebugArea::Atc
+			vsid::MessageHandler::DebugArea::Atc
 		);
 		return;
 	}
-	else if (atcCallsign.find("ATIS") != std::string::npos)
+	
+	if (atcCallsign.find("ATIS") != std::string::npos)
 	{
 		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding ATIS to ignore list.",
-									vsid::MessageHandler::DebugArea::Atc
+			vsid::MessageHandler::DebugArea::Atc
 		);
 		this->ignoreAtc.insert(atcSI);
 		return;
 	}
-	else if (atcSI.find_first_of("0123456789") != std::string::npos)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (SI: " + atcSI + ").",
-									vsid::MessageHandler::DebugArea::Atc
-		);
-		return;
-	}
-	else if (atcFac < 2)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the facility is below 2 (usually FIS).",
-									vsid::MessageHandler::DebugArea::Atc
-		);
-		return;
-	}
-	else if (atcFreq == 0.0 || atcFreq > 199.0)
+
+	if (atcFreq < 0.1 || atcFreq > 199.0)
 	{
 		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the freq. is invalid (" + std::to_string(atcFreq) + ").",
+			vsid::MessageHandler::DebugArea::Atc
+		);
+		return;
+	}
+	
+	if (atcSI.empty())
+	{
+		if (this->atcSiFailCounter.contains(atcCallsign)) this->atcSiFailCounter[atcCallsign]++;
+		else this->atcSiFailCounter[atcCallsign] = 1;
+
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI is empty. Failed SI count: " +
+			std::to_string(this->atcSiFailCounter[atcCallsign]), vsid::MessageHandler::DebugArea::Atc);
+
+		return;
+	}
+	else if (std::all_of(atcSI.begin(), atcSI.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); }))
+	{
+		if (this->atcSiFailCounter.contains(atcCallsign)) this->atcSiFailCounter[atcCallsign]++;
+		else this->atcSiFailCounter[atcCallsign] = 1;
+
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (SI: " + atcSI +
+			"). Failed SI count: " + std::to_string(this->atcSiFailCounter[atcCallsign]), vsid::MessageHandler::DebugArea::Atc);
+
+		return;
+	}
+	else if (this->atcSiFailCounter.contains(atcCallsign))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] removing from SI Fail Counter after SI is valid (SI: " + atcSI + ")",
+			vsid::MessageHandler::DebugArea::Atc);
+
+		this->atcSiFailCounter.erase(atcCallsign);
+	}
+	
+	if (atcFac < 2)
+	{
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the facility is below 2 (usually FIS).",
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		return;
