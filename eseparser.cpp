@@ -65,11 +65,40 @@ void vsid::EseParser::line(Section s, std::string_view l)
 	{
 	case Section::Positions:
 	{
-		std::vector<std::string> atcVec = vsid::utils::split(vsid::utils::trim(std::string(l)), ':');
+		std::vector<std::string> atcVec = vsid::utils::split(vsid::utils::trim(std::string(l)), ':', true);
+		std::vector<EuroScopePlugIn::CPosition> visPoints = {};
+
+		if (atcVec.size() > 10)
+		{
+			for (size_t idx = 11; idx + 1 < std::min(atcVec.size(), static_cast<size_t>(20)); ++idx)
+			{
+				std::string& visLat = atcVec.at(idx);
+				std::string& visLon = atcVec.at(idx + 1);
+
+				if (visLat.size() < 2 || visLon.size() < 2)
+				{
+					++idx;
+					continue;
+				}
+
+				if (((visLat.front() == 'N' || visLat.front() == 'S') && std::isdigit(static_cast<unsigned char>(visLat.back()))) &&
+					((visLon.front() == 'E' || visLon.front() == 'W') && std::isdigit(static_cast<unsigned char>(visLon.back()))))
+				{
+					visPoints.push_back(vsid::utils::toPoint({ visLat, visLon }));
+				}
+
+				++idx;
+			}
+		}
 
 		try
 		{
-			this->sectionAtc_.insert({ .callsign = atcVec.at(0), .si = atcVec.at(3), .freq = std::stod(atcVec.at(2)) });
+			this->sectionAtc_.emplace(
+				atcVec.at(0), // callsign
+				atcVec.at(3), // si
+				std::stod(atcVec.at(2)), // freq
+				visPoints // additional vis points
+			); 
 		}
 		catch (std::out_of_range& e)
 		{

@@ -30,6 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "utils.h"
+#include "area.h" // only for point calculation
 
 namespace vsid
 {
@@ -38,11 +39,15 @@ namespace vsid
 		std::string callsign;
 		std::string si;
 		double freq;
+		std::vector<EuroScopePlugIn::CPosition> visPoints;
 
 		bool operator<(const SectionAtc& other) const noexcept
 		{
 			return si < other.si;
 		}
+
+		explicit SectionAtc(std::string callsign, std::string si, double freq, std::vector<EuroScopePlugIn::CPosition> visPoints) :
+			callsign(std::move(callsign)), si(std::move(si)), freq(freq), visPoints(std::move(visPoints)) {}
 	};
 
 	struct SectionSID
