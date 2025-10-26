@@ -4932,6 +4932,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 						{
 							if (base != sectionSid.base) continue;
 							if (trans.designator != std::string(1, sectionSid.desig)) continue;
+							if (trans.number != "") continue; // #refactor .number to char
 
 							if (std::isdigit(sectionSid.number))
 							{
