@@ -88,12 +88,12 @@ namespace vsid
 		// Method:    splitTransition
 		// FullName:  vsid::fpln::splitTransition
 		// Access:    public 
-		// Returns:   std::string - the SID stripped from possible transitions
-		//	 if the SID itself contains a X it is rebuilt
+		// Returns:   std::pair<std::string, std::string - first = SID, second = Transition
+		//	 second might be empty if no transition present
 		// Qualifier:
 		// Parameter: std::string atcSid
 		//************************************
-		std::string splitTransition(std::string atcSid);
+		std::pair<std::string, std::string> splitTransition(std::string atcSid); // #refactor - std::optional as return, string_view as param
 
 		//************************************
 		// Description: Retrieves the "atc block" from a route (SID/RWY or ICAO/RWY)
