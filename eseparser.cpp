@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "eseparser.h"
+#include "flightplan.h"
 
 void vsid::EseParser::parseEse(const std::filesystem::path& path)
 {
@@ -119,17 +120,65 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			if (currSid.length() < 3) break; // protection for num / desig extraction
 
-			const bool lastIsDigit = vsid::utils::lastIsDigit(currSid);
+			auto [sid, trans] = vsid::fplnhelper::splitTransition(currSid);
 
-			this->sectionSids_.emplace(
-				vsid::utils::trim(sidVec.at(1)), // apt
-				currSid.substr(0, currSid.length() - (lastIsDigit ? 1 : 2)), // sid base
-				currSid.at(currSid.length() - (lastIsDigit ? 1 : 2)), // sid number
-				(lastIsDigit ? ' ' : currSid.back()), // sid designator
-				vsid::utils::trim(sidVec.at(2)) // sid rwy
-			);
+			messageHandler->writeMessage("DEBUG", "[ESE] Parsing SID \"" + currSid + "\" - sid: " + sid + " / trans : " + trans, vsid::MessageHandler::DebugArea::Dev);
+
+			//const bool lastIsDigit = vsid::utils::lastIsDigit(sid);
+
+			vsid::SectionSID sectionSid("", "", '\0', '\0', "");
+			vsid::SectionTransition sectionTrans("", '\0', '\0');
+
+			if (!sid.empty())
+			{
+				sectionSid.apt = vsid::utils::trim(sidVec.at(1));
+				sectionSid.rwy = vsid::utils::trim(sidVec.at(2));
+
+				if (vsid::utils::lastIsDigit(sid))
+				{
+					sectionSid.base = sid.substr(0, sid.length() - 1);
+					sectionSid.number = sid.back();
+				}
+				else if (sid.length() > 2)
+				{
+					if (vsid::utils::lastIsDigit(sid.substr(0, sid.length() - 1)))
+					{
+						sectionSid.base = sid.substr(0, sid.length() - 2);
+						sectionSid.number = sid[sid.length() - 2];
+						sectionSid.desig = sid.back();
+					}
+					else sectionSid.base = sid;
+				}
+			}
+			else break;
+
+			if (!trans.empty())
+			{
+				if (vsid::utils::lastIsDigit(trans))
+				{
+					sectionTrans.base = trans.substr(0, trans.length() - 1);
+					sectionTrans.number = trans.back();
+				}
+				else if(trans.length() > 2)
+				{
+					if (vsid::utils::lastIsDigit(trans.substr(0, trans.length() - 1)))
+					{
+						sectionTrans.base = trans.substr(0, trans.length() - 2);
+						sectionTrans.number = trans[trans.length() - 2];
+						sectionTrans.desig = trans.back();
+					}
+					else sectionTrans.base = trans;
+				}
+			}
+
+			sectionSid.trans = std::move(sectionTrans);
+
+			messageHandler->writeMessage("DEBUG", "[ESE] Stored value: " + sectionSid.base + sectionSid.number + sectionSid.desig +
+				" and trans: " + sectionSid.trans.base + sectionSid.trans.number + sectionSid.trans.desig, vsid::MessageHandler::DebugArea::Dev);
+
+			this->sectionSids_.emplace(std::move(sectionSid));
 		}
-		catch (std::out_of_range& e)
+		catch (const std::out_of_range& e)
 		{
 			messageHandler->writeMessage("ERROR", "Failed to parse SID: " + std::string(e.what()));
 		}

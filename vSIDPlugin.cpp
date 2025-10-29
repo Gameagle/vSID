@@ -2035,10 +2035,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				// if a non standard SID is detected reset the SID to the standard SID
 				if (atcBlock.first != "" && atcBlock.first != std::string(fplnData.GetOrigin()))
 				{
-					if (std::find(atcBlock.first.begin(), atcBlock.first.end(), 'x') != atcBlock.first.end() ||
+					if (std::find(atcBlock.first.begin(), atcBlock.first.end(), 'x') != atcBlock.first.end() || // #refactor - remove checks for xX
 						std::find(atcBlock.first.begin(), atcBlock.first.end(), 'X') != atcBlock.first.end())
 					{
-						atcBlock.first = vsid::fplnhelper::splitTransition(atcBlock.first);
+						atcBlock.first = vsid::fplnhelper::splitTransition(atcBlock.first).first;
 					}
 
 					if (atcBlock.first != this->processed[callsign].sid.name()) this->processFlightplan(fpln, false);
@@ -2084,10 +2084,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			}
 			else if (this->processed.contains(callsign) && blockSid != "" && depRwy != "") // #checkforremoval - processed.contains check above FunctionId Block
 			{
-				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() || // #refactor - remove checks for xX
 					std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 				{
-					blockSid = vsid::fplnhelper::splitTransition(blockSid);
+					blockSid = vsid::fplnhelper::splitTransition(blockSid).first;
 				}
 
 				for (vsid::Sid& sid : this->activeAirports[adep].sids)
@@ -2540,10 +2540,10 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 			if (this->processed.contains(callsign))
 			{
-				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() || // #refactor - remove checks for xX
 					std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 				{
-					blockSid = vsid::fplnhelper::splitTransition(blockSid);
+					blockSid = vsid::fplnhelper::splitTransition(blockSid).first;
 				}
 
 				std::string sidName = this->processed[callsign].sid.name();
@@ -2720,11 +2720,11 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				std::string transition = "";
 				auto [blockSid, blockRwy] = vsid::fplnhelper::getAtcBlock(FlightPlan);
 
-				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+				if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() || // #refactor - remove checks for xX
 					std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 				{
 					transition = blockSid;
-					blockSid = vsid::fplnhelper::splitTransition(blockSid);
+					blockSid = vsid::fplnhelper::splitTransition(blockSid).first;
 					transition.erase(transition.find(blockSid), blockSid.length());
 
 					if (transition != "" && (transition.at(0) == 'X' || transition.at(0) == 'x')) transition.erase(0, 1);
@@ -2788,10 +2788,10 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				std::string customSidName = this->processed[callsign].customSid.name();
 				std::string atcSid = vsid::fplnhelper::getAtcBlock(FlightPlan).first;
 
-				if (std::find(atcSid.begin(), atcSid.end(), 'x') != atcSid.end() ||
+				if (std::find(atcSid.begin(), atcSid.end(), 'x') != atcSid.end() || // #refactor - remove checks for xX
 					std::find(atcSid.begin(), atcSid.end(), 'X') != atcSid.end())
 				{
-					atcSid = vsid::fplnhelper::splitTransition(atcSid);
+					atcSid = vsid::fplnhelper::splitTransition(atcSid).first;
 				}
 
 				
@@ -4926,14 +4926,15 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			{
 				if (sid.designator != "")
 				{					
-					if (!sid.transition.empty())
+					if (!sid.transition.empty() && sectionSid.trans.base != "")
 					{
-						for (auto& [base, trans] : sid.transition)
+						for (auto& [transBase, trans] : sid.transition)
 						{
-							if (base != sectionSid.base) continue;
-							if (trans.designator != std::string(1, sectionSid.desig)) continue;
+							if (transBase != sectionSid.trans.base) continue;
+							if (trans.designator != std::string(1, sectionSid.trans.desig)) continue;
+							if (trans.number != "") continue; // #refactor .number to char
 
-							if (std::isdigit(sectionSid.number))
+							if (std::isdigit(sectionSid.trans.number))
 							{
 								trans.number = sectionSid.number;
 

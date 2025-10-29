@@ -722,8 +722,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											vsid::Transition trans;
 
 											trans.base = base.key();
-											trans.designator =
-												this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key());
+
+                                            if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key()); desig != "XXX")
+                                                trans.designator = desig;             
 
 											wptSetting.transition.insert({ base.key(), trans });
 										}
@@ -848,8 +849,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 													vsid::Transition trans;
 
 													trans.base = base.key();
-													trans.designator =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(base.key());
+                                                    if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).
+                                                        at(sidDes.key()).at(base.key()); desig != "XXX")
+                                                        trans.designator = desig;
 
 													desSetting.transition.insert({ base.key(), trans });
 												}
@@ -1002,8 +1004,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                             vsid::Transition trans;
 
                                                             trans.base = base.key();
-                                                            trans.designator =
-                                                                this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at(base.key());
+                                                            if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
+                                                                .at(sidDes.key()).at(sidId.key()).at(base.key()); desig != "XXX")
+                                                                trans.designator = desig;
 
                                                             idSetting.transition.insert({ base.key(), trans});
                                                         }
