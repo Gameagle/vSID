@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <set>
 #include <vector>
+#include <compare>
 
 #include "utils.h"
 #include "area.h" // only for point calculation
@@ -41,13 +42,24 @@ namespace vsid
 		double freq;
 		std::vector<EuroScopePlugIn::CPosition> visPoints;
 
-		bool operator<(const SectionAtc& other) const noexcept
+		explicit SectionAtc(std::string callsign, std::string si, double freq, std::vector<EuroScopePlugIn::CPosition> visPoints) :
+			callsign(std::move(callsign)), si(std::move(si)), freq(freq), visPoints(std::move(visPoints)) {}
+
+		bool operator<(const vsid::SectionAtc& other) const noexcept
 		{
 			return si < other.si;
 		}
+	};
 
-		explicit SectionAtc(std::string callsign, std::string si, double freq, std::vector<EuroScopePlugIn::CPosition> visPoints) :
-			callsign(std::move(callsign)), si(std::move(si)), freq(freq), visPoints(std::move(visPoints)) {}
+	struct SectionTransition
+	{
+		std::string base;
+		char number;
+		char desig;
+
+		explicit SectionTransition(std::string base, char number, char desig) : base(std::move(base)), number(number), desig(desig) {}
+
+		auto operator<=>(const vsid::SectionTransition&) const = default;
 	};
 
 	struct SectionSID
@@ -57,16 +69,13 @@ namespace vsid
 		char number;
 		char desig;
 		std::string rwy;
+		vsid::SectionTransition trans;
 
-		bool operator<(const vsid::SectionSID& other) const noexcept
-		{
-			return std::tie(apt, base, desig, number, rwy) < std::tie(other.apt, other.base, other.desig, other.number, other.rwy);
-		}
+		explicit SectionSID(std::string apt, std::string base, char number, char desig, std::string rwy = "",
+			vsid::SectionTransition trans = vsid::SectionTransition( "", '\0', '\0')) :
+			apt(std::move(apt)), base(std::move(base)), number(number), desig(desig), rwy(std::move(rwy)), trans(std::move(trans)) {}
 
-		explicit SectionSID(std::string apt, std::string base, char number, char desig, std::string rwy = "") :
-			apt(std::move(apt)), base(std::move(base)), number(number), desig(desig), rwy(rwy)
-		{
-		}
+		auto operator<=> (const vsid::SectionSID&) const = default;
 	};
 
 	class EseParser
