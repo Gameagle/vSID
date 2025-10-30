@@ -4990,7 +4990,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 							if (std::isdigit(sectionSid.trans.number))
 							{
-								trans.number = sectionSid.number;
+								trans.number = sectionSid.trans.number;
 
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
