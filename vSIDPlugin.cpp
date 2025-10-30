@@ -4919,91 +4919,99 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			
 			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
-				if (sid.designator != "")
-				{					
+				if (sid.base != sectionSid.base) continue;
+				if (sid.designator != std::string(1, sectionSid.desig)) continue;
+				if (!vsid::utils::contains(sid.rwys, sectionSid.rwy)) continue;
+
+				if (std::isdigit(sectionSid.number))
+				{
+					if (sid.number == "")
+					{
+						sid.number = sectionSid.number;
+
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+							") mastered. Master rwy: " + sectionSid.rwy, vsid::MessageHandler::DebugArea::Conf);
+					}
+					else if (sid.number != "" && sid.number != std::string(1, sectionSid.number) && sid.allowDiffNumbers)
+					{
+						std::string oldNumber = sid.number; // debugging value
+						sid.number = sectionSid.number;
+
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+							") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
+							" Master rwy: " + sectionSid.rwy,
+							vsid::MessageHandler::DebugArea::Conf);
+					}
+					else if (sid.number != "") // health check for possible errors in .sct / .ese config
+					{
+						int currNumber = std::stoi(sid.number);
+						int newNumber = sectionSid.number - '0';
+
+						/*if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
+						else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);*/
+
+						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
+						{
+							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese - file for " + sid.base + " ? " + sid.designator + " SID!Already set number : " +
+								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+								" - (Runway: " + sectionSid.rwy + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
+						}
+						else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
+						{
+							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+								" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
+
+							sid.number = sectionSid.number;
+						}
+						else if (currNumber != newNumber)
+						{
+							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
+								" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+						}
+					}
+
 					if (!sid.transition.empty() && sectionSid.trans.base != "")
 					{
 						for (auto& [transBase, trans] : sid.transition)
 						{
 							if (transBase != sectionSid.trans.base) continue;
 							if (trans.designator != std::string(1, sectionSid.trans.desig)) continue;
-							if (trans.number != "") continue; // #refactor .number to char
+							if (trans.number != "") // #refactor .number to char
+							{
+								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
+									sid.designator + "] (ID: " + sid.id + ") transition [" + trans.base +
+									trans.number + trans.designator + "] already mastered. Skipping current transition number " +
+									std::to_string(sectionSid.trans.number), vsid::MessageHandler::DebugArea::Conf);
+
+								continue;
+							}
 
 							if (std::isdigit(sectionSid.trans.number))
 							{
-								trans.number = sectionSid.number;
+								trans.number = sectionSid.trans.number;
 
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
 									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
-				
+
 								break;
 							}
 						}
 					}
+				}
 
-					if (sid.base != sectionSid.base) continue;
-					if (sid.designator != std::string(1, sectionSid.desig)) continue;
-
-					if (std::isdigit(sectionSid.number))
-					{
-						if (sid.number == "" && vsid::utils::contains(sid.rwys, sectionSid.rwy))
-						{
-							sid.number = sectionSid.number;
-
-							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-								") mastered. Master rwy: " + sectionSid.rwy, vsid::MessageHandler::DebugArea::Conf);
-						}
-						else if (sid.number != "" && sid.number != std::string(1, sectionSid.number) && sid.allowDiffNumbers)
-						{
-							if (vsid::utils::contains(sid.rwys, sectionSid.rwy))
-							{
-								std::string oldNumber = sid.number; // debugging value
-								sid.number = sectionSid.number;
-
-								messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-									") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
-									" Master rwy: " + sectionSid.rwy,
-									vsid::MessageHandler::DebugArea::Conf);
-							}
-						}
-						else if(sid.number != "") // health check for possible errors in .sct / .ese config
-						{
-							int currNumber = std::stoi(sid.number);
-							int newNumber = sectionSid.number - '0';
-
-							/*if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
-							else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);*/
-
-							if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
-							{
-								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese - file for " + sid.base + " ? " + sid.designator + " SID!Already set number : " +
-									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + sectionSid.rwy + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
-							}
-							else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
-							{
-								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
-									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
-
-								sid.number = sectionSid.number;
-							}
-							else if (currNumber != newNumber)
-							{
-								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
-									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
-									" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
-							}
-						}
-					}
+				/*if (sid.designator != "")
+				{					
+					
 				}
 				else
 				{
 					if (sectionSid.base != sid.base) continue;
 					sid.number = 'X';
 					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
-				}
+				}*/
 			}
 		}
 	}

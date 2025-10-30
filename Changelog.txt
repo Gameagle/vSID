@@ -1,3 +1,14 @@
+[Changelog v0.14.1]
+>[!NOTE]
+> This release is only aimed at vACCS that use transitions (SIDxTRANSITION) format
+> Other vACCS are welcome to use/test it as SID mastering was updated
+
+:gear: **Changed Features / Behaviour**
+*	CONF - improved evaluation for transition mastering to only match transition if the "base" SID also matches (includes checks for correct runways)
+
+:lady_beetle: **Fixes**
+*	CONF - fixed wrong assignement of transition number
+
 [Changelog v0.14.0]
 >[!IMPORTANT]
 >**Main config needs to be updated**
