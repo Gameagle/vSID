@@ -101,38 +101,33 @@ std::string vsid::fplnhelper::getTransition(const EuroScopePlugIn::CFlightPlan& 
 	return ""; // fallback if no transition could be matched
 }
 
-std::string vsid::fplnhelper::splitTransition(std::string atcSid)
+std::pair<std::string, std::string> vsid::fplnhelper::splitTransition(std::string atcSid) // #refactor to string_view
 {
-	if (atcSid == "") return "";
+	if (atcSid.size() < 2) return { "", "" };
+	atcSid = vsid::utils::trim(atcSid);
 
-	atcSid = vsid::utils::toupper(atcSid);
-	bool xIsFirst = false;
-	size_t firstX = atcSid.find_first_of('X');
+	std::size_t pos = 0;
+	std::pair<std::string, std::string> fb = { atcSid, "" };
 
-	if (firstX == 0) xIsFirst = true;
-	else if (firstX == atcSid.length() - 1) return atcSid;	
-
-	std::vector<std::string> splitSid = vsid::utils::split(atcSid, 'X');
-	std::string rebuiltSid = "";
-
-	for (std::string& part : splitSid)
+	while ((pos = atcSid.find_first_of("xX", pos)) != std::string::npos)
 	{
-		if (xIsFirst)
+		if (pos == 0 || pos >= atcSid.size() - 1) { ++pos; continue; }
+
+		const std::string sid = atcSid.substr(0, pos);
+		const std::string trans = atcSid.substr(pos + 1);
+
+		if (sid.size() >= 3 && trans.size() >= 3 && vsid::utils::containsDigit(sid))
 		{
-			rebuiltSid += "X";
-			xIsFirst = false;
+			if (trans.front() != 'x' && trans.front() != 'X') return { sid, trans };
+			if (fb.second.empty()) fb = { sid, trans }; // save trans starting with x as fallback
 		}
 
-		rebuiltSid += part;
-
-		if (rebuiltSid != "" && std::isdigit(static_cast<unsigned char>(rebuiltSid.back())))
-			return rebuiltSid += "X";
-		else if (rebuiltSid.find_first_of("0123456789") != std::string::npos)
-			return rebuiltSid;
-		else
-			rebuiltSid += "X";
+		++pos;
 	}
-	return ""; // fallback
+
+	if (!fb.second.empty()) return fb;
+
+	return { atcSid, ""};
 }
 
 std::pair<std::string, std::string> vsid::fplnhelper::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
@@ -356,10 +351,10 @@ bool vsid::fplnhelper::restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CF
 	EuroScopePlugIn::CFlightPlanControllerAssignedData cad = FlightPlan.GetControllerAssignedData();
 	EuroScopePlugIn::CFlightPlanData fplnData = FlightPlan.GetFlightPlanData();
 
-	if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() ||
+	if (std::find(blockSid.begin(), blockSid.end(), 'x') != blockSid.end() || // #refactor - remove checks for xX
 		std::find(blockSid.begin(), blockSid.end(), 'X') != blockSid.end())
 	{
-		blockSid = vsid::fplnhelper::splitTransition(blockSid);
+		blockSid = vsid::fplnhelper::splitTransition(blockSid).first;
 	}
 
 	if (cad.GetClearedAltitude() == 0 &&

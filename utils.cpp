@@ -132,3 +132,37 @@ std::string vsid::utils::toupper(std::string input)
 	std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c) { return std::toupper(c); });
 	return input;
 }
+
+EuroScopePlugIn::CPosition vsid::utils::toPoint(const std::pair<std::string, std::string>& pos)
+{
+	EuroScopePlugIn::CPosition p;
+	p.m_Latitude = toDeg(pos.first);
+	p.m_Longitude = toDeg(pos.second);
+
+	return p;
+}
+
+double vsid::utils::toDeg(const std::string& coord)
+{
+	std::vector<std::string> dms = vsid::utils::split(coord, '.');
+	int multi = 0; // default state in exception case
+
+	try
+	{
+		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
+	}
+	catch (std::out_of_range)
+	{
+		messageHandler->writeMessage("ERROR", "Failed to get multiplier while calculating coordinate: " + coord);
+	}
+
+	double deg = std::stod(dms[0].substr(1, dms[0].length()));
+	double min = std::stod(dms[1]) / 60;
+	double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
+
+	if (multi == 0)
+	{
+		messageHandler->writeMessage("WARNING", "Coordinate \"" + coord + "\" will be multiplied with 0 which will render false results!");
+	}
+	return (deg + min + sec) * multi;
+}

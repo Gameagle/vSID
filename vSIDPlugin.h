@@ -38,11 +38,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "flightplan.h"
 #include "configparser.h"
 #include "utils.h"
+#include "eseparser.h"
 
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.13.1";
+	const std::string pluginVersion = "0.14.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -413,6 +414,10 @@ namespace vsid
 		int screenId = 0;
 		// pointer to plugin itself for data exchange and control of loading/unloading
 		std::shared_ptr<vsid::VSIDPlugin> shared;
+		// internal storage of parsed atc stations
+		std::set<vsid::SectionAtc> sectionAtc;
+		// internal storage of parsed sids
+		std::set<vsid::SectionSID> sectionSids;
 
 		//************************************
 		// Description: Loads and updates the active airports with available configs
@@ -441,6 +446,8 @@ namespace vsid
 		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
 		bool spWorkerActive = false;
 		std::atomic_bool queueInProcess = false;
+
+		std::map<std::string, int> atcSiFailCounter;
 		
 		//************************************
 		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
@@ -489,5 +496,15 @@ namespace vsid
 			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
 			else messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to update sync release. Not held in release list.", vsid::MessageHandler::DebugArea::Dev);
 		}
+
+		//************************************
+		// Description: Load ese file and parse it if found
+		// Method:    loadEse
+		// FullName:  vsid::VSIDPlugin::loadEse
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		void loadEse();
 	};
 }

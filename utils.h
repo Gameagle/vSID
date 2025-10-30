@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "airport.h"
+#include "include/es/EuroScopePlugIn.h"
 
 #include <vector>
 #include <string>
@@ -132,7 +133,7 @@ namespace vsid
 		// Method:    contains
 		// FullName:  vsid::utils::contains
 		// Access:    public 
-		// Returns:   bool
+		// Return:   bool
 		// Qualifier:
 		// Parameter: const R & range - object container, e.g. std::vector
 		// Parameter: const T & value - value to search for
@@ -142,5 +143,60 @@ namespace vsid
 		{
 			return std::ranges::find(range, value) != std::ranges::end(range);
 		}
+
+
+		//************************************
+		// Description: Checks if the last character of a string is a digit
+		// Method:    lastIsDigit
+		// FullName:  vsid::utils::lastIsDigit
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view s
+		//************************************
+		inline bool lastIsDigit(std::string_view s)
+		{
+			return std::isdigit(s.back());
+		}
+
+		//************************************
+		// Description: Checks if a string contains a digit
+		// Method:    containsDigit
+		// FullName:  vsid::utils::containsDigit
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view s
+		//************************************
+		inline bool containsDigit(std::string_view s)
+		{
+			for (unsigned char c : s)
+				if (std::isdigit(c)) return true;
+
+			return false;
+		}
+
+		//************************************
+		// Description: Creates a decimal position pair
+		// Method:    toPoint
+		// FullName:  vsid::utils::toPoint
+		// Access:    public 
+		// Returns:   EuroScopePlugIn::CPosition
+		// Qualifier:
+		// Parameter: const std::pair<std::string
+		// Parameter: std::string> & pos
+		//************************************
+		EuroScopePlugIn::CPosition toPoint(const std::pair<std::string, std::string>& pos);
+
+		//************************************
+		// Description: Transforms lat/long string value into decimal equivalent
+		// Method:    toDeg
+		// FullName:  vsid::utils::toDeg
+		// Access:    public 
+		// Returns:   double
+		// Qualifier:
+		// Parameter: const std::string & coord
+		//************************************
+		double toDeg(const std::string& coord);
 	}
 }

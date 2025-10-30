@@ -207,8 +207,6 @@ namespace vsid
 			return (std::round(getScreenNM() * 100.0) / 100.0) * 100.0;
 		}
 
-		// #dev - new indicator pos
-
 		//************************************
 		// Description: Calculates the offset for indicators in meters as geodatic values (lat/lon)
 		// Method:    calculateIndicatorMeterOffset

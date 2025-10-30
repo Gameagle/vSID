@@ -40,13 +40,13 @@ namespace vsid
 	public:
 
 		Sid(std::string base = "", std::string waypoint = "", std::string id = "", std::string number = "", std::string designator = "", std::vector<std::string> rwys = {},
-			std::map<std::string, vsid::Transition> transition = {}, std::map<std::string, bool> equip = {}, int initialClimb = 0, bool climbvia = false, int prio = 99,
-			bool pilotfiled = false, std::map<std::string, std::map<std::string, std::string>> actArrRwy = {},
+			std::map<std::string, vsid::Transition> transition = {}, bool allowDiffNumbers = false, std::map<std::string, bool> equip = {}, int initialClimb = 0,
+			bool climbvia = false, int prio = 99, bool pilotfiled = false, std::map<std::string, std::map<std::string, std::string>> actArrRwy = {},
 			std::map<std::string, std::map<std::string, std::string>> actDepRwy = {}, std::string wtc = "", std::string engineType = "", std::string wingType = "",
 			std::map<std::string, bool>acftType = {}, int engineCount = 0, int mtow = 0, std::map<std::string, bool> dest = {},
 			std::map<std::string, std::map<std::string, std::vector<std::string>>> route = {}, std::string customRule = "", std::string area = "", int lvp = -1,
 			int timeFrom = -1, int timeTo = -1, bool sidHighlight = false, bool clmbHighlight = false) : base(base), waypoint(waypoint), id(id), number(number), designator(designator),
-			rwys(rwys), transition(transition), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
+			rwys(rwys), transition(transition), allowDiffNumbers(allowDiffNumbers), equip(equip), initialClimb(initialClimb), climbvia(climbvia), prio(prio),
 			pilotfiled(pilotfiled), actArrRwy(actArrRwy), actDepRwy(actDepRwy), wtc(wtc), engineType(engineType),
 			wingType(wingType), acftType(acftType), engineCount(engineCount), mtow(mtow), dest(dest), route(route),
 			customRule(customRule), area(area), lvp(lvp), timeFrom(timeFrom), timeTo(timeTo), sidHighlight(sidHighlight), clmbHighlight(clmbHighlight) {};
@@ -62,6 +62,7 @@ namespace vsid
 		first - std::string - equipment code
 		second - bool - mandatory (true) or forbidden (false)
 		 */
+		bool allowDiffNumbers;
 		std::map<std::string, bool> equip;
 		int initialClimb;
 		bool climbvia;
@@ -126,6 +127,8 @@ namespace vsid
 		 *
 		 */
 		bool empty() const;
+		
+		bool isExactly(const vsid::Sid& other) const;
 		/**
 		 * @brief Compares if two SIDs are the same
 		 *
