@@ -1,3 +1,13 @@
+[Changelog v0.14.1]
+>[!NOTE]
+> This release is only aimed at vACCS that use transitions (SIDxTRANSITION) format
+
+>[!CAUTION]
+> For testing and evaluation purpose only
+
+:lady_beetle: **Fixes**
+*	CONF - improved evaluation for transition mastering to only match transition if the "base" SID also matches (includes checks for correct runways)
+
 [Changelog v0.14.0]
 >[!IMPORTANT]
 >**Main config needs to be updated**
