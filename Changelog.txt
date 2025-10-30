@@ -10,13 +10,14 @@
 >[!NOTE]
 > **Changes not reflected in changelog as already mentioned but changed slightly**
 >
-> Changes to last pre-release: Changed import of SIDxTRANS part from ese to already split transitions away from SIDs
+> Changes to last pre-release: Changed import of SIDxTRANS part from ese to already split transitions away from SIDs (29.10.25)
+> fine tuned transition split to be able to correctly split more cases that were missed before (30.10.25)
 
 :new: **New Features**
 *	CONF - new setting "esePath" added to set the path to the .ese file (relative or absolute path - relative recommended). Relative path starts from the folder the vsid.dll is stored in
 *	CONF - .ese file is parsed for atc stations as Euroscope sometimes sends sector identifiers as numbers which cannot be matched against airport configs. If ES reports an invalid SI (empty or number) at least 3 times a lookup for a match in the ese atc stations is started. The lookup is stopped after 3 attempts.
 *	CONF - with parsed atc stations additional vis points are also stored
-*	CONF - .ese file is parsed for SIDs as Euroscope doesn't allow to distinguish between SID and STAR. Only SIDs are now parsed to match against the airport configs
+*	CONF - .ese file is parsed for SIDs as Euroscope doesn't allow to distinguish between SID and STAR. Only SIDs are now parsed to match against the airport configs (#345)
 *	CONF - new config value for SIDs (every level) "allowDiffNumbers". Default setting is **false**. If it is set to true and a SID already has a mastered number the number will be overwritten with the current one if the runway from the ese file is found in the SID configuration (#359)
 *	GEN - new command to reload the ese file if needed: .vsid reload ese
 

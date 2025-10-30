@@ -4913,11 +4913,6 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 		// if there are configured airports check for remaining sid data
 
-		//for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS);
-		//	sfe.IsValid();
-		//	sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SIDS_STARS)
-		//	)
-
 		for(auto &sectionSid : this->sectionSids)
 		{
 			if (!this->activeAirports.contains(sectionSid.apt)) continue;
@@ -4982,13 +4977,13 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 							if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
 							{
-								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese - file for " + sid.base + " ? " + sid.designator + " SID!Already set number : " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 									" - (Runway: " + sectionSid.rwy + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
 							}
 							else if (currNumber < newNumber || (newNumber == 1 && currNumber == 9))
 							{
-								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 									" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
@@ -4996,7 +4991,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 							}
 							else if (currNumber != newNumber)
 							{
-								messageHandler->writeMessage("WARNING", "Check your .sct-file and .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
+								messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 									std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 									" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
 							}
