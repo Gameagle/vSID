@@ -47,10 +47,6 @@ void vsid::ConfigParser::loadMainConfig()
         return;
     }
 
-	// #dev - load ESE
-	// this->loadEse(); - DISABLED FOR CURRENT RELEASE
-	// end dev
-
     // set topsky preference
 
     this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
