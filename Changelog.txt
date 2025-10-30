@@ -2,16 +2,9 @@
 >[!IMPORTANT]
 >**Main config needs to be updated**
 > * new config value "esePath" - see below
-> * this **pre-release** is mostly to test for correct import and mastering of SIDs
 
 >[!TIP]
 > new SID config value to allow overwriting of already found SID numbers
-
->[!NOTE]
-> **Changes not reflected in changelog as already mentioned but changed slightly**
->
-> Changes to last pre-release: Changed import of SIDxTRANS part from ese to already split transitions away from SIDs (29.10.25)
-> fine tuned transition split to be able to correctly split more cases that were missed before (30.10.25)
 
 :new: **New Features**
 *	CONF - new setting "esePath" added to set the path to the .ese file (relative or absolute path - relative recommended). Relative path starts from the folder the vsid.dll is stored in
