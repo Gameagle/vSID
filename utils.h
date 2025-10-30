@@ -144,9 +144,36 @@ namespace vsid
 			return std::ranges::find(range, value) != std::ranges::end(range);
 		}
 
+
+		//************************************
+		// Description: Checks if the last character of a string is a digit
+		// Method:    lastIsDigit
+		// FullName:  vsid::utils::lastIsDigit
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view s
+		//************************************
 		inline bool lastIsDigit(std::string_view s)
 		{
 			return std::isdigit(s.back());
+		}
+
+		//************************************
+		// Description: Checks if a string contains a digit
+		// Method:    containsDigit
+		// FullName:  vsid::utils::containsDigit
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view s
+		//************************************
+		inline bool containsDigit(std::string_view s)
+		{
+			for (unsigned char c : s)
+				if (std::isdigit(c)) return true;
+
+			return false;
 		}
 
 		//************************************
