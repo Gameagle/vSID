@@ -106,18 +106,26 @@ std::pair<std::string, std::string> vsid::fplnhelper::splitTransition(std::strin
 	if (atcSid.size() < 2) return { "", "" };
 	atcSid = vsid::utils::trim(atcSid);
 
-	std::size_t pos = atcSid.find_last_of("xX");
+	std::size_t pos = 0;
+	std::pair<std::string, std::string> fb = { atcSid, "" };
 
-	while (pos != std::string::npos)
+	while ((pos = atcSid.find_first_of("xX", pos)) != std::string::npos)
 	{
-		const std::size_t left = pos;
-		const std::size_t right = atcSid.length() - pos - 1;
+		if (pos == 0 || pos >= atcSid.size() - 1) { ++pos; continue; }
 
-		if (left >= 3 && right >= 3) return { atcSid.substr(0, pos), atcSid.substr(pos + 1) };
-		if (pos == 0) break;
+		const std::string sid = atcSid.substr(0, pos);
+		const std::string trans = atcSid.substr(pos + 1);
 
-		pos = atcSid.find_last_of("xX", pos - 1);
+		if (sid.size() >= 3 && trans.size() >= 3 && vsid::utils::containsDigit(sid))
+		{
+			if (trans.front() != 'x' && trans.front() != 'X') return { sid, trans };
+			if (fb.second.empty()) fb = { sid, trans }; // save trans starting with x as fallback
+		}
+
+		++pos;
 	}
+
+	if (!fb.second.empty()) return fb;
 
 	return { atcSid, ""};
 }
