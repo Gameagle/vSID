@@ -4920,7 +4920,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
 				if (sid.base != sectionSid.base) continue;
-				if (sid.designator != std::string(1, sectionSid.desig)) continue;
+				if (sid.designator != (sectionSid.desig ? std::string(1, *sectionSid.desig) : "")) continue;
 				if (!vsid::utils::contains(sid.rwys, sectionSid.rwy)) continue;
 
 				if (std::isdigit(sectionSid.number))
@@ -4942,13 +4942,10 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 							" Master rwy: " + sectionSid.rwy,
 							vsid::MessageHandler::DebugArea::Conf);
 					}
-					else if (sid.number != "") // health check for possible errors in .sct / .ese config
+					else if (sid.number != "") // health check for possible errors in .ese config
 					{
 						int currNumber = std::stoi(sid.number);
 						int newNumber = sectionSid.number - '0';
-
-						/*if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
-						else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);*/
 
 						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
 						{
@@ -4962,39 +4959,56 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
-							sid.number = sectionSid.number;
+							sid.number = newNumber;
 						}
 						else if (currNumber != newNumber)
 						{
 							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+
+							sid.number = newNumber;
 						}
 					}
 
 					if (!sid.transition.empty() && sectionSid.trans.base != "")
 					{
+						messageHandler->writeMessage("DEBUG", "Checking SID [" + sectionSid.base + sectionSid.number +
+							((sectionSid.desig) ? std::string(1, *sectionSid.desig) : "") + "] with transition [" + sectionSid.trans.base +
+							((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : "") +
+							((sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : "") + "].", vsid::MessageHandler::DebugArea::Conf);
+
 						for (auto& [transBase, trans] : sid.transition)
 						{
 							if (transBase != sectionSid.trans.base) continue;
-							if (trans.designator != std::string(1, sectionSid.trans.desig)) continue;
+							if (trans.designator != (sectionSid.trans.desig ? std::string(1, *sectionSid.trans.desig) : "")) continue;
 							if (trans.number != "") // #refactor .number to char
 							{
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") transition [" + trans.base +
-									trans.number + trans.designator + "] already mastered. Skipping current transition number " +
-									std::to_string(sectionSid.trans.number), vsid::MessageHandler::DebugArea::Conf);
+									trans.number + trans.designator + "] already mastered. Skipping current transition number: " +
+									((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : ""), vsid::MessageHandler::DebugArea::Conf);
 
 								continue;
 							}
 
-							if (std::isdigit(sectionSid.trans.number))
+							if (sectionSid.trans.number && std::isdigit(*sectionSid.trans.number))
 							{
-								trans.number = sectionSid.trans.number;
+								trans.number = *sectionSid.trans.number;
 
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
 									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
+
+								break;
+							}
+							else if (!sectionSid.trans.number && (trans.designator == "" || trans.designator != "XXX"))
+							{
+								trans.number = "-1"; // dummy value for wpt transitions
+
+								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
+									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
+									trans.number + trans.designator + "] (dummy number)", vsid::MessageHandler::DebugArea::Conf);
 
 								break;
 							}
@@ -5058,119 +5072,17 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					incompSids[apt.first].insert(sid.base + '?' + sid.designator);
 				else
 				{
-					//int removedTrans = 0;
-
-					//for (auto it = sid.transition.begin(); it != sid.transition.end();)
 					for (auto &[_, trans] : sid.transition)
 					{
-						//auto& [_, trans] = *it;
-
-						if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
-						{
-							/*std::string number = (std::string("0123456789").find_first_of(sid.number) == std::string::npos) ?
-								"?" : sid.number;*/
-
+						if (trans.number == "-1") trans.number = "";
+						else if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
 							incompTrans[apt.first][sid.base + sid.number + sid.designator].insert(trans.base + '?' + trans.designator);
-							//removedTrans++;
-
-							/*messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
-								sid.id + ") removed transition [" + trans.base + "?" + trans.designator +
-								"] (health check failed)", vsid::MessageHandler::DebugArea::Conf);*/
-
-							/*it = sid.transition.erase(it);*/
-							//continue;
-						}
-						//++it;
 					}
-
-					/*if (removedTrans > 0 && sid.transition.size() == 0)
-					{
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
-							sid.id + ") all transitions removed.", vsid::MessageHandler::DebugArea::Dev);
-						incompSids[apt.first].insert(sid.base + sid.number + sid.designator);
-					}*/
 				}
 			}
 			else
 			{
 				if (sid.number != "X") incompSids[apt.first].insert(sid.base);
-			}
-		}
-	}
-
-	// fallback check if incompatible SIDs remain after checking .ese file. Now .sct is checked
-
-	if (incompSids.size() > 0 || incompTrans.size() > 0)
-	{
-		messageHandler->writeMessage("DEBUG", "Incompatible SIDs found. Rechecking in .sct file...", vsid::MessageHandler::DebugArea::Conf);
-		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SID);
-			sfe.IsValid();
-			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SID))
-		{
-			std::vector<std::string> components = vsid::utils::split(std::string(sfe.GetName()), ' ');
-			std::string compIcao = "";
-			std::string compSid = "";
-
-			if (components.size() == 4)
-			{
-				compIcao = components.at(0);
-				compSid = components.at(3);
-			}
-			else continue;
-
-			if (!incompSids.contains(compIcao) && !incompTrans.contains(compIcao)) continue;
-			if (!this->activeAirports.contains(compIcao)) continue;
-
-			for (vsid::Sid& sid : this->activeAirports[compIcao].sids)
-			{
-				if (sid.number != "" && sid.transition.size() == 0) continue;
-
-				if (sid.designator != "")
-				{
-					for (auto& [base, trans] : sid.transition)
-					{
-						if (base != compSid.substr(0, compSid.length() - 2)) continue;
-						if (trans.designator != std::string(1, compSid[compSid.length() - 1])) continue;
-
-						if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
-						{
-							trans.number = compSid[compSid.length() - 2];
-
-							if (sid.number != "" && incompTrans[compIcao].contains(sid.base + sid.number + sid.designator))
-								incompTrans[compIcao][sid.base + sid.number + sid.designator].erase(base + '?' + trans.designator);
-
-							messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
-								sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
-								trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
-
-							break;
-						}
-					}
-
-					if (sid.base != compSid.substr(0, compSid.length() - 2)) continue;
-					if (sid.designator != std::string(1, compSid[compSid.length() - 1])) continue;
-
-					if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
-					{
-						sid.number = compSid[compSid.length() - 2];
-						incompSids[compIcao].erase(sid.base + '?' + sid.designator);
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
-					}
-				}
-				else
-				{
-					if (sid.base != compSid) continue;
-					incompSids[compIcao].erase(sid.base);
-					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
-				}
-			}
-
-			if (incompSids[compIcao].size() == 0) incompSids.erase(compIcao);
-
-			if (incompSids.size() == 0)
-			{
-				messageHandler->writeMessage("DEBUG", "All incompatible SIDs mastered, stopping fallback checks...", vsid::MessageHandler::DebugArea::Conf);
-				break;
 			}
 		}
 	}
@@ -5255,7 +5167,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		}
 	}
 
-	// remove dummy value for SIDs without designator
+	// remove dummy value for SIDs without designator // #evaluate
 
 	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
 	{
