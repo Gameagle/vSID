@@ -1,3 +1,11 @@
+[Changelog v0.14.2]
+>[!NOTE]
+> This pre-release is only aimed at vACCS that use transitions (SIDxTRANSITION) format
+> Mastering of SIDs without designator and transition (e.g. KASIS2xBUNDU) is untested for now due to lack of proper data
+
+:new: **New Features**
+*	CONF - transitions without number and designator are now mastered
+
 [Changelog v0.14.1]
 >[!NOTE]
 > This release is only aimed at vACCS that use transitions (SIDxTRANSITION) format
