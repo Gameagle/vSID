@@ -1458,7 +1458,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		}
 
 		std::string squawk = FlightPlan.GetControllerAssignedData().GetSquawk();
-		if ((squawk == "" || squawk == "0000") && !this->activeAirports[icao].settings["auto"])
+		if ((squawk == "" || squawk == "0000" || squawk == "1234") && !this->activeAirports[icao].settings["auto"])
 		{
 			if (this->ccamsLoaded && !this->getConfigParser().preferTopsky)
 			{
@@ -3858,7 +3858,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						}					
 					}
 				}
-				else if (command.size() == 4)
+				else if (command.size() == 4 && vsid::utils::tolower(command[3]) == "reset")
 				{
 					bool failedReset = false;
 					for (auto& [_, reqList] : this->activeAirports[icao].requests)
@@ -3872,7 +3872,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						" all requests have been cleared.");
 					else messageHandler->writeMessage("INFO", icao + " failed to reset requests.");
 				}
-				else if (command.size() == 5)
+				else if (command.size() == 5 && vsid::utils::tolower(command[3]) == "reset")
 				{
 					std::string req = vsid::utils::tolower(command[4]);
 
@@ -5080,6 +5080,15 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					}
 				}
 			}
+			else if (sid.number != "")
+			{
+				for (auto& [_, trans] : sid.transition)
+				{
+					if (trans.number == "-1") trans.number = "";
+					else if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
+						incompTrans[apt.first][sid.base + sid.number + sid.designator].insert(trans.base + '?' + trans.designator);
+				}
+			}
 			else
 			{
 				if (sid.number != "X") incompSids[apt.first].insert(sid.base);
@@ -5140,15 +5149,13 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 						continue;
 					}
 				}
-				else
+				else if(it->number == "" && it->base == incompSid)
 				{
-					if (it->base == incompSid)
-					{
-						messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->base +
-							"] (ID: " + it->id + ") (base only) incompatible and erased", vsid::MessageHandler::DebugArea::Conf);
-						it = this->activeAirports[incompSidPair.first].sids.erase(it);
-						continue;
-					}
+					messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->base +
+						"] (ID: " + it->id + ") (base only) incompatible and erased", vsid::MessageHandler::DebugArea::Conf);
+
+					it = this->activeAirports[incompSidPair.first].sids.erase(it);
+					continue;
 				}
 				++it;
 			}
