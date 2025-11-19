@@ -12,6 +12,8 @@
 
 #include "display.h"
 #include "airport.h"
+
+// #include "versionchecker.h" // #dev - versionchecker - disabled
 // DEV
 #include <thread>
 
@@ -224,6 +226,8 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		return vsid::Sid();
 	}
 
+	std::set<std::string> depRwys = this->activeAirports[icao].depRwys; // dep rwys to merge with arr rwys if needed
+
 	// determine if a rule is active
 
 	if (this->activeAirports[icao].customRules.size() > 0)
@@ -238,12 +242,14 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		);
 	}
 
-	if (customRuleActive)
+	if (customRuleActive) // #evaluate - arrrwy check for areas below ~ 325
 	{
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] [" + icao +
 			"] Custom rules active. Checking for avbl areas and possible arr as dep rwys.",
 			vsid::MessageHandler::DebugArea::Sid);
+
 		std::map<std::string, bool> customRules = this->activeAirports[icao].customRules;
+
 		for (auto it = this->activeAirports[icao].sids.begin(); it != this->activeAirports[icao].sids.end();)
 		{
 			if (it->customRule == "" ||
@@ -252,8 +258,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 			{
 				++it; continue;
 			}
-
-			std::set<std::string> depRwys = this->activeAirports[icao].depRwys; //#evaluate - depRwys is not carried down to SID checking
 
 			if (it->area != "")
 			{
@@ -305,9 +309,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 	for (vsid::Sid& currSid : this->activeAirports[icao].sids)
 	{
-		// copy depRwys to add arr rwys if enabled in an active area
-		std::set<std::string> depRwys = this->activeAirports[icao].depRwys;
-
 		if (actAtcRwy != "") depRwys.insert(actAtcRwy);
 
 		// skip if current SID does not match found SID wpt
@@ -540,30 +541,13 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 		// skip if custom rules are active but the current sid has no rule or has a rule but this is not active
 
-		//if (customRuleActive &&
-		//	((wptRules.contains(currSid.waypoint) && currSid.customRule == "") ||
-		//	(!wptRules.contains(currSid.waypoint) && currSid.customRule != "")))
-		//{
-		//	// in addition - if a rwy was set by ATC don't skip
-		//	bool skip = true;
-		//	if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) skip = false;
-
-		//	if (skip)
-		//	{
-		//		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-		//			"\" because customRule active for waypoint and SID doesn't have a rule set OR " +
-		//			" customRule NOT active for waypoint, but SID has a rule set",
-		//			vsid::MessageHandler::DebugArea::Sid);
-		//		continue;
-		//	}
-		//}
-
 		if (customRuleActive && currSid.customRule != "" &&
 			this->activeAirports[icao].customRules.contains(currSid.customRule) &&
 			!this->activeAirports[icao].customRules[currSid.customRule])
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" +
 				currSid.idName() + "\" because the SID custom rule is not active.",
+
 				vsid::MessageHandler::DebugArea::Sid);
 			continue;
 		}
