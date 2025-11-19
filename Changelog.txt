@@ -9,6 +9,8 @@
 
 :lady_beetle: **Fixes**
 *	GEN - resetting request queues is now limited to the keyword "reset" (#342)
+*	CONF - custom rules in SIDs were not transformed to upper case while rules in the airport were. If the rule was configured in lower case the checks for activation would fail.
+*	SID - if an arr rwy could become a dep rwy it wasn't always respected during processing the SIDs for a flight plan
 
 [Changelog v0.14.1]
 >[!NOTE]
