@@ -62,9 +62,44 @@ jobs:
       with:
         version: 17
 
+    - name: Download and unpack libcurl
+      shell: pwsh
+      run: |
+        $curlVersion = "8.17.0"
+        $curlTag = "curl-" + ($curlVersion -replace '\.', '_')
+        $url = "https://github.com/curl/curl/archive/refs/tags/$curlTag.zip"
+
+        Write-Host "Downloading libcurl $curlVersion from $url"
+
+        New-Item -ItemType Directory -Force -Path external | Out-Null
+
+        $zipPath = "external/curl.zip"
+        Invoke-WebRequest -Uri $url -OutFile $zipPath
+
+        # verify SHA256 for integrity
+        # ps command: Get-FileHash .\filename.zip -Algorithm SHA256
+        $expectedHash = "0BE15247C07422A0061FDA4758C0182BB9C688E40ECF968D1A0B92742A32667E"
+        $hash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLower()
+        if ($hash -ne $expectedHash.ToLower()) {
+          Write-Error "Hash mismatch for libcurl archive. Expected $expectedHash but got $hash"
+          exit 1
+        }
+
+        Expand-Archive -Path $zipPath -DestinationPath "external" -Force
+
+        $repoName = "curl"
+        
+        $unpackedDir = Join-Path "external" "$repoName-$curlTag"   # → external/curl-curl-8_17_0
+        
+        if (Test-Path "external/curl") {
+          Remove-Item -Recurse -Force "external/curl"
+        }
+        
+        Rename-Item -Path $unpackedDir -NewName "curl"
+
     - name: Configure CMake
       # remove --trace for less verbosity
-      run: cmake -B build -S . -A Win32 --trace
+      run: cmake -B build -S . -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl --trace
       
     - name: Build DLL
       # remove --verbose for less verbosity
