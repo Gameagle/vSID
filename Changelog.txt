@@ -1,11 +1,10 @@
 [Changelog v0.14.2]
->[!NOTE]
-> This pre-release is only aimed at vACCS that use transitions (SIDxTRANSITION) format
-> Mastering of SIDs without designator and transition (e.g. KASIS2xBUNDU) is only tested with fictional data
 
 :new: **New Features**
 *	CONF - transitions without number and designator are now mastered (#338)
 *	CONF - SIDs with only a number and no designator are now accepted (#338)
+*	GEN - version check added. main config can use config value "notifyUpdate" with a value between 0 and 4. 0 disables notifications, 1 informs about updates via text, 2 via message box, 3 and 4 the same but for pre-releases (default: 1)
+*	GEN - new command ".vsid ghversion" to manually re-check version. If no new version is found there will be no info / output.
 
 :lady_beetle: **Fixes**
 *	GEN - resetting request queues is now limited to the keyword "reset" (#342)
