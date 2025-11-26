@@ -1,0 +1,172 @@
+name: Project v2 status → labels
+
+on:
+  repository_dispatch:
+    types: [project_item_updated]
+  
+#  workflow_dispatch:
+#    inputs:
+#      item_node_id:
+#        description: "ProjectV2Item node ID"
+#        required: true
+#        type: string
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Get GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
+      - name: Sync labels from project status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            // --- CONFIG START ---
+            // Node-ID
+            const STATUS_FIELD_ID = "${{ vars.STATUS_FIELD_ID }}";
+            core.info("Checking for STATUS_FIELD_ID: " + STATUS_FIELD_ID);
+
+            // Mapping: Status → Labels
+            const STATUS_TO_LABELS = {
+              "Ready": ["in pre-release"],
+              "In progress": ["in development"],
+              "In review": ["monitor"]
+            };
+
+            // if labels should be exclusive (only one from the list is kept)
+            const EXCLUSIVE = true;
+            // --- CONFIG END ---
+
+            const ev = context.payload;
+
+            // item_node_id from repository_dispatch or workflow_dispatch
+            let itemNodeId = ev.client_payload?.item_node_id;
+            if (!itemNodeId && ev.inputs?.item_node_id) {
+              itemNodeId = ev.inputs.item_node_id;
+            }
+
+            if (!itemNodeId) {
+              core.setFailed("item_node_id fehlt (weder client_payload noch inputs).");
+              return;
+            }
+
+            const gh = github;
+
+            // 1) load projet item → find status and issue
+            const itemQuery = await gh.graphql(
+              `
+              query($id: ID!) {
+                node(id: $id) {
+                  ... on ProjectV2Item {
+                    id
+                    fieldValues(first: 50) {
+                      nodes {
+                        __typename
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                          field { ... on ProjectV2FieldCommon { id name } }
+                          name
+                        }
+                      }
+                    }
+                    content {
+                      __typename
+                      ... on Issue {
+                        id
+                        number
+                        repository {
+                          owner { login }
+                          name
+                        }
+                        labels(first: 100) {
+                          nodes { name }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              `,
+              { id: itemNodeId }
+            );
+
+            const item = itemQuery?.node;
+            if (!item) {
+              core.setFailed("ProjectV2Item nicht gefunden.");
+              return;
+            }
+
+            if (item.content?.__typename !== "Issue") {
+              core.info("Item ist kein Issue – nichts zu tun.");
+              return;
+            }
+
+            const issue = item.content;
+
+            const statusNode = (item.fieldValues?.nodes || [])
+              .find(n => n?.__typename === "ProjectV2ItemFieldSingleSelectValue"
+                      && n?.field?.id === STATUS_FIELD_ID);
+
+            const statusName = statusNode?.name;
+            if (!statusName) {
+              core.info("Kein Status auf diesem Item – nichts zu tun.");
+              return;
+            }
+
+            core.info(`Status: ${statusName}`);
+            const wanted = STATUS_TO_LABELS[statusName] || [];
+            if (!wanted.length) {
+              core.info(`Kein Mapping für Status "${statusName}" – nichts zu tun.`);
+              return;
+            }
+
+            const owner = issue.repository.owner.login;
+            const repo  = issue.repository.name;
+            const number = issue.number;
+            const existing = (issue.labels?.nodes || []).map(l => l.name);
+
+            // get all status labels from mapping (for EXCLUSIVE)
+            const ALL_MAPPED = new Set(
+              Object.values(STATUS_TO_LABELS).flat()
+            );
+
+            let final;
+            if (EXCLUSIVE) {
+              const filtered = existing.filter(l => !ALL_MAPPED.has(l));
+              final = Array.from(new Set([...filtered, ...wanted]));
+            } else {
+              final = Array.from(new Set([...existing, ...wanted]));
+            }
+
+            const current = await gh.rest.issues.get({ owner, repo, issue_number: number });
+            const existingNow = (current.data.labels || []).map(l => l.name);
+
+            const sameNow =
+              existingNow.length === final.length &&
+              existingNow.slice().sort().join("|") === final.slice().sort().join("|");
+
+            if (sameNow) {
+              core.info("Labels sind bereits korrekt (nach Refresh), nichts zu tun.");
+              return;
+            }
+
+            core.info(`Update ${owner}/${repo}#${number} → Labels: ${final.join(", ")}`);
+
+            await gh.rest.issues.update({
+              owner,
+              repo,
+              issue_number: number,
+              labels: final
+            });
+
+            core.info("Label-Update abgeschlossen.");
+            
