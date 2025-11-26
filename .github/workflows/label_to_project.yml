@@ -1,0 +1,122 @@
+name: Issue → Org Project
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  to-project:
+    runs-on: ubuntu-latest
+    if: github.event.sender.type == 'User'
+
+    permissions:
+      contents: read
+      issues: read
+
+    steps:
+      - name: Get GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+
+      - name: Add issue to project and set status
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          LABEL_NAME: ${{ github.event.label.name }}
+          PROJECT_ID: ${{ vars.PROJECT_ID }}
+          STATUS_FIELD_ID: ${{ vars.STATUS_FIELD_ID }}
+        run: |
+          echo "Event-Label: $LABEL_NAME"
+
+          # 1) Map Label -> Option-ID
+          case "$LABEL_NAME" in
+            "in development")
+              OPTION_ID=${{ vars.OPTION_IN_PROGRESS }}
+              ;;
+            "in pre-release")
+              OPTION_ID=${{ vars.OPTION_READY }}
+              ;;
+            "monitor")
+              OPTION_ID=${{ vars.OPTION_IN_REVIEW }}
+              ;;
+            *)
+              echo "Label '$LABEL_NAME' wird nicht gemappt – Workflow beendet."
+              exit 0
+              ;;
+          esac
+
+          echo "Benutze Option-ID: $OPTION_ID"
+
+          # 2) Add issue to project
+          add_item_mutation=$(cat <<'GRAPHQL'
+          mutation($project:ID!, $content:ID!){
+            addProjectV2ItemById(input:{projectId:$project, contentId:$content}) {
+              item { id }
+            }
+          }
+          GRAPHQL
+          )
+
+          add_payload=$(jq -n \
+            --arg q "$add_item_mutation" \
+            --arg project "$PROJECT_ID" \
+            --arg content "$ISSUE_ID" \
+            '{query:$q, variables:{project:$project, content:$content}}')
+
+          echo "---- Add item REQUEST ----"
+          echo "$add_payload"
+
+          add_resp=$(curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$add_payload" \
+            https://api.github.com/graphql)
+
+          echo "---- Add item RESPONSE ----"
+          echo "$add_resp"
+
+          item_id=$(echo "$add_resp" | jq -r '.data.addProjectV2ItemById.item.id // empty')
+          if [ -z "$item_id" ]; then
+            echo "item_id fehlt – wahrscheinlich konnte das Issue nicht zum Project hinzugefügt werden."
+            exit 1
+          fi
+
+          # 3) Set status field
+          update_mutation=$(cat <<'GRAPHQL'
+          mutation($project:ID!, $item:ID!, $field:ID!, $option:String!) {
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: $project,
+                itemId: $item,
+                fieldId: $field,
+                value: { singleSelectOptionId: $option }
+              }
+            ) {
+              projectV2Item { id }
+            }
+          }
+          GRAPHQL
+          )
+
+          update_payload=$(jq -n \
+            --arg q "$update_mutation" \
+            --arg project "$PROJECT_ID" \
+            --arg item "$item_id" \
+            --arg field "$STATUS_FIELD_ID" \
+            --arg option "$OPTION_ID" \
+            '{query:$q, variables:{project:$project, item:$item, field:$field, option:$option}}')
+
+          echo "---- Update status REQUEST ----"
+          echo "$update_payload"
+
+          update_resp=$(curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$update_payload" \
+            https://api.github.com/graphql)
+
+          echo "---- Update status RESPONSE ----"
+          echo "$update_resp"

@@ -13,7 +13,7 @@
 #include "display.h"
 #include "airport.h"
 
-// #include "versionchecker.h" // #dev - versionchecker - disabled
+#include "versionchecker.h"
 // DEV
 #include <thread>
 
@@ -72,6 +72,15 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	UpdateActiveAirports(); // preload rwy settings
 
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
+
+	if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+		messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+	else
+	{
+		vsid::version::checkForUpdates(this->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
+
+		curl_global_cleanup();
+	}	
 }
 
 vsid::VSIDPlugin::~VSIDPlugin()
@@ -3271,14 +3280,18 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				"rule [icao] [rulename] - toggle rule for icao / "
 				"night [icao] - toggle night mode for icao /"
 				"lvp [icao] - toggle lvp ops for icao / "
-				"req icao - lists request list entries /"
-				"req icao reset [listname] - resets all request lists or specified list"
+				"req icao - lists request list entries / "
+				"req icao reset [listname] - resets all request lists or specified list / "
+				"reload [ese] - reloads the main config or the ese file / "
 				"Debug - toggle debug mode");
 			return true;
 		}
 		if (vsid::utils::tolower(command[1]) == "version")
 		{
-			messageHandler->writeMessage("INFO", "vSID Version " + pluginVersion + " loaded.");
+			messageHandler->writeMessage("INFO", "vSID Version " + pluginVersion +
+				" loaded. Using nlohmann json (" + std::to_string(NLOHMANN_JSON_VERSION_MAJOR) + "." +
+				std::to_string(NLOHMANN_JSON_VERSION_MINOR) + "." + std::to_string(NLOHMANN_JSON_VERSION_PATCH) +
+				"). Using libcurl (" + curl_version() + ")");
 			return true;
 		}
 		// debugging only
@@ -3935,6 +3948,20 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			{
 				this->loadEse();
 			}
+			
+			return true;
+		}
+		else if (vsid::utils::tolower(command[1]) == "ghversion")
+		{
+			if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+			{
+				messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+				return true;
+			}		
+
+			vsid::version::checkForUpdates(this->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
+
+			curl_global_cleanup();
 			
 			return true;
 		}

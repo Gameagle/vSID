@@ -51,6 +51,10 @@ void vsid::ConfigParser::loadMainConfig()
 
     this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
 
+    // set update notification
+
+    this->notifyUpdate = this->vSidConfig.value("notifyUpdate", 1);
+
     try
     {
         // import colors or set default values
