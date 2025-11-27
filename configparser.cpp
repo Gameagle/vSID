@@ -47,13 +47,13 @@ void vsid::ConfigParser::loadMainConfig()
         return;
     }
 
-	// #dev - load ESE
-	// this->loadEse(); - DISABLED FOR CURRENT RELEASE
-	// end dev
-
     // set topsky preference
 
     this->preferTopsky = this->vSidConfig.value("preferTopsky", true);
+
+    // set update notification
+
+    this->notifyUpdate = this->vSidConfig.value("notifyUpdate", 1);
 
     try
     {
@@ -607,7 +607,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                         for (auto &sidField : this->parsedConfig.at(icao).at("sids").items())
                         {
-                            if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            if (sidField.key() == "allowDiffNumbers") fieldSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
@@ -644,7 +645,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             else if (sidField.key() == "engineType") fieldSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "engineCount") fieldSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "mtow") fieldSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-                            else if (sidField.key() == "customRule") fieldSetting.customRule = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+                            else if (sidField.key() == "customRule") fieldSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
                             else if (sidField.key() == "area") fieldSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
                             else if (sidField.key() == "equip")
                             {
@@ -708,7 +709,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                                 for (auto& sidWpt : this->parsedConfig.at(icao).at("sids").at(sidField.key()).items())
                                 {
-                                    if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    if (sidWpt.key() == "allowDiffNumbers") wptSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+                                    else if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if(sidWpt.key() == "climbvia") wptSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if (sidWpt.key() == "wpt") wptSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "trans")
@@ -720,8 +722,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											vsid::Transition trans;
 
 											trans.base = base.key();
-											trans.designator =
-												this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key());
+
+                                            if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key()); desig != "XXX")
+                                                trans.designator = desig;             
 
 											wptSetting.transition.insert({ base.key(), trans });
 										}
@@ -764,7 +767,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 									else if (sidWpt.key() == "engineType") wptSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "engineCount") wptSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
 									else if (sidWpt.key() == "mtow") wptSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "customRule") wptSetting.customRule = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+									else if (sidWpt.key() == "customRule") wptSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
 									else if (sidWpt.key() == "area") wptSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
 									else if (sidWpt.key() == "equip")
 									{
@@ -819,7 +822,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 									else if (sidWpt.key() == "clmbHighlight") wptSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
                                     else if (!this->isConfigValue(sidWpt.key()))
                                     {
-                                        if(sidWpt.key().find_first_of("0123456789") == std::string::npos) wptSetting.desig = sidWpt.key();
+                                        if(!vsid::utils::containsDigit(sidWpt.key()) && sidWpt.key() != "XXX") wptSetting.desig = sidWpt.key();
 
                                         // "designator level" - iterates over restrictions and sid ids
 
@@ -829,7 +832,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                         {
                                             if (sidDes.key() == "rwy")
                                                 desSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()), ',');
-											else if (sidDes.key() == "initial")
+											else if (sidDes.key() == "allowDiffNumbers")
+												desSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+                                            else if (sidDes.key() == "initial")
                                                 desSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "climbvia")
                                                 desSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
@@ -844,8 +849,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 													vsid::Transition trans;
 
 													trans.base = base.key();
-													trans.designator =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(base.key());
+                                                    if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).
+                                                        at(sidDes.key()).at(base.key()); desig != "XXX")
+                                                        trans.designator = desig;
 
 													desSetting.transition.insert({ base.key(), trans });
 												}
@@ -900,7 +906,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 											else if (sidDes.key() == "mtow")
                                                 desSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
 											else if (sidDes.key() == "customRule")
-                                                desSetting.customRule = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+                                                desSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
 											else if (sidDes.key() == "area")
                                                 desSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
 											else if (sidDes.key() == "equip")
@@ -981,6 +987,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                         idSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()), ',');
                                                     else if (sidId.key() == "prio")
                                                         idSetting.prio = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													else if (sidId.key() == "allowDiffNumbers")
+														idSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "initial")
                                                         idSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "climbvia")
@@ -996,8 +1004,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                             vsid::Transition trans;
 
                                                             trans.base = base.key();
-                                                            trans.designator =
-                                                                this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at(base.key());
+                                                            if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
+                                                                .at(sidDes.key()).at(sidId.key()).at(base.key()); desig != "XXX")
+                                                                trans.designator = desig;
 
                                                             idSetting.transition.insert({ base.key(), trans});
                                                         }
@@ -1052,7 +1061,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                                     else if (sidId.key() == "mtow")
                                                         idSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
                                                     else if (sidId.key() == "customRule")
-                                                        idSetting.customRule = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+                                                        idSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
                                                     else if (sidId.key() == "area")
                                                         idSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
                                                     else if (sidId.key() == "equip")
@@ -1133,11 +1142,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                                                 // save new sid
 
-												vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition, idSetting.equip,
-                                                                    idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled, idSetting.actArrRwy,
-                                                                    idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType, idSetting.acftType, idSetting.engineCount,
-																	idSetting.mtow, idSetting.dest, idSetting.route, idSetting.customRule, idSetting.area, idSetting.lvp,
-																	idSetting.timeFrom, idSetting.timeTo, idSetting.sidHighlight, idSetting.clmbHighlight };
+                                                vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition,
+                                                                    idSetting.allowDiffNumbers, idSetting.equip, idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled,
+                                                                    idSetting.actArrRwy, idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType,
+                                                                    idSetting.acftType, idSetting.engineCount, idSetting.mtow, idSetting.dest, idSetting.route,
+                                                                    idSetting.customRule, idSetting.area, idSetting.lvp, idSetting.timeFrom, idSetting.timeTo,
+                                                                    idSetting.sidHighlight, idSetting.clmbHighlight };
 												aptInfo.sids.push_back(newSid);
 												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
 
@@ -1353,97 +1363,6 @@ void vsid::ConfigParser::loadRnavList()
     }
     messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
 }
-
-// #dev - load Ese
-void vsid::ConfigParser::loadEse()
-{
-    if (this->vSidConfig.is_null())
-    {
-		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
-		return;
-    }
-
-	if (!this->vSidConfig.contains("esePath") || this->vSidConfig.at("esePath") == "")
-	{
-		messageHandler->writeMessage("ERROR", "No path to .ese file set in main config or it couldn't be loaded.");
-		return;
-	}
-
-	char path[MAX_PATH + 1] = { 0 };
-	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
-	PathRemoveFileSpecA(path);
-	std::filesystem::path basePath = path;
-
-    std::string esePath = this->vSidConfig.at("esePath");
-
-    basePath.append(esePath).make_preferred();
-
-    messageHandler->writeMessage("DEBUG", "loadEse called, basePath: " + basePath.string(), vsid::MessageHandler::DebugArea::Dev);
-
-    std::ofstream debugLog(basePath / "debug_ese_output.txt");
-    debugLog.clear();
-
-	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
-	{
-		messageHandler->writeMessage("DEBUG", "File: " + entry.string(), vsid::MessageHandler::DebugArea::Dev);
-        if (entry.extension() == ".ese")
-        {
-            std::ifstream eseFile(entry.string());
-
-            if (!eseFile.is_open())
-            {
-                messageHandler->writeMessage("WARNING", "Failed to open .ese file in: " + basePath.string());
-                break;
-            }
-
-            std::string newLine = "";
-            std::vector<std::string> vecLine = {};
-            bool sectionPosition = false;
-
-            while (std::getline(eseFile, newLine))
-            {
-                if (newLine.find("[POSITIONS]") != std::string::npos) sectionPosition = true;
-                if (newLine.empty() && sectionPosition) break;
-                if (!sectionPosition) continue;
-
-                if (newLine.find("[POSITIONS]") != std::string::npos) continue; // skip begin of section
-
-                vecLine = vsid::utils::split(newLine, ':', true);
-
-                try
-                {
-                    std::string callsign = vecLine.at(0);
-                    std::string freq = vecLine.at(2);
-                    std::string si = vecLine.at(3);
-                }
-                catch (std::out_of_range& e)
-                {
-                    messageHandler->writeMessage("ERROR", "Failed to retrieve station from .ese file: " + std::string(e.what()));
-                }
-
-                for (auto it = vecLine.begin(); it != vecLine.end(); ++it)
-                {
-                    int pos = std::distance(vecLine.begin(), it);
-
-                    debugLog << "[" << pos << "] " << *it << " | ";
-                }
-
-				debugLog << '\n';
-
-                vecLine.clear();
-            }
-
-            eseFile.close();
-
-            messageHandler->writeMessage("DEBUG", "File should be closed.", vsid::MessageHandler::DebugArea::Dev);
-
-            break; // no further checks necessary
-        }
-	}
-
-    debugLog.close();
-}
-// end dev
 
 const COLORREF vsid::ConfigParser::getColor(std::string color)
 {
