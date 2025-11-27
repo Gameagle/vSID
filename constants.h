@@ -40,8 +40,10 @@ const int TAG_FUNC_VSID_REQMENU = 744;
 
 const int TAG_ITEM_VSID_REQTIMER = 645;
 
-const int TAG_ITEM_VSID_CLRF = 646;
+const int TAG_ITEM_VSID_CTLF = 646;
+const int TAG_ITEM_VSID_CTLF_LOCAL = 6461;
 const int TAG_FUNC_VSID_CTL = 745;
+const int TAG_FUNC_VSID_CTL_LOCAL = 7451;
 
 const int TAG_ITEM_VSID_TRANS = 647;
 const int TAG_FUNC_VSID_TRANS = 746;
