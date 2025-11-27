@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "include/es/EuroScopePlugIn.h"
 #include "menu.h"
+#include "versionchecker.h"
 
 #include <gdiplus.h>
 #include <map>
@@ -31,6 +32,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <numbers>
+
+#include <curl/curl.h> // only to call the update check
 
 namespace vsid
 {
@@ -66,6 +69,7 @@ namespace vsid
 
 		/* ES Functions*/
 
+		void OnAsrContentLoaded(bool loaded);
 		void OnAsrContentToBeClosed();
 		void OnRefresh(HDC hDC, int Phase);
 		void OnMoveScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, bool Released);
@@ -160,6 +164,7 @@ namespace vsid
 		int id;
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
 		std::string name;
+		bool updateInformed = false;
 
 
 		//************************************
