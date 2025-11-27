@@ -13,7 +13,6 @@
 #include "display.h"
 #include "airport.h"
 
-#include "versionchecker.h"
 // DEV
 #include <thread>
 
@@ -54,8 +53,11 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemType("Request Timer", TAG_ITEM_VSID_REQTIMER);
 
-	RegisterTagItemType("Cleared to land flag", TAG_ITEM_VSID_CLRF);
+	RegisterTagItemType("Cleared to land flag", TAG_ITEM_VSID_CTLF);
 	RegisterTagItemFunction("Set cleared to land flag", TAG_FUNC_VSID_CTL);
+
+	RegisterTagItemType("Cleared to land flag (local)", TAG_ITEM_VSID_CTLF_LOCAL);
+	RegisterTagItemFunction("Set cleared to land flag (local)", TAG_FUNC_VSID_CTL_LOCAL);
 
 	RegisterTagItemType("Clearance received flag (CRF)", TAG_ITEM_VSID_CLR);
 	RegisterTagItemFunction("Set CRF and SID", TAG_FUNC_VSID_CLR_SID);
@@ -71,16 +73,7 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	UpdateActiveAirports(); // preload rwy settings
 
-	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
-
-	if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
-		messageHandler->writeMessage("ERROR", "Failed to init curl_global");
-	else
-	{
-		vsid::version::checkForUpdates(this->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
-
-		curl_global_cleanup();
-	}	
+	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);	
 }
 
 vsid::VSIDPlugin::~VSIDPlugin()
@@ -2509,6 +2502,11 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		std::string ctl = (this->processed[callsign].ctl) ? "TRUE" : "FALSE";
 		this->addSyncQueue(callsign, ".VSID_CTL_" + ctl, fpln.GetControllerAssignedData().GetScratchPadString());
 	}
+
+	if (FunctionId == TAG_FUNC_VSID_CTL_LOCAL)
+	{
+		this->processed[callsign].ctlLocal = !this->processed[callsign].ctlLocal;
+	}
 }
 
 void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
@@ -3200,7 +3198,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		}
 	}
 
-	if (ItemCode == TAG_ITEM_VSID_CLRF)
+	if (ItemCode == TAG_ITEM_VSID_CTLF)
 	{
 		if (RadarTarget.GetGS() < 50) return;
 
@@ -3260,6 +3258,38 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					*pRGB = this->configParser.getColor("clrfCaution");
 					strcpy_s(sItemString, 16, "CLR");
 				}
+			}
+		}
+	}
+
+	if (ItemCode == TAG_ITEM_VSID_CTLF_LOCAL)
+	{
+		if (RadarTarget.GetGS() < 50) return;
+
+		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+		 
+		if (!this->processed.contains(callsign) &&
+			(std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)))
+				return;
+		else if (this->processed.contains(callsign))
+		{
+			// alt & clrf only for mapp calculation
+			int alt = RadarTarget.GetPosition().GetPressureAltitude();
+			vsid::Clrf& clrf = this->configParser.getClrfMinimums();
+
+			if (this->processed[callsign].mapp && ((this->activeAirports.contains(ades) &&
+				alt > this->activeAirports[ades].elevation + clrf.altCaution + 200) || alt > clrf.altCaution + 200))
+			{
+				this->processed.erase(callsign);
+				return;
+			}
+
+			if (this->processed[callsign].ctlLocal)
+			{
+				if (this->processed[callsign].ldgAlt == 0) this->processed[callsign].ldgAlt = alt;
+
+				*pRGB = this->configParser.getColor("clrfSet");
+				strcpy_s(sItemString, 16, "CTL");
 			}
 		}
 	}
