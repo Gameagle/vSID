@@ -54,10 +54,11 @@ namespace vsid
 	struct SectionTransition
 	{
 		std::string base;
-		char number;
-		char desig;
+		std::optional<char> number;
+		std::optional<char> desig;
 
-		explicit SectionTransition(std::string base, char number, char desig) : base(std::move(base)), number(number), desig(desig) {}
+		explicit SectionTransition(std::string base, std::optional<char> number, std::optional<char> desig) :
+			base(std::move(base)), number(std::move(number)), desig(std::move(desig)) {}
 
 		auto operator<=>(const vsid::SectionTransition&) const = default;
 	};
@@ -67,13 +68,13 @@ namespace vsid
 		std::string apt;
 		std::string base;
 		char number;
-		char desig;
+		std::optional<char> desig;
 		std::string rwy;
 		vsid::SectionTransition trans;
 
-		explicit SectionSID(std::string apt, std::string base, char number, char desig, std::string rwy = "",
-			vsid::SectionTransition trans = vsid::SectionTransition( "", '\0', '\0')) :
-			apt(std::move(apt)), base(std::move(base)), number(number), desig(desig), rwy(std::move(rwy)), trans(std::move(trans)) {}
+		explicit SectionSID(std::string apt, std::string base, char number, std::optional<char> desig, std::string rwy = "",
+			vsid::SectionTransition trans = vsid::SectionTransition( "", std::nullopt, std::nullopt)) :
+			apt(std::move(apt)), base(std::move(base)), number(number), desig(std::move(desig)), rwy(std::move(rwy)), trans(std::move(trans)) {}
 
 		auto operator<=> (const vsid::SectionSID&) const = default;
 	};

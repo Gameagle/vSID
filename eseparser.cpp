@@ -126,8 +126,8 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			//const bool lastIsDigit = vsid::utils::lastIsDigit(sid);
 
-			vsid::SectionSID sectionSid("", "", '\0', '\0', "");
-			vsid::SectionTransition sectionTrans("", '\0', '\0');
+			vsid::SectionSID sectionSid("", "", '\0', std::nullopt, "");
+			vsid::SectionTransition sectionTrans("", std::nullopt, std::nullopt);
 
 			if (!sid.empty())
 			{
@@ -173,8 +173,11 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			sectionSid.trans = std::move(sectionTrans);
 
-			messageHandler->writeMessage("DEBUG", "[ESE] Stored value: " + sectionSid.base + sectionSid.number + sectionSid.desig +
-				" and trans: " + sectionSid.trans.base + sectionSid.trans.number + sectionSid.trans.desig, vsid::MessageHandler::DebugArea::Dev);
+			messageHandler->writeMessage("DEBUG", "[ESE] Stored value: [" + sectionSid.base + sectionSid.number +
+				((sectionSid.desig) ? std::string(1, *sectionSid.desig) : "") +
+				"] and trans: [" + sectionSid.trans.base + ((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : "") +
+				((sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : "") + "]",
+				vsid::MessageHandler::DebugArea::Dev);
 
 			this->sectionSids_.emplace(std::move(sectionSid));
 		}

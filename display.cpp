@@ -16,7 +16,25 @@ vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const s
 }
 vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed display with id: " + std::to_string(this->id), vsid::MessageHandler::DebugArea::Menu); }
 
- void vsid::Display::OnAsrContentToBeClosed()
+void vsid::Display::OnAsrContentLoaded(bool loaded)
+{
+	if (updateInformed) return;
+
+	if (std::shared_ptr sharedPlugin = this->plugin.lock())
+	{
+		if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+			messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+		else
+		{
+			vsid::version::checkForUpdates(sharedPlugin->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
+			this->updateInformed = true;
+
+			curl_global_cleanup();
+		}
+	}
+}
+
+void vsid::Display::OnAsrContentToBeClosed()
 {
 	// for (auto& [title, menu] : this->menues) delete menu; // re-evaluate
 	this->menues.clear();

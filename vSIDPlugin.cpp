@@ -12,6 +12,7 @@
 
 #include "display.h"
 #include "airport.h"
+
 // DEV
 #include <thread>
 
@@ -52,8 +53,11 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemType("Request Timer", TAG_ITEM_VSID_REQTIMER);
 
-	RegisterTagItemType("Cleared to land flag", TAG_ITEM_VSID_CLRF);
+	RegisterTagItemType("Cleared to land flag", TAG_ITEM_VSID_CTLF);
 	RegisterTagItemFunction("Set cleared to land flag", TAG_FUNC_VSID_CTL);
+
+	RegisterTagItemType("Cleared to land flag (local)", TAG_ITEM_VSID_CTLF_LOCAL);
+	RegisterTagItemFunction("Set cleared to land flag (local)", TAG_FUNC_VSID_CTL_LOCAL);
 
 	RegisterTagItemType("Clearance received flag (CRF)", TAG_ITEM_VSID_CLR);
 	RegisterTagItemFunction("Set CRF and SID", TAG_FUNC_VSID_CLR_SID);
@@ -69,7 +73,7 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	UpdateActiveAirports(); // preload rwy settings
 
-	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);
+	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);	
 }
 
 vsid::VSIDPlugin::~VSIDPlugin()
@@ -224,6 +228,8 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		return vsid::Sid();
 	}
 
+	std::set<std::string> depRwys = this->activeAirports[icao].depRwys; // dep rwys to merge with arr rwys if needed
+
 	// determine if a rule is active
 
 	if (this->activeAirports[icao].customRules.size() > 0)
@@ -238,12 +244,14 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		);
 	}
 
-	if (customRuleActive)
+	if (customRuleActive) // #evaluate - arrrwy check for areas below ~ 325
 	{
 		messageHandler->writeMessage("DEBUG", "[" + callsign + "] [" + icao +
 			"] Custom rules active. Checking for avbl areas and possible arr as dep rwys.",
 			vsid::MessageHandler::DebugArea::Sid);
+
 		std::map<std::string, bool> customRules = this->activeAirports[icao].customRules;
+
 		for (auto it = this->activeAirports[icao].sids.begin(); it != this->activeAirports[icao].sids.end();)
 		{
 			if (it->customRule == "" ||
@@ -252,8 +260,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 			{
 				++it; continue;
 			}
-
-			std::set<std::string> depRwys = this->activeAirports[icao].depRwys; //#evaluate - depRwys is not carried down to SID checking
 
 			if (it->area != "")
 			{
@@ -305,9 +311,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 	for (vsid::Sid& currSid : this->activeAirports[icao].sids)
 	{
-		// copy depRwys to add arr rwys if enabled in an active area
-		std::set<std::string> depRwys = this->activeAirports[icao].depRwys;
-
 		if (actAtcRwy != "") depRwys.insert(actAtcRwy);
 
 		// skip if current SID does not match found SID wpt
@@ -540,30 +543,13 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 		// skip if custom rules are active but the current sid has no rule or has a rule but this is not active
 
-		//if (customRuleActive &&
-		//	((wptRules.contains(currSid.waypoint) && currSid.customRule == "") ||
-		//	(!wptRules.contains(currSid.waypoint) && currSid.customRule != "")))
-		//{
-		//	// in addition - if a rwy was set by ATC don't skip
-		//	bool skip = true;
-		//	if (atcRwy != "" && this->processed.contains(callsign) && this->processed[callsign].atcRWY) skip = false;
-
-		//	if (skip)
-		//	{
-		//		messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-		//			"\" because customRule active for waypoint and SID doesn't have a rule set OR " +
-		//			" customRule NOT active for waypoint, but SID has a rule set",
-		//			vsid::MessageHandler::DebugArea::Sid);
-		//		continue;
-		//	}
-		//}
-
 		if (customRuleActive && currSid.customRule != "" &&
 			this->activeAirports[icao].customRules.contains(currSid.customRule) &&
 			!this->activeAirports[icao].customRules[currSid.customRule])
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" +
 				currSid.idName() + "\" because the SID custom rule is not active.",
+
 				vsid::MessageHandler::DebugArea::Sid);
 			continue;
 		}
@@ -1458,7 +1444,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		}
 
 		std::string squawk = FlightPlan.GetControllerAssignedData().GetSquawk();
-		if ((squawk == "" || squawk == "0000") && !this->activeAirports[icao].settings["auto"])
+		if ((squawk == "" || squawk == "0000" || squawk == "1234") && !this->activeAirports[icao].settings["auto"])
 		{
 			if (this->ccamsLoaded && !this->getConfigParser().preferTopsky)
 			{
@@ -2516,6 +2502,11 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		std::string ctl = (this->processed[callsign].ctl) ? "TRUE" : "FALSE";
 		this->addSyncQueue(callsign, ".VSID_CTL_" + ctl, fpln.GetControllerAssignedData().GetScratchPadString());
 	}
+
+	if (FunctionId == TAG_FUNC_VSID_CTL_LOCAL)
+	{
+		this->processed[callsign].ctlLocal = !this->processed[callsign].ctlLocal;
+	}
 }
 
 void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
@@ -3207,7 +3198,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		}
 	}
 
-	if (ItemCode == TAG_ITEM_VSID_CLRF)
+	if (ItemCode == TAG_ITEM_VSID_CTLF)
 	{
 		if (RadarTarget.GetGS() < 50) return;
 
@@ -3270,6 +3261,38 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 		}
 	}
+
+	if (ItemCode == TAG_ITEM_VSID_CTLF_LOCAL)
+	{
+		if (RadarTarget.GetGS() < 50) return;
+
+		*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+		 
+		if (!this->processed.contains(callsign) &&
+			(std::string(fplnData.GetPlanType()) == "V" || !this->activeAirports.contains(ades)))
+				return;
+		else if (this->processed.contains(callsign))
+		{
+			// alt & clrf only for mapp calculation
+			int alt = RadarTarget.GetPosition().GetPressureAltitude();
+			vsid::Clrf& clrf = this->configParser.getClrfMinimums();
+
+			if (this->processed[callsign].mapp && ((this->activeAirports.contains(ades) &&
+				alt > this->activeAirports[ades].elevation + clrf.altCaution + 200) || alt > clrf.altCaution + 200))
+			{
+				this->processed.erase(callsign);
+				return;
+			}
+
+			if (this->processed[callsign].ctlLocal)
+			{
+				if (this->processed[callsign].ldgAlt == 0) this->processed[callsign].ldgAlt = alt;
+
+				*pRGB = this->configParser.getColor("clrfSet");
+				strcpy_s(sItemString, 16, "CTL");
+			}
+		}
+	}
 }
 
 bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
@@ -3287,14 +3310,18 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				"rule [icao] [rulename] - toggle rule for icao / "
 				"night [icao] - toggle night mode for icao /"
 				"lvp [icao] - toggle lvp ops for icao / "
-				"req icao - lists request list entries /"
-				"req icao reset [listname] - resets all request lists or specified list"
+				"req icao - lists request list entries / "
+				"req icao reset [listname] - resets all request lists or specified list / "
+				"reload [ese] - reloads the main config or the ese file / "
 				"Debug - toggle debug mode");
 			return true;
 		}
 		if (vsid::utils::tolower(command[1]) == "version")
 		{
-			messageHandler->writeMessage("INFO", "vSID Version " + pluginVersion + " loaded.");
+			messageHandler->writeMessage("INFO", "vSID Version " + pluginVersion +
+				" loaded. Using nlohmann json (" + std::to_string(NLOHMANN_JSON_VERSION_MAJOR) + "." +
+				std::to_string(NLOHMANN_JSON_VERSION_MINOR) + "." + std::to_string(NLOHMANN_JSON_VERSION_PATCH) +
+				"). Using libcurl (" + curl_version() + ")");
 			return true;
 		}
 		// debugging only
@@ -3858,7 +3885,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						}					
 					}
 				}
-				else if (command.size() == 4)
+				else if (command.size() == 4 && vsid::utils::tolower(command[3]) == "reset")
 				{
 					bool failedReset = false;
 					for (auto& [_, reqList] : this->activeAirports[icao].requests)
@@ -3872,7 +3899,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						" all requests have been cleared.");
 					else messageHandler->writeMessage("INFO", icao + " failed to reset requests.");
 				}
-				else if (command.size() == 5)
+				else if (command.size() == 5 && vsid::utils::tolower(command[3]) == "reset")
 				{
 					std::string req = vsid::utils::tolower(command[4]);
 
@@ -3951,6 +3978,20 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			{
 				this->loadEse();
 			}
+			
+			return true;
+		}
+		else if (vsid::utils::tolower(command[1]) == "ghversion")
+		{
+			if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+			{
+				messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+				return true;
+			}		
+
+			vsid::version::checkForUpdates(this->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
+
+			curl_global_cleanup();
 			
 			return true;
 		}
@@ -4920,7 +4961,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
 				if (sid.base != sectionSid.base) continue;
-				if (sid.designator != std::string(1, sectionSid.desig)) continue;
+				if (sid.designator != (sectionSid.desig ? std::string(1, *sectionSid.desig) : "")) continue;
 				if (!vsid::utils::contains(sid.rwys, sectionSid.rwy)) continue;
 
 				if (std::isdigit(sectionSid.number))
@@ -4942,13 +4983,10 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 							" Master rwy: " + sectionSid.rwy,
 							vsid::MessageHandler::DebugArea::Conf);
 					}
-					else if (sid.number != "") // health check for possible errors in .sct / .ese config
+					else if (sid.number != "") // health check for possible errors in .ese config
 					{
 						int currNumber = std::stoi(sid.number);
 						int newNumber = sectionSid.number - '0';
-
-						/*if (std::string(sfe.GetRunwayName(0)) != "") rwyName = sfe.GetRunwayName(0);
-						else if (std::string(sfe.GetRunwayName(1)) != "") rwyName = sfe.GetRunwayName(1);*/
 
 						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
 						{
@@ -4962,39 +5000,56 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
-							sid.number = sectionSid.number;
+							sid.number = newNumber;
 						}
 						else if (currNumber != newNumber)
 						{
 							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese-file for " + sid.base + "?" + sid.designator + " SID! Already set number: " +
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
+
+							sid.number = newNumber;
 						}
 					}
 
 					if (!sid.transition.empty() && sectionSid.trans.base != "")
 					{
+						messageHandler->writeMessage("DEBUG", "Checking SID [" + sectionSid.base + sectionSid.number +
+							((sectionSid.desig) ? std::string(1, *sectionSid.desig) : "") + "] with transition [" + sectionSid.trans.base +
+							((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : "") +
+							((sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : "") + "].", vsid::MessageHandler::DebugArea::Conf);
+
 						for (auto& [transBase, trans] : sid.transition)
 						{
 							if (transBase != sectionSid.trans.base) continue;
-							if (trans.designator != std::string(1, sectionSid.trans.desig)) continue;
+							if (trans.designator != (sectionSid.trans.desig ? std::string(1, *sectionSid.trans.desig) : "")) continue;
 							if (trans.number != "") // #refactor .number to char
 							{
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") transition [" + trans.base +
-									trans.number + trans.designator + "] already mastered. Skipping current transition number " +
-									std::to_string(sectionSid.trans.number), vsid::MessageHandler::DebugArea::Conf);
+									trans.number + trans.designator + "] already mastered. Skipping current transition number: " +
+									((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : ""), vsid::MessageHandler::DebugArea::Conf);
 
 								continue;
 							}
 
-							if (std::isdigit(sectionSid.trans.number))
+							if (sectionSid.trans.number && std::isdigit(*sectionSid.trans.number))
 							{
-								trans.number = sectionSid.trans.number;
+								trans.number = *sectionSid.trans.number;
 
 								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
 									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
 									trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
+
+								break;
+							}
+							else if (!sectionSid.trans.number && (trans.designator == "" || trans.designator != "XXX"))
+							{
+								trans.number = "-1"; // dummy value for wpt transitions
+
+								messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
+									sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
+									trans.number + trans.designator + "] (dummy number)", vsid::MessageHandler::DebugArea::Conf);
 
 								break;
 							}
@@ -5058,119 +5113,26 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					incompSids[apt.first].insert(sid.base + '?' + sid.designator);
 				else
 				{
-					//int removedTrans = 0;
-
-					//for (auto it = sid.transition.begin(); it != sid.transition.end();)
 					for (auto &[_, trans] : sid.transition)
 					{
-						//auto& [_, trans] = *it;
-
-						if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
-						{
-							/*std::string number = (std::string("0123456789").find_first_of(sid.number) == std::string::npos) ?
-								"?" : sid.number;*/
-
+						if (trans.number == "-1") trans.number = "";
+						else if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
 							incompTrans[apt.first][sid.base + sid.number + sid.designator].insert(trans.base + '?' + trans.designator);
-							//removedTrans++;
-
-							/*messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
-								sid.id + ") removed transition [" + trans.base + "?" + trans.designator +
-								"] (health check failed)", vsid::MessageHandler::DebugArea::Conf);*/
-
-							/*it = sid.transition.erase(it);*/
-							//continue;
-						}
-						//++it;
 					}
-
-					/*if (removedTrans > 0 && sid.transition.size() == 0)
-					{
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " +
-							sid.id + ") all transitions removed.", vsid::MessageHandler::DebugArea::Dev);
-						incompSids[apt.first].insert(sid.base + sid.number + sid.designator);
-					}*/
+				}
+			}
+			else if (sid.number != "")
+			{
+				for (auto& [_, trans] : sid.transition)
+				{
+					if (trans.number == "-1") trans.number = "";
+					else if (std::string("0123456789").find_first_of(trans.number) == std::string::npos)
+						incompTrans[apt.first][sid.base + sid.number + sid.designator].insert(trans.base + '?' + trans.designator);
 				}
 			}
 			else
 			{
 				if (sid.number != "X") incompSids[apt.first].insert(sid.base);
-			}
-		}
-	}
-
-	// fallback check if incompatible SIDs remain after checking .ese file. Now .sct is checked
-
-	if (incompSids.size() > 0 || incompTrans.size() > 0)
-	{
-		messageHandler->writeMessage("DEBUG", "Incompatible SIDs found. Rechecking in .sct file...", vsid::MessageHandler::DebugArea::Conf);
-		for (EuroScopePlugIn::CSectorElement sfe = this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_SID);
-			sfe.IsValid();
-			sfe = this->SectorFileElementSelectNext(sfe, EuroScopePlugIn::SECTOR_ELEMENT_SID))
-		{
-			std::vector<std::string> components = vsid::utils::split(std::string(sfe.GetName()), ' ');
-			std::string compIcao = "";
-			std::string compSid = "";
-
-			if (components.size() == 4)
-			{
-				compIcao = components.at(0);
-				compSid = components.at(3);
-			}
-			else continue;
-
-			if (!incompSids.contains(compIcao) && !incompTrans.contains(compIcao)) continue;
-			if (!this->activeAirports.contains(compIcao)) continue;
-
-			for (vsid::Sid& sid : this->activeAirports[compIcao].sids)
-			{
-				if (sid.number != "" && sid.transition.size() == 0) continue;
-
-				if (sid.designator != "")
-				{
-					for (auto& [base, trans] : sid.transition)
-					{
-						if (base != compSid.substr(0, compSid.length() - 2)) continue;
-						if (trans.designator != std::string(1, compSid[compSid.length() - 1])) continue;
-
-						if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
-						{
-							trans.number = compSid[compSid.length() - 2];
-
-							if (sid.number != "" && incompTrans[compIcao].contains(sid.base + sid.number + sid.designator))
-								incompTrans[compIcao][sid.base + sid.number + sid.designator].erase(base + '?' + trans.designator);
-
-							messageHandler->writeMessage("DEBUG", "[" + sid.base + ((sid.number != "") ? sid.number : "?") +
-								sid.designator + "] (ID: " + sid.id + ") mastered transition [" + trans.base +
-								trans.number + trans.designator + "]", vsid::MessageHandler::DebugArea::Conf);
-
-							break;
-						}
-					}
-
-					if (sid.base != compSid.substr(0, compSid.length() - 2)) continue;
-					if (sid.designator != std::string(1, compSid[compSid.length() - 1])) continue;
-
-					if (std::string("0123456789").find_first_of(compSid[compSid.length() - 2]) != std::string::npos)
-					{
-						sid.number = compSid[compSid.length() - 2];
-						incompSids[compIcao].erase(sid.base + '?' + sid.designator);
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] mastered", vsid::MessageHandler::DebugArea::Conf);
-					}
-				}
-				else
-				{
-					if (sid.base != compSid) continue;
-					incompSids[compIcao].erase(sid.base);
-					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
-				}
-			}
-
-			if (incompSids[compIcao].size() == 0) incompSids.erase(compIcao);
-
-			if (incompSids.size() == 0)
-			{
-				messageHandler->writeMessage("DEBUG", "All incompatible SIDs mastered, stopping fallback checks...", vsid::MessageHandler::DebugArea::Conf);
-				break;
 			}
 		}
 	}
@@ -5228,15 +5190,13 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 						continue;
 					}
 				}
-				else
+				else if(it->number == "" && it->base == incompSid)
 				{
-					if (it->base == incompSid)
-					{
-						messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->base +
-							"] (ID: " + it->id + ") (base only) incompatible and erased", vsid::MessageHandler::DebugArea::Conf);
-						it = this->activeAirports[incompSidPair.first].sids.erase(it);
-						continue;
-					}
+					messageHandler->writeMessage("DEBUG", "[" + incompSidPair.first + "] [" + it->base +
+						"] (ID: " + it->id + ") (base only) incompatible and erased", vsid::MessageHandler::DebugArea::Conf);
+
+					it = this->activeAirports[incompSidPair.first].sids.erase(it);
+					continue;
 				}
 				++it;
 			}
@@ -5255,7 +5215,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		}
 	}
 
-	// remove dummy value for SIDs without designator
+	// remove dummy value for SIDs without designator // #evaluate
 
 	for (std::pair<const std::string, vsid::Airport>& apt : this->activeAirports)
 	{

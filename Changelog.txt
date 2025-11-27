@@ -1,3 +1,17 @@
+[Changelog v0.14.2]
+
+:new: **New Features**
+*	CONF - transitions without number and designator are now mastered (#338)
+*	CONF - SIDs with only a number and no designator are now accepted (#338)
+*	GEN - version check added. main config can use config value "notifyUpdate" with a value between 0 and 4. 0 disables notifications, 1 informs about updates via text, 2 via message box, 3 and 4 the same but for pre-releases (default: 1) (#354)
+*	GEN - new command ".vsid ghversion" to manually re-check version. If no new version is found there will be no info / output.
+*	FPLN - added unsynced cleared to land flag. tag item and tag function both include "(local)" in their name. Does not include any landing warnings. Config value for altitude warning is only used for missed approach calculation (#377)
+
+:lady_beetle: **Fixes**
+*	GEN - resetting request queues is now limited to the keyword "reset" (#342)
+*	CONF - custom rules in SIDs were not transformed to upper case while rules in the airport were. If the rule was configured in lower case the checks for activation would fail.
+*	SID - if an arr rwy could become a dep rwy it wasn't always respected during processing the SIDs for a flight plan
+
 [Changelog v0.14.1]
 >[!NOTE]
 > This release is only aimed at vACCS that use transitions (SIDxTRANSITION) format

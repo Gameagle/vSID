@@ -160,6 +160,7 @@ namespace vsid
 		json grpConfig;
 		std::set<std::string> rnavList;
 		bool preferTopsky;
+		int notifyUpdate;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;
