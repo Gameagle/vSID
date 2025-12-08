@@ -103,15 +103,15 @@ void vsid::VSIDPlugin::detectPlugins()
 
 			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
 			{
-				std::string modname = szModName;
+				std::string modname = vsid::utils::tolower(szModName);
 
 				//if (modname == "CCAMS.dll")
-				if (modname.find("CCAMS.dll") != std::string::npos)
+				if (modname.find("ccams.dll") != std::string::npos)
 				{
 					this->ccamsLoaded = true;
 				}
 				//if (modname == "TopSky.dll")
-				if (modname.find("TopSky.dll") != std::string::npos)
+				if (modname.find("topsky.dll") != std::string::npos)
 				{
 					this->topskyLoaded = true;
 				}
@@ -4257,7 +4257,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 			this->processed[callsign].ctl = ctl; // #evaluate - setting 'false' could delete from processed if ades is not active (protection against too many entries)
 
-			this->updateSPSyncRelease(callsign);
+			if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 		}
 
 		// set intersection
@@ -4304,7 +4304,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					}
 				}
 
-				this->updateSPSyncRelease(callsign);
+				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
 			// sync release if GRP states are synced - ES is released on gnd state updates
