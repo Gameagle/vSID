@@ -1701,9 +1701,9 @@ void vsid::VSIDPlugin::processSPQueue()
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.first).c_str());
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.second).c_str());
 
-			// pre-release sync lock as mentioned ES msgs are never received
+			// pre-release sync lock as mentioned ES msgs are never received #checkforremoval - check now moved to flightplandataupate (CTR_..)
 			
-			if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
+			// if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
 		}
 		else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove (only debugging)
 		{
@@ -3787,6 +3787,12 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		}
 		else if (vsid::utils::tolower(command[1]) == "sync")
 		{
+			if (!ControllerMyself().IsController())
+			{
+				messageHandler->writeMessage("ERROR", "Flight plan syncing not available for observers!");
+				return true;
+			}
+
 			messageHandler->writeMessage("DEBUG", "Syncinc all requests.", vsid::MessageHandler::DebugArea::Req);
 
 			for (auto& [callsign, fpln] : this->processed)
@@ -3798,6 +3804,12 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
 				std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
+
+				// #dev - temporary info who synced
+				std::string oldScratchPad = FlightPlan.GetControllerAssignedData().GetScratchPadString();
+				FlightPlan.GetControllerAssignedData().SetScratchPadString(std::format(".vsid_syncby_{}", ControllerMyself().GetCallsign()).c_str());
+				FlightPlan.GetControllerAssignedData().SetScratchPadString(oldScratchPad.c_str());
+				// end dev
 
 				// sync requests
 
@@ -4330,7 +4342,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
-			// clearance flag released while sending
+			// clearance flag released while sending - (now temp. below GND states here)
 
 			// request entries
 
@@ -4481,6 +4493,12 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) // updating sync release for ES states as they're not always seen in scratch pad
 	{
+		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+	}
+
+	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_CLEARENCE_FLAG) //#dev updating sync release for ES clearance flag as it is not seen in scratch pad
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] received clearance flag update", vsid::MessageHandler::DebugArea::Dev);
 		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 	}
 
