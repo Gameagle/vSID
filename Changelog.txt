@@ -1,3 +1,9 @@
+[Changelog v0.14.3]
+
+:gear: **Changed Features / Behaviour**
+*	GEN - changed topsky and ccams lookup check to lower case
+*	FPLN - added checks to _CTL_ and _AUTO_ scratch pad entries to not trigger sync queue processing
+
 [Changelog v0.14.2]
 
 :new: **New Features**
