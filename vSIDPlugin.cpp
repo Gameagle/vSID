@@ -4978,7 +4978,23 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			
 			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
-				if (sid.base != sectionSid.base) continue;
+				if (sid.base != sectionSid.base)
+				{
+					// skip unmatching first two char comparison (filter)
+					if (sid.base.length() > 2 && sectionSid.base.length() > 2)
+					{
+						if (sid.base[0] != sectionSid.base[0]) continue;
+						if (sid.base[1] != sectionSid.base[1]) continue;
+						if (sid.base[2] != sectionSid.base[2]) continue;
+					}
+
+					if (!sid.collapsedBaseMatch(sectionSid.base))
+					{
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed didn't match [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
+						continue;
+					}
+					else messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed matched [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
+				}
 				if (sid.designator != (sectionSid.desig ? std::string(1, *sectionSid.desig) : "")) continue;
 				if (!vsid::utils::contains(sid.rwys, sectionSid.rwy)) continue;
 
@@ -5003,7 +5019,24 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					}
 					else if (sid.number != "") // health check for possible errors in .ese config
 					{
-						int currNumber = std::stoi(sid.number);
+						int currNumber = -1;
+
+						try
+						{
+							currNumber = std::stoi(sid.number); // #dev - removed int -> debugging
+						}
+						catch (const std::invalid_argument& e)
+						{
+							messageHandler->writeMessage("ERROR", "Collapsing SID [" + sid.idName() + "] caused an error while collapsing base for section SID [" +
+								sectionSid.base + "]. Error: " + e.what());
+						}
+						catch (const std::out_of_range& e)
+						{
+							messageHandler->writeMessage("ERROR", "Collapsing SID [" + sid.idName() + "] caused an error while collapsing base for section SID [" +
+								sectionSid.base + "]. Error: " + e.what());
+						}
+						if (currNumber == -1) continue;
+						
 						int newNumber = sectionSid.number - '0';
 
 						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
@@ -5018,7 +5051,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
-							sid.number = newNumber;
+							sid.number = std::to_string(newNumber);
 						}
 						else if (currNumber != newNumber)
 						{
@@ -5026,7 +5059,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
 
-							sid.number = newNumber;
+							sid.number = std::to_string(newNumber);
 						}
 					}
 
@@ -5039,7 +5072,23 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 						for (auto& [transBase, trans] : sid.transition)
 						{
-							if (transBase != sectionSid.trans.base) continue;
+							if (transBase != sectionSid.trans.base)
+							{
+								// skip unmatching first two char comparison (filter)
+								if (transBase.length() > 2 && sectionSid.trans.base.length() > 2)
+								{
+									if (transBase[0] != sectionSid.trans.base[0]) continue;
+									if (transBase[1] != sectionSid.trans.base[1]) continue;
+									if (transBase[2] != sectionSid.trans.base[2]) continue;
+								}
+
+								if (!sid.collapsedBaseMatch(sectionSid.trans.base, transBase))
+								{
+									messageHandler->writeMessage("DEBUG", "[" + transBase + "] trans collapsed didn't match [" + sectionSid.trans.base + "]", vsid::MessageHandler::DebugArea::Dev);
+									continue;
+								}
+								else messageHandler->writeMessage("DEBUG", "[" + transBase + "] trans collapsed matched [" + sectionSid.trans.base + "]", vsid::MessageHandler::DebugArea::Dev);
+							}
 							if (trans.designator != (sectionSid.trans.desig ? std::string(1, *sectionSid.trans.desig) : "")) continue;
 							if (trans.number != "") // #refactor .number to char
 							{
