@@ -12,6 +12,7 @@
 *	GEN - changed topsky and ccams lookup check to lower case
 *	FPLN - added checks to _CTL_ and _AUTO_ scratch pad entries to not trigger sync queue processing
 *	FPLN - moved clearance flag sync release to flight plan data update
+*	FPLN - removed syncing of unset clearance flag - only if the clearance flag is set it will be synced
 
 :lady_beetle: **Fixes**
 *	CONF - fixed a crash when SID health check was triggered for different SID numbers due to an accidentally wrong type assignment

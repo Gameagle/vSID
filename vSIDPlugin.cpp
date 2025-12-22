@@ -1583,7 +1583,11 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 	if (this->processed.contains(callsign))
 	{
-		this->addSyncQueue(callsign, (FlightPlan.GetClearenceFlag() ? "CLEA" : "NOTC"), FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		if (FlightPlan.GetClearenceFlag())
+		{
+			this->addSyncQueue(callsign, "CLEA", FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		}
+		
 		if (this->processed[callsign].gndState != "")
 		{
 			this->addSyncQueue(callsign, this->processed[callsign].gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
