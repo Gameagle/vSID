@@ -18,20 +18,7 @@ vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed displ
 
 void vsid::Display::OnAsrContentLoaded(bool loaded)
 {
-	if (updateInformed) return;
-
-	if (std::shared_ptr sharedPlugin = this->plugin.lock())
-	{
-		if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
-			messageHandler->writeMessage("ERROR", "Failed to init curl_global");
-		else
-		{
-			vsid::version::checkForUpdates(sharedPlugin->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
-			this->updateInformed = true;
-
-			curl_global_cleanup();
-		}
-	}
+	if (std::shared_ptr sharedPlugin = this->plugin.lock()) sharedPlugin->updateCheck();
 }
 
 void vsid::Display::OnAsrContentToBeClosed()
