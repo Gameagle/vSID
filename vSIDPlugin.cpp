@@ -73,6 +73,10 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	UpdateActiveAirports(); // preload rwy settings
 
+	if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+		messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+	else this->curlInit = true;
+
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);	
 }
 
@@ -5501,6 +5505,8 @@ void vsid::VSIDPlugin::exit()
 {
 	this->radarScreens.clear();
 	this->shared.reset();
+
+	if(this->curlInit) curl_global_cleanup();
 }
 
 void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
