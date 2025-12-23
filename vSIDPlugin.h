@@ -31,14 +31,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sstream>
 #include <deque>
 
+#include <curl/curl.h> // only to call the update check
+
 #include "include/es/EuroScopePlugIn.h"
 #include "airport.h"
 #include "constants.h"
-
 #include "flightplan.h"
 #include "configparser.h"
 #include "utils.h"
 #include "eseparser.h"
+#include "versionchecker.h"
 
 namespace vsid
 {
@@ -340,6 +342,25 @@ namespace vsid
 		void deleteScreen(int id);
 
 		//************************************
+		// Description: helper function to be triggerd by ASR content
+		// Method:    updateCheck
+		// FullName:  vsid::VSIDPlugin::updateCheck
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		inline void updateCheck()
+		{
+			if (this->updateInformed) return; // only check once
+
+			if (this->curlInit)
+			{
+				vsid::version::checkForUpdates(this->getConfigParser().notifyUpdate, vsid::version::parseSemVer(pluginVersion));
+				this->updateInformed = true;
+			}
+		}
+
+		//************************************
 		// Description: Cleanup work before the plugin is unloaded or ES is exited
 		// Method:    exit
 		// FullName:  vsid::VSIDPlugin::exit
@@ -448,6 +469,9 @@ namespace vsid
 		std::atomic_bool queueInProcess = false;
 
 		std::map<std::string, int> atcSiFailCounter;
+
+		bool updateInformed = false;
+		bool curlInit = false;
 		
 		//************************************
 		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
