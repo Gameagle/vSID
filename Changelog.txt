@@ -16,6 +16,7 @@
 
 :lady_beetle: **Fixes**
 *	CONF - fixed a crash when SID health check was triggered for different SID numbers due to an accidentally wrong type assignment
+*	GEN - moved actual update check to main class (display only caller now) and fixed too many checks (#385)
 
 [Changelog v0.14.2]
 
