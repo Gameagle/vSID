@@ -1448,25 +1448,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		}
 
 		std::string squawk = FlightPlan.GetControllerAssignedData().GetSquawk();
-		if ((squawk == "" || squawk == "0000" || squawk == "1234") && !this->activeAirports[icao].settings["auto"])
-		{
-			if (this->ccamsLoaded && !this->getConfigParser().preferTopsky)
-			{
-				// DEV - see OnTime for further usage
-				// this->sqwkQueue.insert(callsign);
-				// END DEV
-				
-				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
-
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS squawk", vsid::MessageHandler::DebugArea::Dev);
-			}
-			else if (this->topskyLoaded)
-			{
-				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
-
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TopSky squawk", vsid::MessageHandler::DebugArea::Dev);
-			}
-		}
+		if (squawk == "" || squawk == "0000" || squawk == "1234") this->addOrSetSquawk(callsign);
 	}
 
 	// reset IC if it doesn't match
@@ -1790,6 +1772,44 @@ void vsid::VSIDPlugin::loadEse()
 
 	vsid::EseParser eseParser(this->sectionAtc, this->sectionSids);
 	eseParser.parseEse(fullEsePath);
+}
+
+void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
+{
+	long long timeDiff = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count();
+
+	if (timeDiff >= 2)
+	{
+		if (this->topskyLoaded && (forceTS || this->getConfigParser().preferTopsky))
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+			this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+
+			this->lastSquawkTP = std::chrono::utc_clock::now();
+		}
+		else if (this->ccamsLoaded)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+			this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
+
+			this->lastSquawkTP = std::chrono::utc_clock::now();
+		}
+	}
+	else
+	{
+		auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign);
+
+		if (it == this->squawkQueue.end())
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] not in squawk list. Adding to it", vsid::MessageHandler::DebugArea::Dev);
+			this->squawkQueue.push_back(callsign);
+		}
+		else if (it != this->squawkQueue.end() && it != this->squawkQueue.begin())
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] in squawk list. Moving to front", vsid::MessageHandler::DebugArea::Dev);
+			this->squawkQueue.splice(this->squawkQueue.begin(), this->squawkQueue, it);
+		}
+	}
 }
 /*
 * END OWN FUNCTIONS
@@ -2495,10 +2515,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (FunctionId == TAG_FUNC_VSID_TSSQUAWK)
 		{
-			if (this->topskyLoaded)
-			{
-				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
-			}
+			if (this->topskyLoaded) this->addOrSetSquawk(callsign, true);
 			else messageHandler->writeMessage("ERROR", "TopSky auto-assign squawk called, but TopSky was not detected.");
 		}
 	}
@@ -3052,6 +3069,15 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (ItemCode == TAG_ITEM_VSID_SQW)
 		{
+			if (auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign); it != this->squawkQueue.end())
+			{
+				*pRGB = RGB(255, 255, 255);
+			
+				if(it == this->squawkQueue.begin()) strcpy_s(sItemString, 16, "NEXT");
+				else strcpy_s(sItemString, 16, "STBY");
+
+				return; // prevent displaying of old squawk until new is set
+			}
 			std::string setSquawk = FlightPlan.GetFPTrackPosition().GetSquawk();
 			std::string assignedSquawk = FlightPlan.GetControllerAssignedData().GetSquawk();
 
@@ -5354,6 +5380,37 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 		this->syncQueue.clear();
 		this->spReleased.clear();
+	}
+
+	// check squawk queue each second if new squawk can be set
+
+	if (this->squawkQueue.size() > 0 && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count() >= 2)
+	{
+		if (EuroScopePlugIn::CFlightPlan FlightPlan = this->FlightPlanSelectASEL(); FlightPlan.IsValid())
+		{
+			std::string callsign = this->squawkQueue.front();
+
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] working on squawk queue", vsid::MessageHandler::DebugArea::Dev);
+
+			if (this->topskyLoaded && this->getConfigParser().preferTopsky)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+
+				this->lastSquawkTP = std::chrono::utc_clock::now();
+			}
+			else if (this->ccamsLoaded)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
+
+				this->lastSquawkTP = std::chrono::utc_clock::now();
+			}
+
+			this->SetASELAircraft(FlightPlan);
+
+			this->squawkQueue.pop_front();
+		}
 	}
 
 	if (Counter % 10 == 0)
