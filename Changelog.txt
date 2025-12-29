@@ -7,6 +7,7 @@
 :new: **New Features**
 *	FPLN - temporarily added scratch pad info which callsign used the sync command
 *	CONF - collapsing SID or TRANS base when consecutive characters are the same as new Navigraph data collapses those names which are then present in the sector file (#358)
+*	FPLN - add squawk queue with a grace period to fetch assignements that were too fast. Squawk assignement works now also in auto-mode and with our own included TopSky assign function (fast click sequence). Note: CCAMS only supported in auto-mode as there currently is no additional function implemented (currently not planned) (#388)
 
 :gear: **Changed Features / Behaviour**
 *	GEN - changed topsky and ccams lookup check to lower case
