@@ -30,6 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 #include <deque>
+#include <list>
 
 #include <curl/curl.h> // only to call the update check
 
@@ -439,17 +440,6 @@ namespace vsid
 		std::set<vsid::SectionAtc> sectionAtc;
 		// internal storage of parsed sids
 		std::set<vsid::SectionSID> sectionSids;
-
-		//************************************
-		// Description: Loads and updates the active airports with available configs
-		// Method:    UpdateActiveAirports
-		// FullName:  vsid::VSIDPlugin::UpdateActiveAirports
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		//************************************
-		void UpdateActiveAirports();
-
 		//************************************
 		// Description: Tracks if multiple scratch pad entries for the same callsign are save to be sent
 		// Param 1: std::string - callsign
@@ -465,13 +455,31 @@ namespace vsid
 		// Param 2b: std::string - old scratch pad msg (to be restored)
 		//************************************
 		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
+
+		// internal squawn assignment queue
+		std::list<std::string> squawkQueue;
+		// time of last squawk assignment
+		std::chrono::utc_clock::time_point lastSquawkTP;
+		// scratch pad sync queue is active - try to suppress recieved scratch pad entries
 		bool spWorkerActive = false;
+		// if scratch pad sync queue is being worked on
 		std::atomic_bool queueInProcess = false;
-
+		// counter how often a false SI was reported by ES
 		std::map<std::string, int> atcSiFailCounter;
-
+		// was the update check already issued
 		bool updateInformed = false;
+		// if curl init was successfull
 		bool curlInit = false;
+
+		//************************************
+		// Description: Loads and updates the active airports with available configs
+		// Method:    UpdateActiveAirports
+		// FullName:  vsid::VSIDPlugin::UpdateActiveAirports
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		void UpdateActiveAirports();
 		
 		//************************************
 		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
@@ -530,5 +538,17 @@ namespace vsid
 		// Qualifier:
 		//************************************
 		void loadEse();
+
+		//************************************
+		// Description: Assigns a squawk or add to queue if time passed is too small
+		// Method:    addOrSetSquawk
+		// FullName:  vsid::VSIDPlugin::addOrSetSquawk
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: bool forceTS - if TopSky should be forced for squawk assignment
+		//************************************
+		void addOrSetSquawk(const std::string& callsign, bool forceTS = false);
 	};
 }
