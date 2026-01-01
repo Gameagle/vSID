@@ -550,5 +550,17 @@ namespace vsid
 		// Parameter: bool forceTS - if TopSky should be forced for squawk assignment
 		//************************************
 		void addOrSetSquawk(const std::string& callsign, bool forceTS = false);
+
+		//************************************
+		// Description: Checks for frequency match and considers ICAO and facility parts matching
+		// Method:    atcFreqMatch
+		// FullName:  vsid::VSIDPlugin::atcFreqMatch
+		// Access:    private 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: const EuroScopePlugIn::CController & other
+		// Parameter: const vsid::SectionAtc & local
+		//************************************
+		bool atcFreqMatch(const EuroScopePlugIn::CController& other, const vsid::SectionAtc& local);
 	};
 }

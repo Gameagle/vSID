@@ -1604,7 +1604,7 @@ bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
 		{
 			for (auto& atc : this->sectionAtc)
 			{
-				if (myCallsign == atc.callsign || myFreq == atc.freq)
+				if (myCallsign == atc.callsign || atcFreqMatch(ControllerMyself(), atc))
 				{
 					if (atc.visPoints.empty()) return true;
 
@@ -1810,6 +1810,66 @@ void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
 			this->squawkQueue.splice(this->squawkQueue.begin(), this->squawkQueue, it);
 		}
 	}
+}
+
+bool vsid::VSIDPlugin::atcFreqMatch(const EuroScopePlugIn::CController& other, const vsid::SectionAtc& local)
+{
+	if (other.GetPrimaryFrequency() != local.freq)
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other: " + std::to_string(other.GetPrimaryFrequency()) +
+			" is NOT local: " + std::to_string(local.freq), vsid::MessageHandler::DebugArea::Dev);
+		return false;
+	}
+
+	const std::string atcCallsign = other.GetCallsign();
+	const std::string myCallsign = local.callsign;
+	std::optional<std::string> atcIcao = std::nullopt;
+	std::optional<std::string> myIcao = std::nullopt;
+
+	try
+	{
+		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
+		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign);
+	}
+	catch (std::out_of_range)
+	{
+		if (!messageHandler->genErrorsContains(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign))
+		{
+			messageHandler->writeMessage("ERROR", "Failed to get ICAO part of other controller callsign \"" + atcCallsign +
+				"\" in Freq match check. Code: " + ERROR_ATC_ICAOSPLIT_FREQ_OTH);
+			messageHandler->addGenError(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign);
+		}
+	}
+
+	try
+	{
+		myIcao = vsid::utils::split(myCallsign, '_').at(0);
+		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign);
+	}
+	catch (std::out_of_range)
+	{
+		if (!messageHandler->genErrorsContains(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign))
+		{
+			messageHandler->writeMessage("ERROR", "Failed to get ICAO part of my controller callsign \"" + myCallsign +
+				"\" in Freq match check. Code: " + ERROR_ATC_ICAOSPLIT_FREQ_MY);
+			messageHandler->addGenError(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign);
+		}
+	}
+
+	if (atcIcao && myIcao && *atcIcao == *myIcao && other.GetFacility() == local.facility)
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other: " + atcCallsign + "(" + std::to_string(other.GetPrimaryFrequency()) +
+			") IS local: " + myCallsign + "(" + std::to_string(local.freq) + ")", vsid::MessageHandler::DebugArea::Dev);
+		return true;
+	}
+	else if (other.GetFacility() != local.facility) // #dev - debugging purpose
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other fac: " + atcCallsign + "(" + std::to_string(other.GetFacility()) +
+			") is NOT local fac: " + myCallsign + "(" + std::to_string(local.facility) + ")", vsid::MessageHandler::DebugArea::Dev);
+		return false;
+
+	}
+	else return false;
 }
 /*
 * END OWN FUNCTIONS
@@ -4720,15 +4780,15 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 
 void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController Controller)
 {
-	std::string atcCallsign = Controller.GetCallsign();
+	const std::string atcCallsign = Controller.GetCallsign();
 	std::string atcSI = Controller.GetPositionId();
-	int atcFac = Controller.GetFacility();
-	double atcFreq = Controller.GetPrimaryFrequency();
+	const int atcFac = Controller.GetFacility();
+	const double atcFreq = Controller.GetPrimaryFrequency();
 	std::string atcIcao;
 
 	try
 	{
-		atcIcao = vsid::utils::split(Controller.GetCallsign(), '_').at(0);
+		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
 		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT + "_" + atcCallsign);
 	}
 	catch (std::out_of_range)
@@ -4750,7 +4810,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	{
 		for (const vsid::SectionAtc &sAtc : this->sectionAtc)
 		{
-			if (atcCallsign == sAtc.callsign || atcFreq == sAtc.freq)
+			if (atcCallsign == sAtc.callsign || atcFreqMatch(Controller, sAtc))
 			{
 				atcSI = sAtc.si;
 
@@ -4854,11 +4914,6 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			return;
 		}
 	}
-
-	if (std::none_of(atcIcaos.begin(), atcIcaos.end(), [&](auto atcIcao)
-		{
-			return this->activeAirports.contains(atcIcao);
-		})) return;
 
 	for (const std::string& atcIcao : atcIcaos)
 	{
