@@ -39,11 +39,12 @@ namespace vsid
 	{
 		std::string callsign;
 		std::string si;
+		int facility;
 		double freq;
 		std::vector<EuroScopePlugIn::CPosition> visPoints;
 
-		explicit SectionAtc(std::string callsign, std::string si, double freq, std::vector<EuroScopePlugIn::CPosition> visPoints) :
-			callsign(std::move(callsign)), si(std::move(si)), freq(freq), visPoints(std::move(visPoints)) {}
+		explicit SectionAtc(std::string callsign, std::string si, int facility, double freq, std::vector<EuroScopePlugIn::CPosition> visPoints) :
+			callsign(std::move(callsign)), si(std::move(si)), facility(facility), freq(freq), visPoints(std::move(visPoints)) {}
 
 		bool operator<(const vsid::SectionAtc& other) const noexcept
 		{

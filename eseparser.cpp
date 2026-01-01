@@ -94,9 +94,35 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 		try
 		{
+			int facility = 0;
+
+			if (atcVec.at(1).find("Information") != std::string::npos) facility = 1;
+			else
+			{
+				std::optional<std::string> callsignFac = std::nullopt;
+
+				if(std::vector<std::string> callsignSplit = vsid::utils::split(atcVec.at(0), '_'); callsignSplit.size() > 2) 
+					callsignFac = callsignSplit.at(2);
+				else if(callsignSplit.size() > 1)
+					callsignFac = callsignSplit.at(1);
+				
+				
+				if (callsignFac)
+				{
+					const std::string& fac = *callsignFac;
+
+					if (fac == "DEL") facility = 2;
+					else if (fac == "GND") facility = 3;
+					else if (fac == "TWR") facility = 4;
+					else if (fac == "APP" || fac == "DEP") facility = 5;
+					else if (fac == "CTR") facility = 6;
+				}
+			}
+
 			this->sectionAtc_.emplace(
 				atcVec.at(0), // callsign
 				atcVec.at(3), // si
+				facility,
 				std::stod(atcVec.at(2)), // freq
 				visPoints // additional vis points
 			); 
