@@ -8,12 +8,15 @@
 *	FPLN - temporarily added scratch pad info which callsign used the sync command
 *	CONF - collapsing SID or TRANS base when consecutive characters are the same as new Navigraph data collapses those names which are then present in the sector file (#358)
 *	FPLN - add squawk queue with a grace period to fetch assignements that were too fast. Squawk assignement works now also in auto-mode and with our own included TopSky assign function (fast click sequence). Note: CCAMS only supported in auto-mode as there currently is no additional function implemented (currently not planned) (#388)
+	* When using our internal TopSky auto-assign function the selected flight plan will be moved to the front of the queue
 
 :gear: **Changed Features / Behaviour**
 *	GEN - changed topsky and ccams lookup check to lower case
 *	FPLN - added checks to _CTL_ and _AUTO_ scratch pad entries to not trigger sync queue processing
 *	FPLN - moved clearance flag sync release to flight plan data update
 *	FPLN - removed syncing of unset clearance flag - only if the clearance flag is set it will be synced
+*	ATC - changed frequency matching to consider ICAO (e.g. EDGG, EDDF) and facility (e.g. DEL, GND) and only matches the frequency if ICAO and facility also match in case close but different stations share the same frequency
+	* flight information stations are determined by "Information" in the name of the station
 
 :lady_beetle: **Fixes**
 *	CONF - fixed a crash when SID health check was triggered for different SID numbers due to an accidentally wrong type assignment
