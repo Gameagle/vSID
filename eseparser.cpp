@@ -152,13 +152,15 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			//const bool lastIsDigit = vsid::utils::lastIsDigit(sid);
 
-			vsid::SectionSID sectionSid("", "", '\0', std::nullopt, "");
 			vsid::SectionTransition sectionTrans("", std::nullopt, std::nullopt);
+			vsid::SectionSID sectionSid("", "", '\0', std::nullopt, "", sectionTrans, "");
+			
 
 			if (!sid.empty())
 			{
 				sectionSid.apt = vsid::utils::trim(sidVec.at(1));
 				sectionSid.rwy = vsid::utils::trim(sidVec.at(2));
+				sectionSid.route = vsid::utils::trim(sidVec.at(4));
 
 				if (vsid::utils::lastIsDigit(sid))
 				{

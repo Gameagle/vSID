@@ -72,10 +72,11 @@ namespace vsid
 		std::optional<char> desig;
 		std::string rwy;
 		vsid::SectionTransition trans;
+		std::string route;
 
 		explicit SectionSID(std::string apt, std::string base, char number, std::optional<char> desig, std::string rwy = "",
-			vsid::SectionTransition trans = vsid::SectionTransition( "", std::nullopt, std::nullopt)) :
-			apt(std::move(apt)), base(std::move(base)), number(number), desig(std::move(desig)), rwy(std::move(rwy)), trans(std::move(trans)) {}
+			vsid::SectionTransition trans = vsid::SectionTransition( "", std::nullopt, std::nullopt), std::string route = "") :
+			apt(std::move(apt)), base(std::move(base)), number(number), desig(std::move(desig)), rwy(std::move(rwy)), trans(std::move(trans)), route(std::move(route)) {}
 
 		auto operator<=> (const vsid::SectionSID&) const = default;
 	};
