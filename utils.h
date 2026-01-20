@@ -177,6 +177,25 @@ namespace vsid
 		}
 
 		//************************************
+		// Description: Counts digits present in a string
+		// Method:    countDigits
+		// FullName:  vsid::utils::countDigits
+		// Access:    public 
+		// Returns:   int
+		// Qualifier:
+		// Parameter: const std::string_view s
+		//************************************
+		inline int countDigits(const std::string_view s)
+		{
+			int counter = 0;
+
+			for (unsigned char c : s)
+				if (std::isdigit(c)) counter++;
+
+			return counter;
+		}
+
+		//************************************
 		// Description: Creates a decimal position pair
 		// Method:    toPoint
 		// FullName:  vsid::utils::toPoint

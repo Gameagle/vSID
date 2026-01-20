@@ -5098,13 +5098,22 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					}
 					else if (sid.number != "" && sid.number != std::string(1, sectionSid.number) && sid.allowDiffNumbers)
 					{
-						std::string oldNumber = sid.number; // debugging value
-						sid.number = sectionSid.number;
+						if ((!sectionSid.route.empty() && sectionSid.route.find(sid.waypoint) != std::string::npos) || sectionSid.route.empty())
+						{
+							std::string oldNumber = sid.number; // debugging value
+							sid.number = sectionSid.number;
 
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-							") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
-							" Master rwy: " + sectionSid.rwy,
-							vsid::MessageHandler::DebugArea::Conf);
+							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+								") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
+								" Master rwy: " + sectionSid.rwy,
+								vsid::MessageHandler::DebugArea::Conf);
+						}
+					}
+					else if (!sid.number.empty() && sid.number == std::string(1, sectionSid.number)) // #dev - debugging only for MIL / OIDs
+					{
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator +
+							"] matched with section SID [" + sectionSid.base + sectionSid.number + std::string(1, sectionSid.desig.value_or(' ')) + "]",
+							vsid::MessageHandler::DebugArea::Dev);
 					}
 					else if (sid.number != "") // health check for possible errors in .ese config
 					{
