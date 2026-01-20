@@ -603,6 +603,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         vsid::tmpSidSettings desSetting;
                         vsid::tmpSidSettings idSetting;
 
+                        std::string fixedNumber = "";
+
                         // "field level" - iterates over restrictions and sid way points / bases
 
                         for (auto &sidField : this->parsedConfig.at(icao).at("sids").items())
@@ -700,8 +702,17 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             else if (sidField.key() == "clmbHighlight") fieldSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (!this->isConfigValue(sidField.key()))
                             {
-                                fieldSetting.base = sidField.key();
-                                fieldSetting.wpt = fieldSetting.base; // #evaluate - remove from field settings and always overwrite in wptSettings?
+                                // special check for possible military SIDs / OIDs (format: XY12)
+                                if (vsid::utils::lastIsDigit(sidField.key()) && vsid::utils::countDigits(sidField.key()) > 1 && sidField.key().length() > 2)
+                                {
+                                    fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);
+                                    fixedNumber = sidField.key().back();
+                                }
+                                else
+                                {
+									fieldSetting.base = sidField.key();
+									fieldSetting.wpt = fieldSetting.base; // #evaluate - remove from field settings and always overwrite in wptSettings?
+                                }
 
                                 // "waypoint / base level" - iterates over restrictions and sid designators
 
@@ -1142,7 +1153,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
                                                 // save new sid
 
-                                                vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, "", idSetting.desig, idSetting.rwys, idSetting.transition,
+                                                vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, fixedNumber, idSetting.desig, idSetting.rwys, idSetting.transition,
                                                                     idSetting.allowDiffNumbers, idSetting.equip, idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled,
                                                                     idSetting.actArrRwy, idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType,
                                                                     idSetting.acftType, idSetting.engineCount, idSetting.mtow, idSetting.dest, idSetting.route,
@@ -1152,7 +1163,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
 
 												// #dev - debugging msgs for evaluation of sid restriction levels
-												std::string sidName = newSid.base + "_" + newSid.designator + " (ID: " + newSid.id + ")";
+												std::string sidName = newSid.base + ((newSid.number.empty()) ? "_" : newSid.number) + newSid.designator + " (ID: " + newSid.id + ")";
 												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wpt: " + newSid.waypoint, vsid::MessageHandler::DebugArea::Conf);
                                                 for (auto& [_, trans] : newSid.transition)
                                                 {
