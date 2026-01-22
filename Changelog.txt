@@ -1,3 +1,30 @@
+[Changelog v0.14.3]
+
+>[!NOTE]
+> Feedback from users with consecutive SID letters welcome to validate proper matching
+> e.g. WERRA vs WERA / PAZZE vs PAZE
+
+:new: **New Features**
+*	FPLN - temporarily added scratch pad info which callsign used the sync command
+*	CONF - collapsing SID or TRANS base when consecutive characters are the same as new Navigraph data collapses those names which are then present in the sector file (#358)
+*	CONF - if allowDiffNumbers is used in a SID config the route is now also checked (precisely if the setting "wpt" is contained in the .ese-file route for this SID)
+*	FPLN - add squawk queue with a grace period to fetch assignements that were too fast. Squawk assignement works now also in auto-mode and with our own included TopSky assign function (fast click sequence). Note: CCAMS only supported in auto-mode as there currently is no additional function implemented (currently not planned) (#388)
+	* When using our internal TopSky auto-assign function the selected flight plan will be moved to the front of the queue
+
+:gear: **Changed Features / Behaviour**
+*	GEN - changed topsky and ccams lookup check to lower case
+*	FPLN - added checks to _CTL_ and _AUTO_ scratch pad entries to not trigger sync queue processing
+*	FPLN - moved clearance flag sync release to flight plan data update
+*	FPLN - removed syncing of unset clearance flag - only if the clearance flag is set it will be synced
+*	ATC - changed frequency matching to consider ICAO (e.g. EDGG, EDDF) and facility (e.g. DEL, GND) and only matches the frequency if ICAO and facility also match in case close but different stations share the same frequency
+	* flight information stations are determined by "Information" in the name of the station
+*	CONF - Military SIDs / OIDs can now be written in their entirety to the config. There is no mastering against .ese-files in this case as the number is already set. Any SID containing more than 2 numbers in their name are considered "military" and split into base and number, where number is the last position and base is the rest. (#386)
+	* the setting "allowDiffNumbers" needs to be used and set to true for those military SIDs, otherwise warnings might pop up depending on the similarity of those SIDs (e.g. NG96 and NG91 are too similar).
+
+:lady_beetle: **Fixes**
+*	CONF - fixed a crash when SID health check was triggered for different SID numbers due to an accidentally wrong type assignment
+*	GEN - moved actual update check to main class (display only caller now) and fixed too many checks (#385)
+
 [Changelog v0.14.2]
 
 :new: **New Features**

@@ -24,7 +24,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "include/es/EuroScopePlugIn.h"
 #include "menu.h"
-#include "versionchecker.h"
 
 #include <gdiplus.h>
 #include <map>
@@ -32,8 +31,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <numbers>
-
-#include <curl/curl.h> // only to call the update check
 
 namespace vsid
 {
@@ -76,42 +73,66 @@ namespace vsid
 		void OnClickScreenObject(int ObjectType, const char* sObjectId, POINT Pt, RECT Area, int Button);
 		bool OnCompileCommand(const char* sCommandLine);
 
-		/* Own Functions*/
-
-		/**
-		 * @brief will be called from main plugin whenever the same function there is called
-		 */
+		//************************************
+		// Description: will be called from main plugin whenever the same function there is called
+		// Method:    OnAirportRunwayActivityChanged
+		// FullName:  vsid::Display::OnAirportRunwayActivityChanged
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
 		void OnAirportRunwayActivityChanged();
 
-		/**
-		 * @brief opens main menu or creates it if it doesn't exist
-		 * 
-		 * @param top - initial top position
-		 * @param left - initial left position
-		 */
+		/* Own Functions*/
+
+		//************************************
+		// Description: opens main menu or creates it if it doesn't exist
+		// Method:    openMainMenu
+		// FullName:  vsid::Display::openMainMenu
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: int top - initial top position
+		// Parameter: int left - initial left position
+		// Parameter: bool render - if the menu should be rendered or not
+		//************************************
 		void openMainMenu(int top = -1, int left = -1, bool render = true);
 
-		/**
-		 * @brief opens startup menu or creates it if it doesn't exist
-		 * 
-		 * @param apt - upper string ICAO
-		 * @param parent - title of parent menu
-		 * @note test
-		 */
+		//************************************
+		// Description: opens startup menu or creates it if it doesn't exist
+		// Method:    openStartupMenu
+		// FullName:  vsid::Display::openStartupMenu
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string apt - upper string ICAO
+		// Parameter: const std::string parent - title of parent menu
+		// Parameter: bool render - if the menu should be rendered or not
+		// Parameter: int top - top position
+		// Parameter: int left - left position
+		//************************************
 		void openStartupMenu(const std::string apt, const std::string parent, bool render = true, int top = 0, int left = 0);
 
-		/**
-		 * @brief closes specified menu
-		 * 
-		 * @param title of menu to close
-		 */
+		//************************************
+		// Description: closes specified menu
+		// Method:    closeMenu
+		// FullName:  vsid::Display::closeMenu
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & title - title of menu to close
+		//************************************
 		void closeMenu(const std::string& title);
 
-		/**
-		 * @brief deletes (destroys) the specified menu
-		 * 
-		 * @param title of menu to remove
-		 */
+		//************************************
+		// Description: deletes (destroys) the specified menu
+		// Method:    removeMenu
+		// FullName:  vsid::Display::removeMenu
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & title - title of menu to remove
+		//************************************
 		void removeMenu(const std::string& title);
 
 		
@@ -164,8 +185,6 @@ namespace vsid
 		int id;
 		std::weak_ptr<vsid::VSIDPlugin> plugin;
 		std::string name;
-		bool updateInformed = false;
-
 
 		//************************************
 		// Description: Gets the current diagonal distance of the ES instance in NM

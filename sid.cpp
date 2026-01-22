@@ -22,6 +22,30 @@ bool vsid::Sid::empty() const
 	return base == "";
 }
 
+bool vsid::Sid::collapsedBaseMatch(std::string_view other, std::optional<std::string_view> trans)
+{
+	std::string collapsed;
+	std::string_view s;
+
+	if (!trans)
+	{
+		collapsed.reserve(this->base.size());
+		s = this->base;
+	}
+	else
+	{
+		collapsed.reserve(trans.value().size());
+		s = trans.value();
+	}
+
+	for (char c : s)
+	{
+		if (collapsed.empty() || collapsed.back() != c) collapsed.push_back(c);
+	}
+
+	return collapsed == other;
+}
+
 bool vsid::Sid::operator==(const Sid& sid)
 {
 	if (this->designator != "")

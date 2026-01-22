@@ -73,6 +73,10 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	UpdateActiveAirports(); // preload rwy settings
 
+	if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+		messageHandler->writeMessage("ERROR", "Failed to init curl_global");
+	else this->curlInit = true;
+
 	DisplayUserMessage("Message", "vSID", std::string("Version " + pluginVersion + " loaded").c_str(), true, true, false, false, false);	
 }
 
@@ -103,15 +107,15 @@ void vsid::VSIDPlugin::detectPlugins()
 
 			if (GetModuleFileNameEx(hprocess, hmods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
 			{
-				std::string modname = szModName;
+				std::string modname = vsid::utils::tolower(szModName);
 
 				//if (modname == "CCAMS.dll")
-				if (modname.find("CCAMS.dll") != std::string::npos)
+				if (modname.find("ccams.dll") != std::string::npos)
 				{
 					this->ccamsLoaded = true;
 				}
 				//if (modname == "TopSky.dll")
-				if (modname.find("TopSky.dll") != std::string::npos)
+				if (modname.find("topsky.dll") != std::string::npos)
 				{
 					this->topskyLoaded = true;
 				}
@@ -1444,25 +1448,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		}
 
 		std::string squawk = FlightPlan.GetControllerAssignedData().GetSquawk();
-		if ((squawk == "" || squawk == "0000" || squawk == "1234") && !this->activeAirports[icao].settings["auto"])
-		{
-			if (this->ccamsLoaded && !this->getConfigParser().preferTopsky)
-			{
-				// DEV - see OnTime for further usage
-				// this->sqwkQueue.insert(callsign);
-				// END DEV
-				
-				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
-
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS squawk", vsid::MessageHandler::DebugArea::Dev);
-			}
-			else if (this->topskyLoaded)
-			{
-				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
-
-				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TopSky squawk", vsid::MessageHandler::DebugArea::Dev);
-			}
-		}
+		if (squawk == "" || squawk == "0000" || squawk == "1234") this->addOrSetSquawk(callsign);
 	}
 
 	// reset IC if it doesn't match
@@ -1583,7 +1569,11 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 	if (this->processed.contains(callsign))
 	{
-		this->addSyncQueue(callsign, (FlightPlan.GetClearenceFlag() ? "CLEA" : "NOTC"), FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		if (FlightPlan.GetClearenceFlag())
+		{
+			this->addSyncQueue(callsign, "CLEA", FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		}
+		
 		if (this->processed[callsign].gndState != "")
 		{
 			this->addSyncQueue(callsign, this->processed[callsign].gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
@@ -1614,7 +1604,7 @@ bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
 		{
 			for (auto& atc : this->sectionAtc)
 			{
-				if (myCallsign == atc.callsign || myFreq == atc.freq)
+				if (myCallsign == atc.callsign || atcFreqMatch(ControllerMyself(), atc))
 				{
 					if (atc.visPoints.empty()) return true;
 
@@ -1701,9 +1691,9 @@ void vsid::VSIDPlugin::processSPQueue()
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.first).c_str());
 			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.second).c_str());
 
-			// pre-release sync lock as mentioned ES msgs are never received
+			// pre-release sync lock as mentioned ES msgs are never received #checkforremoval - check now moved to flightplandataupate (CTR_..)
 			
-			if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
+			// if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
 		}
 		else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove (only debugging)
 		{
@@ -1782,6 +1772,104 @@ void vsid::VSIDPlugin::loadEse()
 
 	vsid::EseParser eseParser(this->sectionAtc, this->sectionSids);
 	eseParser.parseEse(fullEsePath);
+}
+
+void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
+{
+	long long timeDiff = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count();
+
+	if (timeDiff >= 2)
+	{
+		if (this->topskyLoaded && (forceTS || this->getConfigParser().preferTopsky))
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+			this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+
+			this->lastSquawkTP = std::chrono::utc_clock::now();
+		}
+		else if (this->ccamsLoaded)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+			this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
+
+			this->lastSquawkTP = std::chrono::utc_clock::now();
+		}
+	}
+	else
+	{
+		auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign);
+
+		if (it == this->squawkQueue.end())
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] not in squawk list. Adding to it", vsid::MessageHandler::DebugArea::Dev);
+			this->squawkQueue.push_back(callsign);
+		}
+		else if (it != this->squawkQueue.end() && it != this->squawkQueue.begin())
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] in squawk list. Moving to front", vsid::MessageHandler::DebugArea::Dev);
+			this->squawkQueue.splice(this->squawkQueue.begin(), this->squawkQueue, it);
+		}
+	}
+}
+
+bool vsid::VSIDPlugin::atcFreqMatch(const EuroScopePlugIn::CController& other, const vsid::SectionAtc& local)
+{
+	if (other.GetPrimaryFrequency() != local.freq)
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other: " + std::to_string(other.GetPrimaryFrequency()) +
+			" is NOT local: " + std::to_string(local.freq), vsid::MessageHandler::DebugArea::Dev);
+		return false;
+	}
+
+	const std::string atcCallsign = other.GetCallsign();
+	const std::string myCallsign = local.callsign;
+	std::optional<std::string> atcIcao = std::nullopt;
+	std::optional<std::string> myIcao = std::nullopt;
+
+	try
+	{
+		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
+		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign);
+	}
+	catch (std::out_of_range)
+	{
+		if (!messageHandler->genErrorsContains(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign))
+		{
+			messageHandler->writeMessage("ERROR", "Failed to get ICAO part of other controller callsign \"" + atcCallsign +
+				"\" in Freq match check. Code: " + ERROR_ATC_ICAOSPLIT_FREQ_OTH);
+			messageHandler->addGenError(ERROR_ATC_ICAOSPLIT_FREQ_OTH + "_" + atcCallsign);
+		}
+	}
+
+	try
+	{
+		myIcao = vsid::utils::split(myCallsign, '_').at(0);
+		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign);
+	}
+	catch (std::out_of_range)
+	{
+		if (!messageHandler->genErrorsContains(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign))
+		{
+			messageHandler->writeMessage("ERROR", "Failed to get ICAO part of my controller callsign \"" + myCallsign +
+				"\" in Freq match check. Code: " + ERROR_ATC_ICAOSPLIT_FREQ_MY);
+			messageHandler->addGenError(ERROR_ATC_ICAOSPLIT_FREQ_MY + "_" + myCallsign);
+		}
+	}
+
+	if (atcIcao && myIcao && *atcIcao == *myIcao && other.GetFacility() == local.facility)
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other: " + atcCallsign + "(" + std::to_string(other.GetPrimaryFrequency()) +
+			") IS local: " + myCallsign + "(" + std::to_string(local.freq) + ")", vsid::MessageHandler::DebugArea::Dev);
+		return true;
+	}
+	else if (other.GetFacility() != local.facility) // #dev - debugging purpose
+	{
+		messageHandler->writeMessage("DEBUG", "[FREQ Match] other fac: " + atcCallsign + "(" + std::to_string(other.GetFacility()) +
+			") is NOT local fac: " + myCallsign + "(" + std::to_string(local.facility) + ")", vsid::MessageHandler::DebugArea::Dev);
+		return false;
+
+	}
+	else return false;
 }
 /*
 * END OWN FUNCTIONS
@@ -2487,10 +2575,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (FunctionId == TAG_FUNC_VSID_TSSQUAWK)
 		{
-			if (this->topskyLoaded)
-			{
-				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
-			}
+			if (this->topskyLoaded) this->addOrSetSquawk(callsign, true);
 			else messageHandler->writeMessage("ERROR", "TopSky auto-assign squawk called, but TopSky was not detected.");
 		}
 	}
@@ -3044,6 +3129,15 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (ItemCode == TAG_ITEM_VSID_SQW)
 		{
+			if (auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign); it != this->squawkQueue.end())
+			{
+				*pRGB = RGB(255, 255, 255);
+			
+				if(it == this->squawkQueue.begin()) strcpy_s(sItemString, 16, "NEXT");
+				else strcpy_s(sItemString, 16, "STBY");
+
+				return; // prevent displaying of old squawk until new is set
+			}
 			std::string setSquawk = FlightPlan.GetFPTrackPosition().GetSquawk();
 			std::string assignedSquawk = FlightPlan.GetControllerAssignedData().GetSquawk();
 
@@ -3787,6 +3881,12 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		}
 		else if (vsid::utils::tolower(command[1]) == "sync")
 		{
+			if (!ControllerMyself().IsController())
+			{
+				messageHandler->writeMessage("ERROR", "Flight plan syncing not available for observers!");
+				return true;
+			}
+
 			messageHandler->writeMessage("DEBUG", "Syncinc all requests.", vsid::MessageHandler::DebugArea::Req);
 
 			for (auto& [callsign, fpln] : this->processed)
@@ -3798,6 +3898,12 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
 				std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
+
+				// #dev - temporary info who synced
+				std::string oldScratchPad = FlightPlan.GetControllerAssignedData().GetScratchPadString();
+				FlightPlan.GetControllerAssignedData().SetScratchPadString(std::format(".vsid_syncby_{}", ControllerMyself().GetCallsign()).c_str());
+				FlightPlan.GetControllerAssignedData().SetScratchPadString(oldScratchPad.c_str());
+				// end dev
 
 				// sync requests
 
@@ -4257,7 +4363,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 			this->processed[callsign].ctl = ctl; // #evaluate - setting 'false' could delete from processed if ades is not active (protection against too many entries)
 
-			this->updateSPSyncRelease(callsign);
+			if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 		}
 
 		// set intersection
@@ -4304,7 +4410,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 					}
 				}
 
-				this->updateSPSyncRelease(callsign);
+				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
 			// sync release if GRP states are synced - ES is released on gnd state updates
@@ -4330,7 +4436,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
-			// clearance flag released while sending
+			// clearance flag released while sending - (now temp. below GND states here)
 
 			// request entries
 
@@ -4481,6 +4587,12 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) // updating sync release for ES states as they're not always seen in scratch pad
 	{
+		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+	}
+
+	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_CLEARENCE_FLAG) //#dev updating sync release for ES clearance flag as it is not seen in scratch pad
+	{
+		messageHandler->writeMessage("DEBUG", "[" + callsign + "] received clearance flag update", vsid::MessageHandler::DebugArea::Dev);
 		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 	}
 
@@ -4668,15 +4780,15 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 
 void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController Controller)
 {
-	std::string atcCallsign = Controller.GetCallsign();
+	const std::string atcCallsign = Controller.GetCallsign();
 	std::string atcSI = Controller.GetPositionId();
-	int atcFac = Controller.GetFacility();
-	double atcFreq = Controller.GetPrimaryFrequency();
+	const int atcFac = Controller.GetFacility();
+	const double atcFreq = Controller.GetPrimaryFrequency();
 	std::string atcIcao;
 
 	try
 	{
-		atcIcao = vsid::utils::split(Controller.GetCallsign(), '_').at(0);
+		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
 		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT + "_" + atcCallsign);
 	}
 	catch (std::out_of_range)
@@ -4698,7 +4810,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	{
 		for (const vsid::SectionAtc &sAtc : this->sectionAtc)
 		{
-			if (atcCallsign == sAtc.callsign || atcFreq == sAtc.freq)
+			if (atcCallsign == sAtc.callsign || atcFreqMatch(Controller, sAtc))
 			{
 				atcSI = sAtc.si;
 
@@ -4802,11 +4914,6 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			return;
 		}
 	}
-
-	if (std::none_of(atcIcaos.begin(), atcIcaos.end(), [&](auto atcIcao)
-		{
-			return this->activeAirports.contains(atcIcao);
-		})) return;
 
 	for (const std::string& atcIcao : atcIcaos)
 	{
@@ -4960,7 +5067,23 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			
 			for (vsid::Sid& sid : this->activeAirports[sectionSid.apt].sids)
 			{
-				if (sid.base != sectionSid.base) continue;
+				if (sid.base != sectionSid.base)
+				{
+					// skip unmatching first two char comparison (filter)
+					if (sid.base.length() > 2 && sectionSid.base.length() > 2)
+					{
+						if (sid.base[0] != sectionSid.base[0]) continue;
+						if (sid.base[1] != sectionSid.base[1]) continue;
+						if (sid.base[2] != sectionSid.base[2]) continue;
+					}
+
+					if (!sid.collapsedBaseMatch(sectionSid.base))
+					{
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed didn't match [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
+						continue;
+					}
+					else messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed matched [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
+				}
 				if (sid.designator != (sectionSid.desig ? std::string(1, *sectionSid.desig) : "")) continue;
 				if (!vsid::utils::contains(sid.rwys, sectionSid.rwy)) continue;
 
@@ -4975,17 +5098,43 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					}
 					else if (sid.number != "" && sid.number != std::string(1, sectionSid.number) && sid.allowDiffNumbers)
 					{
-						std::string oldNumber = sid.number; // debugging value
-						sid.number = sectionSid.number;
+						if ((!sectionSid.route.empty() && sectionSid.route.find(sid.waypoint) != std::string::npos) || sectionSid.route.empty())
+						{
+							std::string oldNumber = sid.number; // debugging value
+							sid.number = sectionSid.number;
 
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
-							") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
-							" Master rwy: " + sectionSid.rwy,
-							vsid::MessageHandler::DebugArea::Conf);
+							messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator + "] (ID: " + sid.id +
+								") overwritten old number (" + oldNumber + ") with " + sid.number + ". RWYs matched and diff numbers allowed." +
+								" Master rwy: " + sectionSid.rwy,
+								vsid::MessageHandler::DebugArea::Conf);
+						}
+					}
+					else if (!sid.number.empty() && sid.number == std::string(1, sectionSid.number)) // #dev - debugging only for MIL / OIDs
+					{
+						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator +
+							"] matched with section SID [" + sectionSid.base + sectionSid.number + std::string(1, sectionSid.desig.value_or(' ')) + "]",
+							vsid::MessageHandler::DebugArea::Dev);
 					}
 					else if (sid.number != "") // health check for possible errors in .ese config
 					{
-						int currNumber = std::stoi(sid.number);
+						int currNumber = -1;
+
+						try
+						{
+							currNumber = std::stoi(sid.number); // #dev - removed int -> debugging
+						}
+						catch (const std::invalid_argument& e)
+						{
+							messageHandler->writeMessage("ERROR", "Collapsing SID [" + sid.idName() + "] caused an error while collapsing base for section SID [" +
+								sectionSid.base + "]. Error: " + e.what());
+						}
+						catch (const std::out_of_range& e)
+						{
+							messageHandler->writeMessage("ERROR", "Collapsing SID [" + sid.idName() + "] caused an error while collapsing base for section SID [" +
+								sectionSid.base + "]. Error: " + e.what());
+						}
+						if (currNumber == -1) continue;
+						
 						int newNumber = sectionSid.number - '0';
 
 						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
@@ -5000,7 +5149,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number (is higher or after restarting count) due to possible sectore file error!");
 
-							sid.number = newNumber;
+							sid.number = std::to_string(newNumber);
 						}
 						else if (currNumber != newNumber)
 						{
@@ -5008,7 +5157,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + ") . Setting additional number as it couldn't be determined which one is more likely to be correct!");
 
-							sid.number = newNumber;
+							sid.number = std::to_string(newNumber);
 						}
 					}
 
@@ -5021,7 +5170,23 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 						for (auto& [transBase, trans] : sid.transition)
 						{
-							if (transBase != sectionSid.trans.base) continue;
+							if (transBase != sectionSid.trans.base)
+							{
+								// skip unmatching first two char comparison (filter)
+								if (transBase.length() > 2 && sectionSid.trans.base.length() > 2)
+								{
+									if (transBase[0] != sectionSid.trans.base[0]) continue;
+									if (transBase[1] != sectionSid.trans.base[1]) continue;
+									if (transBase[2] != sectionSid.trans.base[2]) continue;
+								}
+
+								if (!sid.collapsedBaseMatch(sectionSid.trans.base, transBase))
+								{
+									messageHandler->writeMessage("DEBUG", "[" + transBase + "] trans collapsed didn't match [" + sectionSid.trans.base + "]", vsid::MessageHandler::DebugArea::Dev);
+									continue;
+								}
+								else messageHandler->writeMessage("DEBUG", "[" + transBase + "] trans collapsed matched [" + sectionSid.trans.base + "]", vsid::MessageHandler::DebugArea::Dev);
+							}
 							if (trans.designator != (sectionSid.trans.desig ? std::string(1, *sectionSid.trans.desig) : "")) continue;
 							if (trans.number != "") // #refactor .number to char
 							{
@@ -5281,6 +5446,37 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 		this->spReleased.clear();
 	}
 
+	// check squawk queue each second if new squawk can be set
+
+	if (this->squawkQueue.size() > 0 && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count() >= 2)
+	{
+		if (EuroScopePlugIn::CFlightPlan FlightPlan = this->FlightPlanSelectASEL(); FlightPlan.IsValid())
+		{
+			std::string callsign = this->squawkQueue.front();
+
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] working on squawk queue", vsid::MessageHandler::DebugArea::Dev);
+
+			if (this->topskyLoaded && this->getConfigParser().preferTopsky)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling TS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
+
+				this->lastSquawkTP = std::chrono::utc_clock::now();
+			}
+			else if (this->ccamsLoaded)
+			{
+				messageHandler->writeMessage("DEBUG", "[" + callsign + "] calling CCAMS Squawk func", vsid::MessageHandler::DebugArea::Dev);
+				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
+
+				this->lastSquawkTP = std::chrono::utc_clock::now();
+			}
+
+			this->SetASELAircraft(FlightPlan);
+
+			this->squawkQueue.pop_front();
+		}
+	}
+
 	if (Counter % 10 == 0)
 	{
 		for (std::map<std::string, vsid::Fpln>::iterator it = this->processed.begin(); it != this->processed.end();)
@@ -5430,6 +5626,8 @@ void vsid::VSIDPlugin::exit()
 {
 	this->radarScreens.clear();
 	this->shared.reset();
+
+	if(this->curlInit) curl_global_cleanup();
 }
 
 void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
