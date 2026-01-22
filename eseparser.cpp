@@ -160,7 +160,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 			{
 				sectionSid.apt = vsid::utils::trim(sidVec.at(1));
 				sectionSid.rwy = vsid::utils::trim(sidVec.at(2));
-				sectionSid.route = vsid::utils::trim(sidVec.at(4));
+				if(sidVec.size() > 4) sectionSid.route = vsid::utils::trim(sidVec.at(4));
 
 				if (vsid::utils::lastIsDigit(sid))
 				{
@@ -211,7 +211,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 		}
 		catch (const std::out_of_range& e)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to parse SID: " + std::string(e.what()));
+			messageHandler->writeMessage("ERROR", "Failed to parse SID: " + std::string(e.what()) + " in line: " + std::string(l));
 		}
 
 		break;
