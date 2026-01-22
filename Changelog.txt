@@ -1,3 +1,10 @@
+[Changelog v0.14.3.1]
+>[!NOTE]
+> This Hotfix is only needed if SIDs without any route (no waypoint after the last ':') is present
+
+:lady_beetle: **Fixes**
+*	CONF - added check to not try to retrieve a route from the .ese-file if no route is presend
+
 [Changelog v0.14.3]
 
 >[!NOTE]
