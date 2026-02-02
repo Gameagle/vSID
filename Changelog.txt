@@ -1,3 +1,7 @@
+[Changelog v0.14.4]
+:lady_beetle: **Fixes**
+*	FPLN - Squawks are now also displayed if the departure airport is inactive. Only CTR controllers were affected by this
+
 [Changelog v0.14.3.1]
 >[!NOTE]
 > This Hotfix is only needed if SIDs without any route (no waypoint after the last ':') is present
