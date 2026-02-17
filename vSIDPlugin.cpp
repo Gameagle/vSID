@@ -3127,56 +3127,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			}
 		}
 
-		if (ItemCode == TAG_ITEM_VSID_SQW)
-		{
-			if (auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign); it != this->squawkQueue.end())
-			{
-				*pRGB = RGB(255, 255, 255);
-			
-				if(it == this->squawkQueue.begin()) strcpy_s(sItemString, 16, "NEXT");
-				else strcpy_s(sItemString, 16, "STBY");
-
-				return; // prevent displaying of old squawk until new is set
-			}
-			std::string setSquawk = FlightPlan.GetFPTrackPosition().GetSquawk();
-			std::string assignedSquawk = FlightPlan.GetControllerAssignedData().GetSquawk();
-
-			if (setSquawk != assignedSquawk)
-			{
-				*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-				*pRGB = this->configParser.getColor("squawkNotSet");
-			}
-			else
-			{
-				if (this->configParser.getColor("squawkSet") == RGB(300, 300, 300))
-				{
-					if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_NON_CONCERNED)
-					{
-						*pColorCode = EuroScopePlugIn::TAG_COLOR_NON_CONCERNED;
-					}
-					else if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_NOTIFIED)
-					{
-						*pColorCode = EuroScopePlugIn::TAG_COLOR_NOTIFIED;
-					}
-					else if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_ASSUMED)
-					{
-						*pColorCode = EuroScopePlugIn::TAG_COLOR_ASSUMED;
-					}
-					else
-					{
-						*pColorCode = EuroScopePlugIn::TAG_COLOR_DEFAULT;
-					}
-				}
-				else
-				{
-					*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-					*pRGB = this->configParser.getColor("squawkSet");
-				}
-			}
-
-			if (assignedSquawk != "0000" && assignedSquawk != "1234") strcpy_s(sItemString, 16, assignedSquawk.c_str());
-		}
-
 		if (ItemCode == TAG_ITEM_VSID_REQ)
 		{
 			if (this->processed.contains(callsign) && this->processed[callsign].request != "")
@@ -3386,6 +3336,62 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				strcpy_s(sItemString, 16, "CTL");
 			}
 		}
+	}
+
+
+
+	if (ItemCode == TAG_ITEM_VSID_SQW)
+	{
+		if (this->activeAirports.contains(adep))
+		{
+			if (auto it = std::find(this->squawkQueue.begin(), this->squawkQueue.end(), callsign); it != this->squawkQueue.end())
+			{
+				*pRGB = RGB(255, 255, 255);
+
+				if (it == this->squawkQueue.begin()) strcpy_s(sItemString, 16, "NEXT");
+				else strcpy_s(sItemString, 16, "STBY");
+
+				return; // prevent displaying of old squawk until new is set
+			}
+		}
+		
+		std::string setSquawk = FlightPlan.GetFPTrackPosition().GetSquawk();
+		std::string assignedSquawk = FlightPlan.GetControllerAssignedData().GetSquawk();
+
+		if (setSquawk != assignedSquawk)
+		{
+			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+			*pRGB = this->configParser.getColor("squawkNotSet");
+		}
+		else
+		{
+			if (this->configParser.getColor("squawkSet") == RGB(300, 300, 300))
+			{
+				if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_NON_CONCERNED)
+				{
+					*pColorCode = EuroScopePlugIn::TAG_COLOR_NON_CONCERNED;
+				}
+				else if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_NOTIFIED)
+				{
+					*pColorCode = EuroScopePlugIn::TAG_COLOR_NOTIFIED;
+				}
+				else if (FlightPlan.GetState() == EuroScopePlugIn::FLIGHT_PLAN_STATE_ASSUMED)
+				{
+					*pColorCode = EuroScopePlugIn::TAG_COLOR_ASSUMED;
+				}
+				else
+				{
+					*pColorCode = EuroScopePlugIn::TAG_COLOR_DEFAULT;
+				}
+			}
+			else
+			{
+				*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+				*pRGB = this->configParser.getColor("squawkSet");
+			}
+		}
+
+		if (assignedSquawk != "0000" && assignedSquawk != "1234") strcpy_s(sItemString, 16, assignedSquawk.c_str());
 	}
 }
 
