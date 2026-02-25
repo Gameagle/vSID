@@ -477,7 +477,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         aptInfo.requests["taxi"] = {};
                         aptInfo.requests["departure"] = {};
                         aptInfo.requests["vfr"] = {};
-                        aptInfo.rwyrequests["rwy startup"] = {};
+                        aptInfo.rwyrequests["startup"] = {};
 
                         // customRules
 

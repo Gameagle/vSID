@@ -2380,97 +2380,138 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (FunctionId == TAG_FUNC_VSID_REQMENU)
 		{
+			if (!this->activeAirports.contains(adep))
+			{
+				messageHandler->writeMessage("WARNING", "[" + callsign + "] - Airport " + adep + " not active, can't process request!");
+				return;
+			}
 			if (strlen(sItemString) == 0)
 			{
 				this->OpenPopupList(Area, "REQ", 1);
 
 				this->AddPopupListElement("No Req", "No Req", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
 
-				if (this->activeAirports.contains(adep))
+				this->AddPopupListElement("Clearance", "Clearance", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("Startup", "Startup", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("RWY Startup", "RWY Startup", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("Pushback", "Pushback", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("Taxi", "Taxi", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("Departure", "Departure", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				if (fpln.GetFlightPlanData().GetPlanType() == std::string("V"))
 				{
-					this->AddPopupListElement("Clearance", "Clearance", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					this->AddPopupListElement("Startup", "Startup", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					this->AddPopupListElement("RWY Startup", "RWY Startup", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					this->AddPopupListElement("Pushback", "Pushback", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					this->AddPopupListElement("Taxi", "Taxi", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					this->AddPopupListElement("Departure", "Departure", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					if (fpln.GetFlightPlanData().GetPlanType() == std::string("V"))
-					{
-						this->AddPopupListElement("VFR", "VFR", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-					}
+					this->AddPopupListElement("VFR", "VFR", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
 				}
 			}
 			else if (strlen(sItemString) != 0)
 			{
 				std::string req = vsid::utils::tolower(sItemString);
-				std::string newScratch = "";
-				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now()).time_since_epoch().count();
+				bool isRwyReq = req.find("rwy") != std::string::npos;
 
-				if (this->processed[callsign].request == req)
-				{
-					if (this->activeAirports[adep].requests.contains(req)) return;
-
-					if (this->activeAirports[adep].rwyrequests.contains(req))
-					{
-						for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests[req])
-						{
-							if (rwy != fplnData.GetDepartureRwy()) continue;
-
-							for (auto& [reqCallsign, reqTime] : rwyReq)
-							{
-								if (reqCallsign == callsign) return;
-							}
-						}
-					}
-				}
-				else if (req.find(this->processed[callsign].request) != std::string::npos)
-				{
-					if (req.find("rwy") != std::string::npos)
-					{
-						try
-						{
-							std::string normReq = vsid::utils::split(req, ' ').at(1);
-
-							if (this->activeAirports[adep].requests.contains(normReq))
-							{
-								for (auto& [reqCallign, reqTime] : this->activeAirports[adep].requests[normReq])
-								{
-									if (reqCallign != callsign) continue;
-									now = reqTime;
-									break;
-								}
-							}
-						}
-						catch (std::out_of_range) {};
-					}
-				}
-				else if (this->processed[callsign].request.find(req) != std::string::npos)
+				if (isRwyReq)
 				{
 					try
 					{
-						bool stop = false;
-						for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests.at(this->processed[callsign].request))
-						{
-							if (rwy != fplnData.GetDepartureRwy()) continue;
+						req = vsid::utils::split(vsid::utils::tolower(sItemString), ' ').at(1);
+					}
+					catch (std::out_of_range&)
+					{ 
+						messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to split RWY from request: " + sItemString);
+						return;
+					}
+				}
+				
+				bool isFplRwyReq = this->processed[callsign].request.find("rwy") != std::string::npos;
+				std::string newScratch = "";
+				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now()).time_since_epoch().count();
 
-							for (auto& [reqCallsign, reqTime] : rwyReq)
+				// check existing requests to preserve request times when switching from norm to rwy request and vice versa
+
+				if (!isRwyReq && !isFplRwyReq && this->processed[callsign].request == req) // all req other than rwq requests
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] no rwy req and stored req matches current req", vsid::MessageHandler::DebugArea::Req);
+
+					if (this->activeAirports[adep].requests.contains(req))
+					{
+						for (auto& [reqCallsign, _] : this->activeAirports[adep].requests[req])
+						{
+							if (reqCallsign == callsign)
+							{
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] already in request list: " + req, vsid::MessageHandler::DebugArea::Req);
+								return;
+							}
+						}
+					}
+				}
+				else if (isRwyReq && isFplRwyReq && this->processed[callsign].request.find(req)) // both current and stored req are rwy req and a (partial) match
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] rwy req and stored req (partial) matches current req", vsid::MessageHandler::DebugArea::Req);
+
+					if (this->activeAirports[adep].rwyrequests.contains(req))
+					{
+						for (auto& [reqRwy, fp] : this->activeAirports[adep].rwyrequests[req])
+						{
+							for (auto& [reqCallsign, _] : fp)
+							{
+								if (reqCallsign == callsign)
+								{
+									messageHandler->writeMessage("DEBUG", "[" + callsign + "] already in request list: " + req + " for rwy: " + reqRwy,
+										vsid::MessageHandler::DebugArea::Req);
+									return;
+								}
+							}
+						}
+					}
+				}
+				else if (!isRwyReq && isFplRwyReq && this->processed[callsign].request.find(req))
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] has rwy request and current non-rwy req (partial) matches",
+						vsid::MessageHandler::DebugArea::Req);
+
+					if (this->activeAirports[adep].rwyrequests.contains(req))
+					{
+						bool stop = false;
+						for (auto& [reqRwy, _req] : this->activeAirports[adep].rwyrequests[req])
+						{
+							for (auto& [reqCallsign, reqTime] : _req)
 							{
 								if (reqCallsign != callsign) continue;
 
 								now = reqTime;
 								stop = true;
-
 								break;
 							}
+
 							if (stop) break;
 						}
 					}
-					catch (std::out_of_range) {};
+				}
+				else if (isRwyReq && !isFplRwyReq && this->processed[callsign].request == req)
+				{
+					messageHandler->writeMessage("DEBUG", "[" + callsign + "] has no rwy req, but current req is a rwy req", vsid::MessageHandler::DebugArea::Req);
+
+					if (this->activeAirports[adep].requests.contains(req))
+					{
+						for (auto& [reqCallsign, reqTime] : this->activeAirports[adep].requests[req])
+						{
+							if (reqCallsign != callsign) continue;
+
+							messageHandler->writeMessage("DEBUG", "[" + callsign + "] found in req list: " + req + ". Storing time.", vsid::MessageHandler::DebugArea::Req);
+
+							now = reqTime;
+							break;
+						}
+					}
+				}
+
+				if (vsid::fplnhelper::getAtcBlock(fpln).second.empty())
+				{
+					messageHandler->writeMessage("WARNING", "[" + callsign + "] no departure runway found in flight plan for request: " + req + ". Not setting the request!");
+					return;
 				}
 
 				newScratch = ".vsid_req_" + std::string(sItemString) + "/" + std::to_string(now); // #refactor - now check for empty string needed
 
-				if (newScratch != "") this->addSyncQueue(callsign, newScratch, fpln.GetControllerAssignedData().GetScratchPadString());
+				if (!newScratch.empty()) this->addSyncQueue(callsign, newScratch, fpln.GetControllerAssignedData().GetScratchPadString());
 			}
 		}
 
@@ -3129,13 +3170,34 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (ItemCode == TAG_ITEM_VSID_REQ)
 		{
-			if (this->processed.contains(callsign) && this->processed[callsign].request != "")
+			if (this->processed.contains(callsign) && !this->processed[callsign].request.empty())
 			{
-				std::string& request = this->processed[callsign].request;
+				
+				std::string request = this->processed[callsign].request;
+				bool isFplRwyReq = request.find("rwy") != std::string::npos;
+
+				if (isFplRwyReq)
+				{
+					try
+					{
+						request = vsid::utils::split(request, ' ').at(1);
+
+						messageHandler->removeFplnError(callsign, ERROR_FPLN_REQSPLIT);
+					}
+					catch (std::out_of_range&)
+					{
+						if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_REQSPLIT))
+						{
+							messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to split stored request (" + request +
+								") on tagItem update. Code: " + ERROR_FPLN_REQSPLIT);
+							messageHandler->addFplnError(callsign, ERROR_FPLN_REQSPLIT);
+						}						
+					}
+				}
 
 				// check rwy requests first
 
-				if(this->activeAirports[adep].rwyrequests.contains(request))
+				if(isFplRwyReq && this->activeAirports[adep].rwyrequests.contains(request))
 				{
 					for (auto& [rwy, rwyreq] : this->activeAirports[adep].rwyrequests[request])
 					{
@@ -3144,7 +3206,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 							if (it->first == callsign)
 							{
 								int pos = std::distance(it, rwyreq.end());
-								std::string req = vsid::utils::toupper(request).at(0) + std::to_string(pos);
+								std::string req = "R" + std::to_string(pos);
 								strcpy_s(sItemString, 16, req.c_str());
 								break;
 							}
@@ -3152,7 +3214,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					}
 				}
 				// check normal requests
-				else if (this->activeAirports[adep].requests.contains(request))
+				else if (!isFplRwyReq&& this->activeAirports[adep].requests.contains(request))
 				{
 					for (std::set<std::pair<std::string, long long>>::iterator it = this->activeAirports[adep].requests[request].begin();
 						it != this->activeAirports[adep].requests[request].end(); ++it)
@@ -4203,7 +4265,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 				{
 					if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_AMEND))
 					{
-						messageHandler->writeMessage("ERROR", "[" + callsign + "] - Failed to amend flight plan! - #FFDU");
+						messageHandler->writeMessage("ERROR", "[" + callsign + "] - Failed to amend flight plan! Code: " + ERROR_FPLN_AMEND);
 						messageHandler->addFplnError(callsign, ERROR_FPLN_AMEND);
 					}
 
@@ -4372,10 +4434,10 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 		}
 
-		// set intersection
-
 		if (this->processed.contains(callsign) && scratchpad.size() > 0)
 		{
+			// set intersection
+
 			if (scratchpad.size() <= 4 && this->activeAirports.contains(adep))
 			{
 				if (size_t pos = scratchpad.find("+"); pos != std::string::npos)
@@ -4457,6 +4519,19 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				{
 					std::vector<std::string> req = vsid::utils::split(scratchpad.substr(pos + toFind.size(), scratchpad.size()), '/');
 					std::string reqType = vsid::utils::tolower(req.at(0));
+					bool isRwyReq = reqType.find("rwy") != std::string::npos;
+					if (isRwyReq)
+					{
+						try
+						{
+							reqType = vsid::utils::split(reqType, ' ').at(1);
+						}
+						catch (std::out_of_range&)
+						{
+							messageHandler->writeMessage("ERROR", "[" + callsign + "] failed to split req type (" + reqType + ") in scratch pad update. Stopping setting request!");
+							return;
+						}
+					}
 					long long reqTime = std::stoll(req.at(1));
 
 					// clear all possible requests before setting a new one
@@ -4488,23 +4563,22 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 							}
 							if (it->first == reqType)
 							{
-								messageHandler->writeMessage("DEBUG", "[" + callsign + "] setting in requests in: " +
+								messageHandler->writeMessage("DEBUG", "[" + callsign + "] (equal reqType) setting in requests in: " +
 									it->first, vsid::MessageHandler::DebugArea::Req);
 
 								it->second.insert({ callsign, reqTime });
-								this->processed[callsign].request = reqType;
-								this->processed[callsign].reqTime = reqTime;
-								reqActive = true;
-							}
-							else if (reqType.find(it->first) != std::string::npos)
-							{
-								it->second.insert({ callsign, reqTime });
+
+								if (!isRwyReq)
+								{
+									this->processed[callsign].request = reqType;
+									this->processed[callsign].reqTime = reqTime;
+									reqActive = true;
+								}
 							}
 						}
 
 						for (auto& [type, rwys] : this->activeAirports[adep].rwyrequests)
 						{
-							messageHandler->writeMessage("DEBUG", "[" + callsign + "] rwy req type : " + type, vsid::MessageHandler::DebugArea::Dev);
 							for (auto it = rwys.begin(); it != rwys.end(); ++it)
 							{
 								for (std::set<std::pair<std::string, long long>>::iterator jt = it->second.begin(); jt != it->second.end();)
@@ -4527,21 +4601,21 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 									jt = it->second.erase(jt);
 								}
 							}
-							if (type == reqType && fplnRwy != "")
+							if (type == reqType && !fplnRwy.empty())
 							{
 								messageHandler->writeMessage("DEBUG", "[" + callsign + "] setting in rwy requests in: " +
 									type + "/" + std::string(FlightPlan.GetFlightPlanData().GetDepartureRwy()), vsid::MessageHandler::DebugArea::Req);
 
 								rwys[fplnRwy].insert({ callsign, reqTime });
-								this->processed[callsign].request = reqType;
-								this->processed[callsign].reqTime = reqTime;
-								reqActive = true;
+
+								if (isRwyReq)
+								{
+									this->processed[callsign].request = "rwy " + reqType;
+									this->processed[callsign].reqTime = reqTime;
+									reqActive = true;
+								}	
 							}
-							else if (type.find(reqType) != std::string::npos && fplnRwy != "") // #evaluate - if still needed
-							{
-								rwys[fplnRwy].insert({ callsign, reqTime });
-							}
-							else if (type == reqType && fplnRwy == "")
+							else if (isRwyReq && type == reqType && fplnRwy.empty())
 								messageHandler->writeMessage("WARNING", "[" + callsign + "] to be set in runway requests, but runway hasn't been set in the flight plan.");
 						}
 					}
@@ -4648,14 +4722,18 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						break;
 					}
 
-					for (auto& fp : this->activeAirports[adep].requests["rwy startup"])
+					for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests["startup"])
 					{
-						if (fp.first != callsign) continue;
+						for (auto& fp : rwyReq)
+						{
+							if (fp.first != callsign) continue;
 
-						this->activeAirports[adep].requests["rwy startup"].erase(fp);
-						this->processed[callsign].request = "";
-						this->processed[callsign].reqTime = -1;
-						break;
+							this->activeAirports[adep].rwyrequests["startup"][rwy].erase(fp);
+							this->processed[callsign].request = "";
+							this->processed[callsign].reqTime = -1;
+							break;
+						}
+						
 					}
 				}
 				else if (state == "PUSH")
