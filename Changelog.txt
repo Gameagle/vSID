@@ -1,6 +1,12 @@
 [Changelog v0.14.4]
+:gear: **Changed Features / Behaviour**
+*	FPLN - startup requests are now blocked if no runway is set (both "normal" startup and rwy startup)
+	* request system refactored - requests and rwy requests share the same type now (distinction is now stored with the flight plan)
+	* other smaller improvements to the request system (mainly startup request related)
+
 :lady_beetle: **Fixes**
 *	FPLN - Squawks are now also displayed if the departure airport is inactive. Only CTR controllers were affected by this
+*	FPLN - rwy request indicators shouldn't be overwritten anymore (#406)
 
 [Changelog v0.14.3.1]
 >[!NOTE]
