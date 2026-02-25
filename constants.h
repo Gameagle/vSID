@@ -70,6 +70,7 @@ const int MENU_BOTTOM_BAR = 112;
 // errors
 
 const std::string ERROR_FPLN_ATCBLOCK = "E010";
+const std::string ERROR_FPLN_REQSPLIT = "E010-1";
 const std::string ERROR_FPLN_SIDWPT = "E011";
 const std::string ERROR_FPLN_SPLITWPT = "E012";
 const std::string ERROR_FPLN_EXTFUNC = "E013";
