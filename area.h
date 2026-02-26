@@ -65,7 +65,7 @@ namespace vsid
 		std::vector<Line> lines;
 
 		/**
-		 * @brief Creates a decimal position pair // #refacotr - change to utils.h version
+		 * @brief Creates a decimal position pair // #refactor - change to utils.h version
 		 * 
 		 * @param pos the fpln position as pair of lat/long coordinates
 		 */
