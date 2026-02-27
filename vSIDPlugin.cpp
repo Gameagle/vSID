@@ -4297,19 +4297,22 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 
 				// update possible rwy requests
 
-				if (this->processed[callsign].request != "")
+				if (!this->processed[callsign].request.empty())
 				{
-					std::string fplnRwy = fplnData.GetDepartureRwy();
+					std::string fplnRwy = vsid::fplnhelper::getAtcBlock(FlightPlan).second;
 
 					// update rwy requests directly if a rwy request is stored for the flight plan
 
-					if (this->processed[callsign].request.find("rwy") != std::string::npos && fplnRwy != "")
+					if (this->processed[callsign].request.find("rwy") != std::string::npos &&
+						!fplnRwy.empty() && vsid::utils::contains(this->activeAirports[adep].allRwys, fplnRwy))
 					{
-						try
+						std::string normReq = vsid::utils::split(this->processed[callsign].request, ' ').at(1);
+
+						if (this->activeAirports[adep].rwyrequests.contains(normReq))
 						{
 							bool stop = false;
 
-							for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests.at(this->processed[callsign].request))
+							for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests[normReq])
 							{
 								for (std::set<std::pair<std::string, long long>>::iterator it = rwyReq.begin(); it != rwyReq.end();)
 								{
@@ -4321,7 +4324,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 
 									if (rwy != fplnRwy)
 									{
-										this->activeAirports[adep].rwyrequests.at(this->processed[callsign].request)[fplnRwy].insert({ callsign, it->second });
+										this->activeAirports[adep].rwyrequests[normReq][fplnRwy].insert({ callsign, it->second });
 										rwyReq.erase(it);
 										stop = true;
 										break;
@@ -4330,15 +4333,14 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 								if (stop) break;
 							}
 						}
-						catch (std::out_of_range) {};
 					}
 					// check if a rwy request is available for stored non-rwy request and update the rwy
-					else if(fplnRwy != "")
+					else if(!fplnRwy.empty() && vsid::utils::contains(this->activeAirports[adep].allRwys, fplnRwy))
 					{
 						bool stop = false;
 						for (auto& [type, rwys] : this->activeAirports[adep].rwyrequests)
 						{
-							if (type.find(this->processed[callsign].request) == std::string::npos) continue;
+							if (this->processed[callsign].request.find(type) == std::string::npos) continue;
 
 							for (auto& [rwy, rwyReq] : rwys)
 							{
@@ -4352,7 +4354,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 
 									if (rwy != fplnRwy)
 									{
-										this->activeAirports[adep].rwyrequests.at(type)[fplnRwy].insert({ callsign, it->second });
+										this->activeAirports[adep].rwyrequests[type][fplnRwy].insert({ callsign, it->second });
 										rwyReq.erase(it);
 										stop = true;
 										break;
@@ -5143,6 +5145,13 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		this->configParser.loadAirportConfig(this->activeAirports, this->savedRules, this->savedSettings, this->savedAreas, this->savedRequests, this->savedRwyRequests);
 		messageHandler->writeMessage("DEBUG", "Checking .ese file for SID mastering...", vsid::MessageHandler::DebugArea::Conf);
 
+		//************************************
+		// temp storage for OID mismatches
+		// Parameter:	<std::string, - ICAO
+		// Parameter:	, std::map<std::string, bool>> - map of OID to whether it has been matched with a section SID or not
+		//************************************
+		std::map<std::string, std::map<std::string, bool>> incompOIDs;
+
 		// if there are configured airports check for remaining sid data
 
 		for(auto &sectionSid : this->sectionSids)
@@ -5153,7 +5162,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			{
 				if (sid.base != sectionSid.base)
 				{
-					// skip unmatching first two char comparison (filter)
+					// skip unmatching first three char comparison (filter)
 					if (sid.base.length() > 2 && sectionSid.base.length() > 2)
 					{
 						if (sid.base[0] != sectionSid.base[0]) continue;
@@ -5164,6 +5173,11 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					if (!sid.collapsedBaseMatch(sectionSid.base))
 					{
 						messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed didn't match [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
+
+						// if OID is skipped due to unmatching bases mark it has incompatible to yield warnings
+						if (vsid::utils::containsDigit(sid.base) && !incompOIDs[sectionSid.apt].contains(sid.base + sid.number + sid.designator))
+							incompOIDs[sectionSid.apt][sid.base + sid.number + sid.designator] = false;
+
 						continue;
 					}
 					else messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed matched [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
@@ -5193,14 +5207,32 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 								vsid::MessageHandler::DebugArea::Conf);
 						}
 					}
-					else if (!sid.number.empty() && sid.number == std::string(1, sectionSid.number)) // #dev - debugging only for MIL / OIDs
+					else if (!sid.number.empty()) // health check for possible errors in .ese config
 					{
-						messageHandler->writeMessage("DEBUG", "[" + sid.base + sid.number + sid.designator +
-							"] matched with section SID [" + sectionSid.base + sectionSid.number + std::string(1, sectionSid.desig.value_or(' ')) + "]",
-							vsid::MessageHandler::DebugArea::Dev);
-					}
-					else if (sid.number != "") // health check for possible errors in .ese config
-					{
+						if (vsid::utils::containsDigit(sid.base))
+						{
+							if(!incompOIDs[sectionSid.apt].contains(sid.base + sid.number + sid.designator))
+								incompOIDs[sectionSid.apt][sid.base + sid.number + sid.designator] = false;
+
+							if (vsid::utils::trim(sid.base + sid.number + sid.designator) ==
+								vsid::utils::trim(sectionSid.base + sectionSid.number + sectionSid.desig.value_or(' ')))
+							{
+								messageHandler->writeMessage("DEBUG", "[MIL SID] " +
+									sid.base + sid.number + sid.designator + " equal: " +
+									sectionSid.base + sectionSid.number + sectionSid.desig.value_or(' '), vsid::MessageHandler::DebugArea::Conf);
+
+								incompOIDs[sectionSid.apt][sid.base + sid.number + sid.designator] = true;
+							}
+							else
+							{
+								messageHandler->writeMessage("DEBUG", "[MIL SID] " +
+									sid.base + sid.number + sid.designator + " NOT equal: " +
+									sectionSid.base + sectionSid.number + sectionSid.desig.value_or(' '), vsid::MessageHandler::DebugArea::Dev);
+							}
+
+							continue;
+						}
+
 						int currNumber = -1;
 
 						try
@@ -5305,18 +5337,31 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 						}
 					}
 				}
-
-				/*if (sid.designator != "")
-				{					
-					
-				}
-				else
-				{
-					if (sectionSid.base != sid.base) continue;
-					sid.number = 'X';
-					messageHandler->writeMessage("DEBUG", "[" + sid.base + "] has no designator but the base could be mastered", vsid::MessageHandler::DebugArea::Conf);
-				}*/
 			}
+		}
+
+		for (auto& [apt, oids] : incompOIDs)
+		{
+			if (oids.empty()) continue;
+
+			std::ostringstream ss;
+			ss << "[" << apt << "] Check your config file for the following OIDs that couldn't be mastered: ";
+			std::string separator = "";
+			int mismatchCount = 0;
+
+			for (auto& [oid, matched] : oids)
+			{
+				if (!matched)
+				{
+					ss << separator << oid;
+					separator = ", ";
+					mismatchCount++;
+				}
+			}
+
+			if (mismatchCount > 0) messageHandler->writeMessage("WARNING", ss.str());
+
+			ss.clear();
 		}
 	}
 
