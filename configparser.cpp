@@ -603,12 +603,12 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         vsid::tmpSidSettings desSetting;
                         vsid::tmpSidSettings idSetting;
 
-                        std::string fixedNumber = "";
-
                         // "field level" - iterates over restrictions and sid way points / bases
 
                         for (auto &sidField : this->parsedConfig.at(icao).at("sids").items())
                         {
+                            std::string fixedNumber = "";
+
                             if (sidField.key() == "allowDiffNumbers") fieldSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
                             else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
@@ -708,6 +708,9 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                                 {
                                     fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);
                                     fixedNumber = sidField.key().back();
+
+                                    messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] contained a number - setting as fixed SID number: " +
+                                        fixedNumber, vsid::MessageHandler::DebugArea::Conf);
                                 }
                                 else
                                 {
