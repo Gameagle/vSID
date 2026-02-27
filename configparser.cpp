@@ -703,6 +703,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                             else if (!this->isConfigValue(sidField.key()))
                             {
                                 // special check for possible military SIDs / OIDs (format: XY12)
+
                                 if (vsid::utils::lastIsDigit(sidField.key()) && vsid::utils::countDigits(sidField.key()) > 1 && sidField.key().length() > 2)
                                 {
                                     fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);

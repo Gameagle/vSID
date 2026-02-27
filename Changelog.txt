@@ -3,6 +3,8 @@
 *	FPLN - startup requests are now blocked if no runway is set (both "normal" startup and rwy startup)
 	* request system refactored - requests and rwy requests share the same type now (distinction is now stored with the flight plan)
 	* other smaller improvements to the request system (mainly startup request related)
+*	CONF - improved checking for military SIDs (OID) to validate against the .ese file. As per previous version OIDs have to be written like found in the .ese file (there is no mastering like with normal SIDs)
+	* added a health check to warn about OIDs in the config that haven't been found in the .ese file
 
 :lady_beetle: **Fixes**
 *	FPLN - Squawks are now also displayed if the departure airport is inactive. Only CTR controllers were affected by this
