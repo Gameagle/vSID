@@ -5255,7 +5255,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 						if (currNumber > newNumber || (currNumber == 1 && newNumber == 9))
 						{
-							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese - file for " + sid.base + " ? " + sid.designator + " SID!Already set number : " +
+							messageHandler->writeMessage("WARNING", "[" + sectionSid.apt + "] Check your .ese - file for " + sid.base + "?" + sid.designator + " SID! Already set number : " +
 								std::to_string(currNumber) + " (ID: " + sid.id + "). Now found additional number: " + std::to_string(newNumber) +
 								" - (Runway: " + sectionSid.rwy + "). Skipping additional number (is lower or before restarting count) due to possible sectore file error!");
 						}
