@@ -5162,6 +5162,11 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 			{
 				if (sid.base != sectionSid.base)
 				{
+
+					// if OID is skipped due to unmatching bases mark it has incompatible to yield warnings
+					if (vsid::utils::containsDigit(sid.base) && !incompOIDs[sectionSid.apt].contains(sid.base + sid.number + sid.designator))
+						incompOIDs[sectionSid.apt][sid.base + sid.number + sid.designator] = false;
+
 					// skip unmatching first three char comparison (filter)
 					if (sid.base.length() > 2 && sectionSid.base.length() > 2)
 					{
@@ -5173,11 +5178,6 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 					if (!sid.collapsedBaseMatch(sectionSid.base))
 					{
 						messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed didn't match [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);
-
-						// if OID is skipped due to unmatching bases mark it has incompatible to yield warnings
-						if (vsid::utils::containsDigit(sid.base) && !incompOIDs[sectionSid.apt].contains(sid.base + sid.number + sid.designator))
-							incompOIDs[sectionSid.apt][sid.base + sid.number + sid.designator] = false;
-
 						continue;
 					}
 					else messageHandler->writeMessage("DEBUG", "[" + sid.base + "] sid collapsed matched [" + sectionSid.base + "]", vsid::MessageHandler::DebugArea::Dev);

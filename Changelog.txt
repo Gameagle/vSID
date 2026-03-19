@@ -7,9 +7,9 @@
 	* added a health check to warn about OIDs in the config that haven't been found in the .ese file
 
 :lady_beetle: **Fixes**
-*	FPLN - Squawks are now also displayed if the departure airport is inactive. Only CTR controllers were affected by this
+*	FPLN - Squawks are now also displayed if the departure airport is inactive. Only CTR controllers were affected by this (#401)
 *	FPLN - rwy request indicators shouldn't be overwritten anymore (#406)
-*	CONF - military SIDs (OIDs) had to be at the end of the config due to missing reset of special OID/SID numbering
+*	CONF - military SIDs (OIDs) had to be at the end of the config due to missing reset of special OID/SID numbering (#402)
 
 [Changelog v0.14.3.1]
 >[!NOTE]
