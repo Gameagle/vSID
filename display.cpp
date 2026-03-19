@@ -152,19 +152,30 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				std::string adep = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
-				std::string fplnRwy = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetDepartureRwy(); // # refactor - use rwy from actual flight plan (icao block)
+				std::string fplnRwy = vsid::fplnhelper::getAtcBlock(target.GetCorrelatedFlightPlan()).second;
+				std::string reqType = fplnInfo.request;
+				bool isRwyReq = fplnInfo.request.find("rwy") != std::string::npos;
 
-				if (fplnInfo.request != "" && adep != "")
+				if (isRwyReq)
+				{
+					try
+					{
+						reqType = vsid::utils::split(reqType, ' ').at(1);
+					}
+					catch (std::out_of_range&) {}
+				}
+				
+				if (!reqType.empty() && !adep.empty() && sharedPlugin->getActiveApts().contains(adep))
 				{
 					EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
 
 					POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
 
-					try
+					if (!isRwyReq)
 					{
 						for (auto& [type, req] : sharedPlugin->getActiveApts().at(adep).requests)
 						{
-							if (type != fplnInfo.request) continue;
+							if (type != reqType) continue;
 
 							for (std::set<std::pair<std::string, long long>>::iterator it = req.begin(); it != req.end(); ++it)
 							{
@@ -188,21 +199,23 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								dc.DrawText(reqPos.c_str(), &area, DT_BOTTOM);
 							}
 						}
-
+					}			
+					else
+					{
 						for (auto& [type, rwys] : sharedPlugin->getActiveApts().at(adep).rwyrequests)
 						{
-							if (type != fplnInfo.request) continue;
+							if (type != reqType) continue;
 
 							for (auto& [rwy, rwyReq] : rwys)
 							{
-								if (fplnRwy == "" || fplnRwy != rwy) continue;
+								if (fplnRwy.empty() || fplnRwy != rwy) continue;
 
 								for (std::set<std::pair<std::string, long long>>::iterator it = rwyReq.begin(); it != rwyReq.end(); ++it)
 								{
 									if (it->first != callsign) continue;
 
 									size_t pos = std::distance(it, rwyReq.end());
-									std::string reqPos = vsid::utils::toupper(type).at(0) + std::to_string(pos);
+									std::string reqPos = "R" + std::to_string(pos);
 
 									CRect area;
 
@@ -219,8 +232,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								}
 							}
 						}
-					}
-					catch (std::out_of_range) {};
+					}				
 				}
 			}
 
