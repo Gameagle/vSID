@@ -69,6 +69,9 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	RegisterTagItemFunction("Auto-Assign Squawk (TopSky)", TAG_FUNC_VSID_TSSQUAWK);
 
+	RegisterTagItemType("Handover Flag", TAG_ITEM_VSID_HOVF);
+	RegisterTagItemFunction("Set handover flag", TAG_FUNC_VSID_HOV);
+
 	this->loadEse(); // load and parse ese file
 
 	UpdateActiveAirports(); // preload rwy settings
@@ -2633,6 +2636,11 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 	{
 		this->processed[callsign].ctlLocal = !this->processed[callsign].ctlLocal;
 	}
+
+	if (FunctionId == TAG_FUNC_VSID_HOV)
+	{
+		this->processed[callsign].hov = !this->processed[callsign].hov;
+	}
 }
 
 void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, EuroScopePlugIn::CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
@@ -3300,6 +3308,31 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				else *pRGB = this->configParser.getColor("intsecAble");
 
 				strcpy_s(sItemString, 16, this->processed[callsign].intsec.first.c_str());
+			}
+		}
+
+		if (ItemCode == TAG_ITEM_VSID_HOVF)
+		{
+			if (RadarTarget.GetGS() < 50) return;
+			if (this->activeAirports[adep].autoHandoff) return;
+
+			int alt = RadarTarget.GetPosition().GetPressureAltitude();
+			int hovWarningAlt = this->getConfigParser().hovWarningAlt;
+			EuroScopePlugIn::CFlightPlan fpln = FlightPlan;
+			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+
+			if (!this->processed[callsign].hov)
+			{
+				if (alt >= fpln.GetClearedAltitude() - hovWarningAlt)
+				{
+					*pRGB = this->configParser.getColor("hovWarning");
+					strcpy_s(sItemString, 16, "HOV!");
+				}
+				else
+				{
+					*pRGB = this->configParser.getColor("hovNeutral");
+					strcpy_s(sItemString, 16, "HOV");
+				}
 			}
 		}
 	}

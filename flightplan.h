@@ -54,6 +54,7 @@ namespace vsid
 		bool mapp = false;
 		// altitude tracking during acft landing phase
 		int ldgAlt = 0;
+		bool hov = false;
 	};
 
 	namespace fplnhelper
