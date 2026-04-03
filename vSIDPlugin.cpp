@@ -12,6 +12,7 @@
 
 #include "display.h"
 #include "airport.h"
+#include "crashhandler.h"
 
 // DEV
 #include <thread>
@@ -3461,6 +3462,20 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 {
 	std::vector<std::string> command = vsid::utils::split(sCommandLine, ' ');
 
+	/*if (command[0] == ".vsidcrash") // #dev - only for testing crash handling
+	{
+		auto triggercrash = []()
+			{
+				volatile int* badPointer = nullptr;
+
+				*badPointer = 42;
+			};
+
+		triggercrash();
+
+		return true;
+	}*/
+
 	if (command[0] == ".vsid")
 	{
 		if (command.size() == 1)
@@ -5761,6 +5776,7 @@ void vsid::VSIDPlugin::exit()
 
 void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
 {
+	vsid::crashhandler::initCrashHandler();
 	// create the instance
 
 	*ppPlugInInstance = vsidPlugin = new vsid::VSIDPlugin();
@@ -5771,7 +5787,8 @@ void __declspec (dllexport) EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlu
 
 void __declspec (dllexport) EuroScopePlugInExit(void)
 {
-	/* no deletion of vsidPlugin needed - ownership taken over by this->shared */
+	vsid::crashhandler::removeCrashHandler();
 
+	/* no deletion of vsidPlugin needed - ownership taken over by this->shared */
 	vsidPlugin->exit();
 }
