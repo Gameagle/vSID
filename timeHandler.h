@@ -39,11 +39,32 @@ namespace vsid
 		 */
 		bool isActive(const std::string& timezone, const int start, const int end);
 
-		/**
-		 * @brief Get the current time in utc (ceiled in seconds)
-		 * 
-		 */
-		std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> getUtcNow();
+		//************************************
+		// Description: Get the current time in utc (ceiled in seconds)
+		// Method:    getUtcNow
+		// FullName:  vsid::time::getUtcNow
+		// Access:    public 
+		// Returns:   std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds>
+		// Qualifier:
+		//************************************
+		inline std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> getUtcNow()
+		{
+			return std::chrono::ceil<std::chrono::seconds>(std::chrono::utc_clock::now());
+		}
+
+		//************************************
+		// Description: Get the current date as string in format YYYY-MM-DD
+		// Method:    getDate
+		// FullName:  vsid::time::getDate
+		// Access:    public 
+		// Returns:   std::string
+		// Qualifier:
+		//************************************
+		inline std::string getDate()
+		{
+			std::chrono::sys_time sysTime = std::chrono::clock_cast<std::chrono::system_clock>(vsid::time::getUtcNow());
+			return std::format("{:%Y-%m-%d}", sysTime);
+		}
 
 		/**
 		 * @brief Transform a timepoint into a string

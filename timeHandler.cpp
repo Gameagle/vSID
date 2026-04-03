@@ -30,8 +30,3 @@ bool vsid::time::isActive(const std::string& timezone, const int start, const in
 	}
 	return false;
 }
-
-std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> vsid::time::getUtcNow()
-{
-	return std::chrono::ceil<std::chrono::seconds>(std::chrono::utc_clock::now());
-}
