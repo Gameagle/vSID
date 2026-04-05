@@ -11,6 +11,12 @@ vsid::Area::Area(std::vector<std::pair<std::string, std::string>> &coords, bool 
 {
 	for (std::pair<std::string, std::string>& coord : coords)
 	{
+		if(coord.first.empty() || coord.second.empty())
+		{
+			messageHandler->writeMessage("WARNING", "Empty coordinate string found (first: \"" + coord.first +
+				"\" / second: \"" + coord.second + "\"!  Skipping coordinate.");
+			continue;
+		}
 		this->points.push_back(toPoint(coord));
 	}
 
@@ -37,49 +43,53 @@ void vsid::Area::showline()
 {
 	for (auto& line : this->lines)
 	{
-		messageHandler->writeMessage("DEBUG", "line: " + std::to_string(line.first.lon) + ":" + std::to_string(line.first.lat) + " - " + std::to_string(line.second.lon) + "." + std::to_string(line.second.lat));
+		messageHandler->writeMessage("DEBUG", "line: " + std::to_string(line.first.lon) + ":" + std::to_string(line.first.lat) + " - " +
+			std::to_string(line.second.lon) + "." + std::to_string(line.second.lat));
 	}
 }
 
 vsid::Area::Point vsid::Area::toPoint(std::pair<std::string, std::string> &pos)
 {
-	double lat = toDeg(pos.first);
-	double lon = toDeg(pos.second);
+	/*double lat = toDeg(pos.first);
+	double lon = toDeg(pos.second);*/
+
+	double lat = vsid::utils::toDeg(pos.first);
+	double lon = vsid::utils::toDeg(pos.second);
 
 	return {lat, lon};
 }
 
-double vsid::Area::toDeg(std::string& coord)
-{
-	std::vector<std::string> dms = vsid::utils::split(coord, '.');
-	int multi = 0; // default state in exception case
-
-	try
-	{
-		if (dms.size() < 4)
-			throw std::out_of_range("Coordinate string \"" + coord + "\" does not contain enough parts for DMS conversion!");
-
-		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
-
-		double deg = std::stod(dms[0].substr(1, dms[0].length()));
-		double min = std::stod(dms[1]) / 60;
-		double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
-
-		return (deg + min + sec) * multi;
-	}
-	catch (std::out_of_range &e)
-	{
-		messageHandler->writeMessage("ERROR", "Out of bounds while calculating coordinate: " + coord + ". " + e.what());
-	}
-	catch (const std::invalid_argument& e)
-	{
-		messageHandler->writeMessage("ERROR", "Invalid number format in coord " + coord + ". " + e.what());
-	}
-
-	messageHandler->writeMessage("WARNING", "Fallback state for \"" + coord + "\"! Failed to calculate. DMS will be set to 0.0");
-
-	return 0.0;
-}
+//double vsid::Area::toDeg(std::string& coord)
+//{
+//	std::vector<std::string> dms = vsid::utils::split(coord, '.');
+//	int multi = 0; // default state in exception case
+//
+//	try
+//	{
+//		if (dms.size() < 4)
+//			throw std::out_of_range("Coordinate string \"" + coord + "\" does not contain enough parts for DMS conversion!");
+//
+//		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
+//
+//		double deg = std::stod(dms[0].substr(1, dms[0].length()));
+//		double min = std::stod(dms[1]) / 60;
+//		double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
+//
+//		return (deg + min + sec) * multi;
+//	}
+//	catch (std::out_of_range &e)
+//	{
+//		messageHandler->writeMessage("ERROR", "Out of bounds while calculating coordinate: " + coord + ". " + e.what());
+//	}
+//	catch (const std::invalid_argument& e)
+//	{
+//		messageHandler->writeMessage("ERROR", "Invalid number format in coord " + coord + ". " + e.what());
+//	}
+//
+//	messageHandler->writeMessage("WARNING", "Fallback state for \"" + coord + "\"! Failed to calculate. DMS will be set to 0.0");
+//
+//	return 0.0;
+//}
 
 bool vsid::Area::inside(const EuroScopePlugIn::CPosition& fplnPos)
 {
