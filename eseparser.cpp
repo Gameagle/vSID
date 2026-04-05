@@ -85,6 +85,18 @@ void vsid::EseParser::line(Section s, std::string_view l)
 				if (((visLat.front() == 'N' || visLat.front() == 'S') && std::isdigit(static_cast<unsigned char>(visLat.back()))) &&
 					((visLon.front() == 'E' || visLon.front() == 'W') && std::isdigit(static_cast<unsigned char>(visLon.back()))))
 				{
+					if (visLat.empty() || visLon.empty())
+					{
+						messageHandler->writeMessage("WARNING", "Empty coordinate string found for ATC station \"" + atcVec.at(0) +
+							"\" vis point (lat: \"" + visLat + "\" / lon: \"" + visLon + "\"! Skipping coordinate.");
+
+						messageHandler->writeMessage("DEBUG", "[ESE] empty vispoint lat (\"" + visLat + "\" / lon (\"" + visLon +
+							"\" in line : " + std::string(l), vsid::MessageHandler::DebugArea::Conf);
+
+						++idx;
+						continue;
+					}
+
 					visPoints.push_back(vsid::utils::toPoint({ visLat, visLon }));
 				}
 
