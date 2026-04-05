@@ -77,6 +77,6 @@ namespace vsid
 		 * @param coord 
 		 * @return double 
 		 */
-		double toDeg(std::string& coord);
+		/*double toDeg(std::string& coord);*/
 	};
 }
