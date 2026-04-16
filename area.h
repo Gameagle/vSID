@@ -70,13 +70,5 @@ namespace vsid
 		 * @param pos the fpln position as pair of lat/long coordinates
 		 */
 		Point toPoint(std::pair<std::string, std::string> &pos);
-
-		/**
-		 * @brief Transforms lat/long string value into decimal equivalent // #refactor - change to utils.h version
-		 * 
-		 * @param coord 
-		 * @return double 
-		 */
-		/*double toDeg(std::string& coord);*/
 	};
 }

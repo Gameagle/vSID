@@ -41,34 +41,26 @@ std::string vsid::version::semverToString(const vsid::version::semver& v)
 
 int vsid::version::compSemVer(const vsid::version::semver& local, const vsid::version::semver& remote)
 {
-	if (!std::get<3>(remote))
+	// get base version (major, minor, patch)
+	auto baseLocal = std::tie(std::get<0>(local), std::get<1>(local), std::get<2>(local));
+	auto baseRemote = std::tie(std::get<0>(remote), std::get<1>(remote), std::get<2>(remote));
+
+	bool remoteIsStable = !std::get<3>(remote);
+	bool localIsStable = !std::get<3>(local);
+
+	if (baseRemote > baseLocal) return remoteIsStable ? 1 : 2; // remote is newer, 1 = stable, 2 = pre-release
+
+	if (baseRemote == baseLocal)
 	{
-		if (std::get<0>(remote) > std::get<0>(local) ||
-			std::get<1>(remote) > std::get<1>(local) ||
-			std::get<2>(remote) > std::get<2>(local))
+		if (!remoteIsStable && !localIsStable)
 		{
+			if (std::get<3>(remote) != std::get<3>(local)) return 2; // assumed new pre-release
+		}
+		else if (remoteIsStable && !localIsStable)
 			return 1; // new stable release
-		}
-	}
-	else
-	{
-		if ((std::get<0>(remote) > std::get<0>(local) ||
-			std::get<1>(remote) > std::get<1>(local) ||
-			std::get<2>(remote) > std::get<2>(local)) &&
-			std::get<3>(remote) != std::get<3>(local))
-		{
-			return 2; // assumed new pre-release
-		}
-		else if (std::get<0>(remote) == std::get<0>(local) &&
-			std::get<1>(remote) == std::get<1>(local) &&
-			std::get<2>(remote) == std::get<2>(local) &&
-			std::get<3>(remote) != std::get<3>(local))
-		{
-			return 2; // assumed new pre-release, only hash differs
-		}
 	}
 
-	return 0;
+	return 0; // default state - no update
 }
 
 std::optional<std::string> vsid::version::getHttp(bool prerelease)
