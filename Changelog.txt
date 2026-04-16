@@ -6,8 +6,9 @@
 	* the pdb file is generated during the build process
 
 :lady_beetle: **Fixes**
-*	CONF - fix UB during coordinate conversion during the parsing of the .ese file for atc stations and vis points
-	* might need further investigation. On random occasions the conversion of coordinates from the .ese file caused an access violation, possible due to wrong / missing values from the ese file (reason unknown / if related to ES itself)
+*	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points
+	* due to a wrong coordinate in the .ese file the split was wrong and parameters missing - now guarded against
+*	GEN - version check could report newer remote version if minor or patch was newer but major was older
 
 [Changelog v0.14.4]
 :gear: **Changed Features / Behaviour**
