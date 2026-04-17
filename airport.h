@@ -81,6 +81,7 @@ namespace vsid
 		//bool arrAsDep = false;
 		int transAlt = 0;
 		int maxInitialClimb = 0;
+		bool autoHandoff = true;
 		std::map<std::string, bool> settings = {};
 		std::map<std::string, vsid::Controller> controllers = {};
 		//************************************

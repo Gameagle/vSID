@@ -55,6 +55,8 @@ void vsid::ConfigParser::loadMainConfig()
 
     this->notifyUpdate = this->vSidConfig.value("notifyUpdate", 1);
 
+	this->hovWarningAlt = this->vSidConfig.value("hovWarningAlt", 1000);
+
     try
     {
         // import colors or set default values
@@ -338,6 +340,26 @@ void vsid::ConfigParser::loadMainConfig()
 		}
 		else this->colors["reqIndicator"] = RGB(255, 255, 255);
 
+		if (this->vSidConfig.at("colors").contains("hovNeutral"))
+        {
+            this->colors["hovNeutral"] = RGB(
+                this->vSidConfig.at("colors").at("hovNeutral").value("r", 250),
+                this->vSidConfig.at("colors").at("hovNeutral").value("g", 250),
+                this->vSidConfig.at("colors").at("hovNeutral").value("b", 0)
+            );
+        }
+        else this->colors["hovNeutral"] = RGB(250, 250, 0);
+
+        if (this->vSidConfig.at("colors").contains("hovWarning"))
+        {
+            this->colors["hovWarning"] = RGB(
+                this->vSidConfig.at("colors").at("hovWarning").value("r", 250),
+                this->vSidConfig.at("colors").at("hovWarning").value("g", 0),
+                this->vSidConfig.at("colors").at("hovWarning").value("b", 0)
+            );
+        }
+        else this->colors["hovWarning"] = RGB(250, 0, 0);
+
         // pseudo values for special color use cases
         if (!this->colors.contains("squawkSet")) this->colors["squawkSet"] = RGB(300, 300, 300);
     }
@@ -478,6 +500,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
                         aptInfo.requests["departure"] = {};
                         aptInfo.requests["vfr"] = {};
                         aptInfo.rwyrequests["startup"] = {};
+						aptInfo.autoHandoff = this->parsedConfig.at(icao).value("autoHandoff", true);
 
                         // customRules
 
