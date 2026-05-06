@@ -2623,6 +2623,11 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (this->topskyLoaded) this->addOrSetSquawk(callsign, true);
 			else messageHandler->writeMessage("ERROR", "TopSky auto-assign squawk called, but TopSky was not detected.");
 		}
+
+		if (FunctionId == TAG_FUNC_VSID_HOV)
+		{
+			this->processed[callsign].hov = !this->processed[callsign].hov;
+		}
 	}
 
 	if (FunctionId == TAG_FUNC_VSID_CTL)
@@ -2636,11 +2641,6 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 	if (FunctionId == TAG_FUNC_VSID_CTL_LOCAL)
 	{
 		this->processed[callsign].ctlLocal = !this->processed[callsign].ctlLocal;
-	}
-
-	if (FunctionId == TAG_FUNC_VSID_HOV)
-	{
-		this->processed[callsign].hov = !this->processed[callsign].hov;
 	}
 }
 
@@ -3314,17 +3314,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (ItemCode == TAG_ITEM_VSID_HOVF)
 		{
-			if (RadarTarget.GetGS() < 50) return;
 			if (this->activeAirports[adep].autoHandoff) return;
+			if (RadarTarget.GetGS() < 50) return;
 
-			int alt = RadarTarget.GetPosition().GetPressureAltitude();
-			int hovWarningAlt = this->getConfigParser().hovWarningAlt;
-			EuroScopePlugIn::CFlightPlan fpln = FlightPlan;
 			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 
-			if (!this->processed[callsign].hov)
+			if (this->processed.contains(callsign) && !this->processed[callsign].hov)
 			{
-				if (alt >= fpln.GetClearedAltitude() - hovWarningAlt)
+				if (RadarTarget.GetPosition().GetPressureAltitude() >= FlightPlan.GetClearedAltitude() - this->getConfigParser().hovWarningAlt)
 				{
 					*pRGB = this->configParser.getColor("hovWarning");
 					strcpy_s(sItemString, 16, "HOV!");
@@ -3494,20 +3491,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 {
 	std::vector<std::string> command = vsid::utils::split(sCommandLine, ' ');
-
-	/*if (command[0] == ".vsidcrash") // #dev - only for testing crash handling
-	{
-		auto triggercrash = []()
-			{
-				volatile int* badPointer = nullptr;
-
-				*badPointer = 42;
-			};
-
-		triggercrash();
-
-		return true;
-	}*/
 
 	if (command[0] == ".vsid")
 	{
@@ -5141,7 +5124,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 	this->SelectActiveSectorfile();
 	this->activeAirports.clear();
-      
+	  
 	// get active airports
 	for (EuroScopePlugIn::CSectorElement sfe =	this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT);
 												sfe.IsValid();
