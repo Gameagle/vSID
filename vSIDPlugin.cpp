@@ -9,6 +9,7 @@
 
 #include <set>
 #include <algorithm>
+#include <format>
 
 #include "display.h"
 #include "airport.h"
@@ -2627,6 +2628,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		if (FunctionId == TAG_FUNC_VSID_HOV)
 		{
 			this->processed[callsign].hov = !this->processed[callsign].hov;
+			this->addSyncQueue(callsign, std::format(".VSID_HOV_{}", this->processed[callsign].hov ? "TRUE" : "FALSE"),
+				fpln.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
 
@@ -4692,6 +4695,20 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						messageHandler->addFplnError(callsign, ERROR_FPLN_INTSET);
 					}
 				}
+
+				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+			}
+
+			// handover flag
+
+			if (scratchpad.find(".VSID_HOV_") != std::string::npos)
+			{
+				std::string toFind = ".VSID_HOV_";
+				size_t pos = scratchpad.find(toFind);
+
+				bool hov = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
+
+				this->processed[callsign].hov = hov;
 
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
