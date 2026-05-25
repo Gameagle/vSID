@@ -327,7 +327,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		else if (!currSid.transition.empty() && !currSid.transition.contains(sidWpt)) continue;
 
 		bool rwyMatch = false;
-		bool restriction = false;
+		bool restriction = false; // #evaluate - can probably be removed, tmp unused
 		validEquip = true;
 
 
@@ -1083,6 +1083,17 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 			continue;
 		}
 
+		// skip the SID if only accepted as pilot filed but it differs
+
+		if (currSid.pilotfiled && currSid.name() != fplnData.GetSidName())
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+				"\" as pilot filed only. Filed SID: " + fplnData.GetSidName(), vsid::MessageHandler::DebugArea::Sid
+			);
+
+			continue;
+		}
+
 		// if a SID has the special prio "0" return an empty SID for forced manual selection
 		if (currSid.prio == 0)
 		{
@@ -1093,31 +1104,30 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 			return vsid::Sid();
 		}
 
-		// if a SID is accepted when filed by a pilot set the SID
-		if (currSid.pilotfiled && currSid.name() == fplnData.GetSidName() && currSid.prio < prio)
-		{
-			setSid = currSid;
-			prio = currSid.prio;
-		}
-		else if (currSid.pilotfiled) messageHandler->writeMessage("DEBUG", "[" + callsign + "] Ignoring SID \"" + currSid.idName() +
-			"\" because it is only accepted as pilot filed and the prio is higher or the filed SID was another",
-			vsid::MessageHandler::DebugArea::Sid
-		);
-		if (currSid.prio < prio && (setSid.pilotfiled == currSid.pilotfiled || restriction))
-		{
-			setSid = currSid;
-			prio = currSid.prio;
-		}
-		else if (currSid.prio == 99)
+		if (currSid.prio == 99)
 		{
 			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
 				"\" because prio is 99 (manual only SID)",
 				vsid::MessageHandler::DebugArea::Sid);
+
+			continue;
 		}
-		else messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
-			"\" because prio is higher",
-			vsid::MessageHandler::DebugArea::Sid);
+
+		if (currSid.prio > prio)
+		{
+			messageHandler->writeMessage("DEBUG", "[" + callsign + "] Skipping SID \"" + currSid.idName() +
+				"\" because prio is higher",
+				vsid::MessageHandler::DebugArea::Sid);
+
+			continue;
+		}
+
+		// update SID if a better prio is found for non-pilot filed SIDs
+
+		setSid = currSid;
+		prio = currSid.prio;
 	}
+
 	messageHandler->writeMessage("DEBUG", "[" + callsign + "] Setting SID \"" + setSid.idName() + "\"", vsid::MessageHandler::DebugArea::Sid);
 
 	// if the last valid SID fails due to equipment return a special "EQUIP" sid to also handle yet unprocessed fplns
