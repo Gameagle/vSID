@@ -161,6 +161,7 @@ namespace vsid
 		std::set<std::string> rnavList;
 		bool preferTopsky;
 		int notifyUpdate;
+		int hovWarningAlt;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;

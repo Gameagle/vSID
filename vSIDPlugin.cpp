@@ -9,6 +9,7 @@
 
 #include <set>
 #include <algorithm>
+#include <format>
 
 #include "display.h"
 #include "airport.h"
@@ -69,6 +70,9 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	RegisterTagItemFunction("Select runway intersection as able", TAG_FUNC_VSID_INTS_ABLE);
 
 	RegisterTagItemFunction("Auto-Assign Squawk (TopSky)", TAG_FUNC_VSID_TSSQUAWK);
+
+	RegisterTagItemType("Handover Flag", TAG_ITEM_VSID_HOVF);
+	RegisterTagItemFunction("Set handover flag", TAG_FUNC_VSID_HOV);
 
 	this->loadEse(); // load and parse ese file
 
@@ -2620,6 +2624,13 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			if (this->topskyLoaded) this->addOrSetSquawk(callsign, true);
 			else messageHandler->writeMessage("ERROR", "TopSky auto-assign squawk called, but TopSky was not detected.");
 		}
+
+		if (FunctionId == TAG_FUNC_VSID_HOV)
+		{
+			this->processed[callsign].hov = !this->processed[callsign].hov;
+			this->addSyncQueue(callsign, std::format(".VSID_HOV_{}", this->processed[callsign].hov ? "TRUE" : "FALSE"),
+				fpln.GetControllerAssignedData().GetScratchPadString());
+		}
 	}
 
 	if (FunctionId == TAG_FUNC_VSID_CTL)
@@ -3303,6 +3314,28 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				strcpy_s(sItemString, 16, this->processed[callsign].intsec.first.c_str());
 			}
 		}
+
+		if (ItemCode == TAG_ITEM_VSID_HOVF)
+		{
+			if (this->activeAirports[adep].autoHandoff) return;
+			if (RadarTarget.GetGS() < 50) return;
+
+			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
+
+			if (this->processed.contains(callsign) && !this->processed[callsign].hov)
+			{
+				if (RadarTarget.GetPosition().GetPressureAltitude() >= FlightPlan.GetClearedAltitude() - this->getConfigParser().hovWarningAlt)
+				{
+					*pRGB = this->configParser.getColor("hovWarning");
+					strcpy_s(sItemString, 16, "HOV!");
+				}
+				else
+				{
+					*pRGB = this->configParser.getColor("hovNeutral");
+					strcpy_s(sItemString, 16, "HOV");
+				}
+			}
+		}
 	}
 
 	if (ItemCode == TAG_ITEM_VSID_CTLF)
@@ -3461,20 +3494,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 {
 	std::vector<std::string> command = vsid::utils::split(sCommandLine, ' ');
-
-	/*if (command[0] == ".vsidcrash") // #dev - only for testing crash handling
-	{
-		auto triggercrash = []()
-			{
-				volatile int* badPointer = nullptr;
-
-				*badPointer = 42;
-			};
-
-		triggercrash();
-
-		return true;
-	}*/
 
 	if (command[0] == ".vsid")
 	{
@@ -4679,6 +4698,20 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
+
+			// handover flag
+
+			if (scratchpad.find(".VSID_HOV_") != std::string::npos)
+			{
+				std::string toFind = ".VSID_HOV_";
+				size_t pos = scratchpad.find(toFind);
+
+				bool hov = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
+
+				this->processed[callsign].hov = hov;
+
+				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+			}
 		}
 	}
 
@@ -5108,7 +5141,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 	this->SelectActiveSectorfile();
 	this->activeAirports.clear();
-      
+	  
 	// get active airports
 	for (EuroScopePlugIn::CSectorElement sfe =	this->SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT);
 												sfe.IsValid();
