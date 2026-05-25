@@ -1,4 +1,7 @@
 [Changelog v0.15.0]
+[!WARNING]
+SID evaluation slightly changed due to the bug fixing of restrictions overruling pilot filed SIDs. If you encounter odd or unexpected evaluation results please feel free to report back.
+
 :new: **New Features**
 *	GEN - add crash handling
 	* a .txt file is generated with a small stacktrace showing the line or offset, depending if the pdb file was present at the time of the crash
@@ -18,6 +21,7 @@
 *	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points
 	* due to a wrong coordinate in the .ese file the split was wrong and parameters missing - now guarded against
 *	GEN - version check could report newer remote version if minor or patch was newer but major was older
+*	FPLN - fulfilled restrictions could overwrite "pilot filed only" SIDs, even if it was not filed by the pilot
 
 [Changelog v0.14.4]
 :gear: **Changed Features / Behaviour**
@@ -37,7 +41,7 @@
 > This Hotfix is only needed if SIDs without any route (no waypoint after the last ':') is present
 
 :lady_beetle: **Fixes**
-*	CONF - added check to not try to retrieve a route from the .ese-file if no route is presend
+*	CONF - added check to not try to retrieve a route from the .ese-file if no route is present
 
 [Changelog v0.14.3]
 
