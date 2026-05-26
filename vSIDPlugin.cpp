@@ -1831,8 +1831,8 @@ bool vsid::VSIDPlugin::atcFreqMatch(const EuroScopePlugIn::CController& other, c
 {
 	if (other.GetPrimaryFrequency() != local.freq)
 	{
-		messageHandler->writeMessage("DEBUG", "[FREQ Match] other: " + std::to_string(other.GetPrimaryFrequency()) +
-			" is NOT local: " + std::to_string(local.freq), vsid::MessageHandler::DebugArea::Dev);
+		/*messageHandler->writeMessage("DEBUG", "[FREQ Match] other (" + std::string(other.GetCallsign()) + "): " + std::to_string(other.GetPrimaryFrequency()) +
+			" is NOT local (section ATC): " + std::to_string(local.freq), vsid::MessageHandler::DebugArea::Dev);*/
 		return false;
 	}
 
@@ -1877,14 +1877,16 @@ bool vsid::VSIDPlugin::atcFreqMatch(const EuroScopePlugIn::CController& other, c
 			") IS local: " + myCallsign + "(" + std::to_string(local.freq) + ")", vsid::MessageHandler::DebugArea::Dev);
 		return true;
 	}
-	else if (other.GetFacility() != local.facility) // #dev - debugging purpose
+	
+	if (other.GetFacility() != local.facility) // #dev - debugging purpose
 	{
 		messageHandler->writeMessage("DEBUG", "[FREQ Match] other fac: " + atcCallsign + "(" + std::to_string(other.GetFacility()) +
 			") is NOT local fac: " + myCallsign + "(" + std::to_string(local.facility) + ")", vsid::MessageHandler::DebugArea::Dev);
 		return false;
 
 	}
-	else return false;
+	
+	return false; // default fallback state
 }
 /*
 * END OWN FUNCTIONS
@@ -4930,6 +4932,10 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	const double atcFreq = Controller.GetPrimaryFrequency();
 	std::string atcIcao;
 
+	if (atcCallsign == ControllerMyself().GetCallsign()) return;
+	if (this->actAtc.contains(atcSI) || this->ignoreAtc.contains(atcSI)) return;
+	if (this->atcSiFailCounter.contains(atcCallsign) && this->atcSiFailCounter[atcCallsign] >= 10) return;
+
 	try
 	{
 		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
@@ -4944,9 +4950,6 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			messageHandler->addGenError(ERROR_ATC_ICAOSPLIT + "_" + atcCallsign);
 		}
 	}
-
-	if (atcCallsign == ControllerMyself().GetCallsign()) return;
-	if (this->actAtc.contains(atcSI) || this->ignoreAtc.contains(atcSI)) return;
 
 	// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
 
@@ -4983,11 +4986,39 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 		return;
 	}
 
+	if (atcCallsign.ends_with("FMP"))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping FMP station.",
+			vsid::MessageHandler::DebugArea::Atc
+		);
+		return;
+	}
+
 	if (atcFreq < 0.1 || atcFreq > 199.0)
 	{
 		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the freq. is invalid (" + std::to_string(atcFreq) + ").",
 			vsid::MessageHandler::DebugArea::Atc
 		);
+		return;
+	}
+
+	if (atcFac < 2)
+	{
+		if (!std::all_of(atcSI.begin(), atcSI.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); }))
+		{
+			messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Adding SI to ignore list because the facility is below 2 (usually FIS)",
+				vsid::MessageHandler::DebugArea::Atc
+			);
+
+			this->ignoreAtc.insert(atcSI);
+
+			return;
+		}
+		
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the facility is below 2 (usually FIS) and SI cannot be stored (SI: " + atcSI + ").",
+			vsid::MessageHandler::DebugArea::Atc
+		);
+
 		return;
 	}
 	
@@ -5009,6 +5040,10 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the SI contains a number (SI: " + atcSI +
 			"). Failed SI count: " + std::to_string(this->atcSiFailCounter[atcCallsign]), vsid::MessageHandler::DebugArea::Atc);
 
+		if (this->atcSiFailCounter[atcCallsign] == 10)
+			messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Failed to get valid SI after 10 attempts. No more evaluation.",
+				vsid::MessageHandler::DebugArea::Atc);
+
 		return;
 	}
 	else if (this->atcSiFailCounter.contains(atcCallsign))
@@ -5017,14 +5052,6 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			vsid::MessageHandler::DebugArea::Atc);
 
 		this->atcSiFailCounter.erase(atcCallsign);
-	}
-	
-	if (atcFac < 2)
-	{
-		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] Skipping ATC because the facility is below 2 (usually FIS).",
-									vsid::MessageHandler::DebugArea::Atc
-		);
-		return;
 	}
 
 	EuroScopePlugIn::CController atcMyself = ControllerMyself();
@@ -5110,6 +5137,14 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 									vsid::MessageHandler::DebugArea::Atc
 		);
 		this->ignoreAtc.erase(atcSI);
+	}
+
+	if (this->atcSiFailCounter.contains(atcCallsign))
+	{
+		messageHandler->writeMessage("DEBUG", "[" + atcCallsign + "] disconnected. Removing from SI fail counter list.",
+			vsid::MessageHandler::DebugArea::Atc
+		);
+		this->atcSiFailCounter.erase(atcCallsign);
 	}
 }
 

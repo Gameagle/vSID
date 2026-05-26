@@ -95,6 +95,19 @@ void vsid::MessageHandler::openConsole()
 	try
 	{
 		AllocConsole();
+
+		// disable close button to prevent ES closing
+		HWND hwnd = GetConsoleWindow();
+		if (hwnd != NULL)
+		{
+			HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+			if (hMenu != NULL)
+			{
+				DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+			}
+			SetWindowTextA(hwnd, "Console Logger");
+		}
+
 		freopen_s(&this->consoleFile, "CONOUT$", "w", stdout);
 	}
 	catch (std::exception& e)
