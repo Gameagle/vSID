@@ -16,6 +16,12 @@ SID evaluation slightly changed due to the bug fixing of restrictions overruling
 *	CONF - add color values for the handover flag
 	* "hovNeutral" (default: orange) - caution / information color
 	* "hovWarning" (default: red) - warning color
+*	ATC - FMP stations are skipped in controller detection (#410)
+*	ATC - if a controller disconnects that was on the list for failed SI determination the callsign will be removed to enable new evaluation upon new connection
+
+:gear: **Changed Features / Behaviour**
+*	ATC - after too many tries (10) evaluation for SI is stopped as it probably cannot be matched anymore (not reported by ES / the network and not present in the .ese file)
+*	GEN - debugging console cannot be closed via the 'X' anymore (as this would also close ES)
 
 :lady_beetle: **Fixes**
 *	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points
