@@ -2,6 +2,9 @@
 #include "timeHandler.h"
 #include "messageHandler.h"
 
+#include "logger.h"
+#include <format>
+
 bool vsid::time::isActive(const std::string& timezone, const int start, const int end)
 {
 	try
@@ -26,7 +29,7 @@ bool vsid::time::isActive(const std::string& timezone, const int start, const in
 	}
 	catch (std::runtime_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Timezone failed - " + std::string(e.what()) + ": " + timezone);
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Timezone failed - {}: {}", e.what(), timezone));
 	}
 	return false;
 }

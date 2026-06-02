@@ -5,8 +5,10 @@
 #include "constants.h"
 #include "messageHandler.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <utility>
+#include <format>
 
 vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const std::string name) : EuroScopePlugIn::CRadarScreen()
 { 
@@ -14,7 +16,9 @@ vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const s
 	this->plugin = plugin;
 	this->name = name;
 }
-vsid::Display::~Display() { messageHandler->writeMessage("DEBUG", "Removed display with id: " + std::to_string(this->id), vsid::MessageHandler::DebugArea::Menu); }
+vsid::Display::~Display() { 
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("Removed display with id: {}", this->id), vsid::DebugLevel::Menu);
+}
 
 void vsid::Display::OnAsrContentLoaded(bool loaded)
 {
@@ -28,11 +32,11 @@ void vsid::Display::OnAsrContentToBeClosed()
 
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
 	{
-		messageHandler->writeMessage("DEBUG", "Removing display with id: " + std::to_string(this->id) + " from saved displays.", vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Removing display with id [{}] from saved displays.", this->id), vsid::DebugLevel::Menu);
 		sharedPlugin->deleteScreen(this->id);
 	}
-	else messageHandler->writeMessage("ERROR", "Could not remove display id: " + std::to_string(this->id) +
-		" from vSID as vSID is already destroyed. Code: " + ERROR_DSP_REMOVE);
+	else vsid::Logger::log(vsid::LogLevel::Error, std::format("Could not remove display id [{}] from vSID as vSID is already destroyed. Code: {}",
+		this->id, ERROR_DSP_REMOVE));
 	
 	//delete this;
 }
@@ -78,8 +82,8 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		{
 			if (!messageHandler->genErrorsContains(ERROR_CONF_DISPLAY))
 			{
-				messageHandler->writeMessage("ERROR", "[Range] Missing config section during display refresh: " +
-					std::string(e.what()) + ". Code: " + ERROR_CONF_DISPLAY);
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("[Range] Missing config section during display refresh: {}. Code: {}",
+					std::string(e.what()), ERROR_CONF_DISPLAY));
 				messageHandler->addGenError(ERROR_CONF_DISPLAY);
 			}
 		}
@@ -359,8 +363,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									{
 										if (!messageHandler->genErrorsContains(ERROR_DSP_COUNTICAO + mMenu.getTitle()))
 										{
-											messageHandler->writeMessage("ERROR", "Failed to get ICAO from menu title " +
-												mMenu.getTitle() + " while counting startups. Code: " + ERROR_DSP_COUNTICAO);
+											vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to get ICAO from menu title [{}] while counting startups. Code: {}",
+												mMenu.getTitle(), ERROR_DSP_COUNTICAO));
+
 											messageHandler->addGenError(ERROR_DSP_COUNTICAO + mMenu.getTitle());
 										}
 									}
@@ -396,8 +401,9 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								{
 									if (!messageHandler->genErrorsContains(ERROR_DSP_COUNTRMICAO + mMenu.getTitle()))
 									{
-										messageHandler->writeMessage("ERROR", "Failed to retrieve icao from menu " + mMenu.getTitle() +
-											" during departure count check. Code: " + ERROR_DSP_COUNTRMICAO);
+										vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to retrieve icao from menu [{}] during departure count check. Code: {}",
+											mMenu.getTitle(), ERROR_DSP_COUNTRMICAO));
+
 										messageHandler->addGenError(ERROR_DSP_COUNTRMICAO + mMenu.getTitle());
 									}
 								}
@@ -511,10 +517,10 @@ void vsid::Display::OnClickScreenObject(int ObjectType, const char* sObjectId, P
 				}
 				else
 				{
-					messageHandler->writeMessage("DEBUG", "menus doesn't contain " + std::string(sObjectId) + " elems are:", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Menus doesn't contain [{}]. Elements are:", std::string(sObjectId)));
 					for (auto &[title, _] : this->menues)
 					{
-						messageHandler->writeMessage("DEBUG", "menu title: " + title, vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("menu title [{}]", title), vsid::DebugLevel::Menu);
 					}
 				}
 				
@@ -543,8 +549,8 @@ void vsid::Display::OnClickScreenObject(int ObjectType, const char* sObjectId, P
 		}
 		else
 		{
-			messageHandler->writeMessage("ERROR", "Couldn't close menu, because menu title couldn't be extracted from button " +
-				std::string(sObjectId) + ". Code: " + ERROR_DSP_BTNEXTTITLE);
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Couldn't close menu, because menu title couldn't be extracted from button [{}]. Code: {}",
+				std::string(sObjectId), ERROR_DSP_BTNEXTTITLE));
 		}	
 	}
 }
@@ -567,7 +573,7 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 			{
 				if (!sharedPlugin->getActiveApts().contains(params[2]))
 				{
-					messageHandler->writeMessage("INFO", "[" + params[2] + "] is not an active airport. Cannot open menu.");
+					vsid::Logger::log(vsid::LogLevel::Info, std::format("[{}] is not an active airport. Cannot open menu.", params[2]));
 					return true;
 				}
 
@@ -581,7 +587,7 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 	if (std::string(sCommandLine) == ".vsid display config")
 	{
-		messageHandler->writeMessage("INFO", "Zoom-Level: " + std::to_string(this->getZoomLevel()));
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("Zoom-Level [{}]", this->getZoomLevel()));
 		return true;
 	}
 	return false;
@@ -589,13 +595,13 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 void vsid::Display::OnAirportRunwayActivityChanged()
 {
-	messageHandler->writeMessage("DEBUG", "[MENU] Activity Changed()", vsid::MessageHandler::DebugArea::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, "[MENU] Runway Activity Changed()", vsid::DebugLevel::Menu);
 
 	if (this->menues.empty()) return;
 
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
 	{
-		messageHandler->writeMessage("DEBUG", "[MENU] Shared Ptr valid.", vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, "[MENU] Shared Ptr valid.", vsid::DebugLevel::Menu, true);
 
 		// re-create mainmenu
 
@@ -605,7 +611,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 
 		for (const auto&[title,menu] : this->menues)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + title + "] is checked on runway change", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] is checked on runway change", title), vsid::DebugLevel::Menu);
 			if (title == std::string("mainmenu"))
 			{
 				CPoint topLeft = this->menues["mainmenu"].topLeft();
@@ -615,18 +621,10 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 			}
 			else if (title.find("startupmenu_") != std::string::npos)
 			{
-				messageHandler->writeMessage("DEBUG", "[" + title + "] storing startup menu", vsid::MessageHandler::DebugArea::Menu);
+				vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] storing startup menu", title), vsid::DebugLevel::Menu);
 				this->reopenStartup.insert({title, { menu.topLeft(), menu.getParent(), menu.getRender() }});
 			}
 		}
-
-		/*if (this->menues.contains("mainmenu"))
-		{
-			CPoint topLeft = this->menues["mainmenu"].topLeft();
-			top = topLeft.y;
-			left = topLeft.x;
-			render = this->menues["mainmenu"].getRender();
-		}*/
 
 		this->removeMenu("mainmenu");
 
@@ -638,7 +636,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 			{
 				try
 				{
-					messageHandler->writeMessage("DEBUG", "[" + title + "] reopening startup menu", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] reopening startup menu", title), vsid::DebugLevel::Menu);
 					std::string apt = vsid::utils::split(title, '_').at(1);
 
 					if (!sharedPlugin->getActiveApts().contains(apt)) continue;
@@ -647,8 +645,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to get apt ICAO while re-opening startup menu \"" + title +
-						"\". Code: " + ERROR_DSP_REOPENICAO);
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to get apt ICAO while re-opening startup menu [{}]. Code: {}", title, ERROR_DSP_REOPENICAO));
 				}
 				
 			}
@@ -656,7 +653,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 			this->reopenStartup.clear();
 		}
 	}
-	else messageHandler->writeMessage("ERROR", "Couldn't update active airports for screen as plugin couldn't be accessed. Code: " + ERROR_DSP_PLUGACCESS);
+	else vsid::Logger::log(vsid::LogLevel::Error, "Couldn't update active airports for screen as plugin couldn't be accessed. Code: {}" + ERROR_DSP_PLUGACCESS, vsid::DebugLevel::Menu);
 }
 
 void vsid::Display::openMainMenu(int top, int left, bool render)
@@ -690,7 +687,7 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 
 	for (auto& [title, apt] : this->plugin.lock()->getActiveApts())
 	{
-		messageHandler->writeMessage("DEBUG", "Button add for apt: " + title);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Add airport button for [{}]", title), vsid::DebugLevel::Menu, true);
 		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
 	}
 
@@ -738,8 +735,7 @@ void vsid::Display::openStartupMenu(const std::string apt, const std::string par
 
 		this->menues.insert({ title, std::move(newMenu) });
 	}
-	else messageHandler->writeMessage("ERROR", "Tried to create startup menu for [" + apt +
-		"] but plugin couldn't be accessed. Code: " + ERROR_DSP_MENUSUCREATE);
+	vsid::Logger::log(vsid::LogLevel::Error, std::format("Tried to create startup menu for [{}] but plugin couldn't be accessed. Code: {}", apt, ERROR_DSP_MENUSUCREATE));
 }
 
 void vsid::Display::removeMenu(const std::string &title)
@@ -752,15 +748,13 @@ void vsid::Display::removeMenu(const std::string &title)
 		}
 		this->menues.erase(title);
 	}
-	else messageHandler->writeMessage("ERROR", "Called to remove menu [" + title +
-		"] but it wasn't found in the menues list. Code: " + ERROR_DSP_RMMENU);
+	vsid::Logger::log(vsid::LogLevel::Error, std::format("Called to remove menu [{}] but it wasn't found in the menues list. Code: {}", title, ERROR_DSP_RMMENU));
 }
 
 void vsid::Display::closeMenu(const std::string &title)
 {
 	if (this->menues.contains(title)) this->menues[title].toggleRender();
-	else messageHandler->writeMessage("ERROR", "Couldn't close menu " + title +
-		" because it is not in the menu list. Code: " + ERROR_DSP_RMMENU);
+	vsid::Logger::log(vsid::LogLevel::Error, std::format("Couldn't close menu [{}] because it is not in the menu list. Code: {}", title, ERROR_DSP_RMMENU));
 }
 
 EuroScopePlugIn::CPosition vsid::Display::calculateIndicatorMeterOffset(double lat, double lon, double offset, double deg)

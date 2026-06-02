@@ -3,9 +3,11 @@
 #include "area.h"
 #include "messageHandler.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <algorithm>
 #include <stdexcept>
+#include <format>
 
 vsid::Area::Area(std::vector<std::pair<std::string, std::string>> &coords, bool isActive, bool arrAsDep)
 {
@@ -13,8 +15,8 @@ vsid::Area::Area(std::vector<std::pair<std::string, std::string>> &coords, bool 
 	{
 		if(coord.first.empty() || coord.second.empty())
 		{
-			messageHandler->writeMessage("WARNING", "Empty coordinate string found (first: \"" + coord.first +
-				"\" / second: \"" + coord.second + "\"!  Skipping coordinate.");
+			vsid::Logger::log(vsid::LogLevel::Warning, std::format("Empty coordinate string found (first: [{}] / second: [{}]!  Skipping coordinate.",
+				coord.first, coord.second));
 			continue;
 		}
 		this->points.push_back(toPoint(coord));
@@ -43,16 +45,13 @@ void vsid::Area::showline()
 {
 	for (auto& line : this->lines)
 	{
-		messageHandler->writeMessage("DEBUG", "line: " + std::to_string(line.first.lon) + ":" + std::to_string(line.first.lat) + " - " +
-			std::to_string(line.second.lon) + "." + std::to_string(line.second.lat));
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("area line: {}:{} - {}:{}",
+			line.first.lon, line.first.lat, line.second.lon, line.second.lat), vsid::DebugLevel::Area);
 	}
 }
 
 vsid::Area::Point vsid::Area::toPoint(std::pair<std::string, std::string> &pos)
 {
-	/*double lat = toDeg(pos.first);
-	double lon = toDeg(pos.second);*/
-
 	double lat = vsid::utils::toDeg(pos.first);
 	double lon = vsid::utils::toDeg(pos.second);
 

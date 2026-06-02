@@ -35,7 +35,7 @@ vsid::Menu::Menu(int type, std::string title, std::string parent, int top, int l
 
 	this->addButton(MENU_BUTTON_CLOSE, this->title + "_close", this->topBar, "", 5, 5, 0, { 5, 5, 5, 5 });
 
-	messageHandler->writeMessage("DEBUG", "Creating menu " + title, vsid::MessageHandler::DebugArea::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("Creating menu [{}]", title), vsid::DebugLevel::Menu, true);
 }
 
 void vsid::Menu::addText(int type, std::string title, const CRect &base, std::string txt, int minWidth, int height, int weight, Spacing margin,
@@ -43,12 +43,12 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 {
 	if (this->texts.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add text \"" + title + "\" to menu \"" + this->title +
-			"\". Report as an error. Code: " + ERROR_MEN_TXTADD);
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add text [{}] to menu [{}]. Report as an error. Code: {}",
+			title, this->title, ERROR_MEN_TXTADD), vsid::DebugLevel::Menu);
 		return;
 	}
 
-	messageHandler->writeMessage("DEBUG", "Creating new text \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("Creating new text [{}]", title), vsid::DebugLevel::Menu, true);
 
 	vsid::Text newText = { type, title, base, txt, minWidth, height, weight, margin, relElem, render, textColor, bg };
 
@@ -71,15 +71,13 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 			newText.tablePos = { maxRow + 1, 0 };
 		}
 
-		messageHandler->writeMessage("DEBUG", "Text [" + title + "] maxRow: " + std::to_string(maxRow) +
-			" - maxCol: " + std::to_string(maxCol), vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] maxRow: {} - maxCol: {}", title, maxRow, maxCol), vsid::DebugLevel::Menu, true);
 
 		try
 		{
 			auto [row, col] = newText.tablePos;
 
-			messageHandler->writeMessage("DEBUG", "Text [" + title + "] row: " + std::to_string(row) +
-				" - col: " + std::to_string(col), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] row: {} - col: {}", title, row, col), vsid::DebugLevel::Menu, true);
 
 			if (row == 0)
 			{
@@ -92,7 +90,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 
 					if (this->texts.contains(onLeft))
 					{
-						messageHandler->writeMessage("DEBUG", "Text [" + title + "] onLeft: " + onLeft + " contained in table", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] in row 0 left neighbor [{}] contained in table",
+							title, onLeft), vsid::DebugLevel::Menu, true);
 						newText.area.left = this->texts[onLeft].area.left + newText.margin.left;
 					}
 				}
@@ -105,8 +104,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 				{
 					newText.area.top = this->texts[onTop].area.bottom + newText.margin.top;
 
-					messageHandler->writeMessage("DEBUG", "Text [" + title + "] .top: " + std::to_string(newText.area.top) +
-						" based on [" + onTop + "] .bottom: " + std::to_string(this->texts[onTop].area.bottom), vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] .top [{}] based on [{}] .bottom: [{}]",
+						title, newText.area.top, onTop, this->texts[onTop].area.bottom), vsid::DebugLevel::Menu, true);
 				}
 
 				if (col == 0) newText.area.left = base.left + newText.margin.left;
@@ -116,7 +115,8 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 
 					if (this->texts.contains(onLeft))
 					{
-						messageHandler->writeMessage("DEBUG", "Text [" + title + "] onLeft: " + onLeft + " contained in table", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] left neighbor [{}] contained in table",
+							title, onLeft), vsid::DebugLevel::Menu, true);
 						newText.area.left = this->texts[onLeft].area.left + newText.margin.left;
 					}
 				}
@@ -124,8 +124,9 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newText.title + "\". Code: " + ERROR_MENU_TXTINVTABPOS);
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Tried to access an invalid table position in menu [{}] "
+				"working on new text [{}]. Code: {}",
+				this->title, newText.title, ERROR_MENU_TXTINVTABPOS));
 			return;
 		}
 
@@ -143,15 +144,17 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 	// insert into total text overview
 
 	if (newText.title != "INVALID") this->texts.insert({ title, newText });
-	else messageHandler->writeMessage("ERROR", "Trying to add text " + title + " of invalid type to menu " +
-		this->title + ". Code: " + ERROR_MEN_TXTINVTYPE);
+
+	vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add text [{}] of invalid type to menu [{}]. Code: {}",
+		title, this->title, ERROR_MEN_TXTINVTYPE), vsid::DebugLevel::Menu);
 }
 
 void vsid::Menu::removeText(const std::string& title)
 {
 	if (this->texts.contains(title))
 	{
-		messageHandler->writeMessage("DEBUG", "Removing " + title + " from " + this->title, vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Removing text [{}] from menu [{}]", title, this->title), vsid::DebugLevel::Menu, true);
+
 		this->texts.erase(title);
 
 		// update table
@@ -183,12 +186,12 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 {
 	if (this->buttons.contains(title))
 	{
-		messageHandler->writeMessage("ERROR", "Trying to add button \"" + title + "\" to menu \"" + this->title +
-			"\". Report as an error. Code: " + ERROR_MENU_BTNADD);
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add button [{}] to menu [{}]. Report as an error. Code: {}",
+			title, this->title, ERROR_MENU_BTNADD));
 		return;
 	}
 
-	messageHandler->writeMessage("DEBUG", "Creating new button \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("Creating new button [{}]", title), vsid::DebugLevel::Menu, true);
 
 	vsid::Button newButton = { type, title, base, label, minWidth, height, weight, margin, relElem, render, textColor, bg, border };
 
@@ -212,15 +215,15 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 			newButton.tablePos = { maxRow + 1, 0 };
 		}
 
-		messageHandler->writeMessage("DEBUG", "Button [" + title + "] maxRow: " + std::to_string(maxRow) +
-			" - maxCol: " + std::to_string(maxCol), vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] maxRow: {} - maxCol: {}",
+			title, std::to_string(maxRow), std::to_string(maxCol)), vsid::DebugLevel::Menu, true );
 
 		try
 		{
 			auto [row, col] = newButton.tablePos;
 
-			messageHandler->writeMessage("DEBUG", "Button [" + title + "] row: " + std::to_string(row) +
-				" - col: " + std::to_string(col), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] row: {} - col: {}",
+				title, std::to_string(row), std::to_string(col)), vsid::DebugLevel::Menu, true);
 
 			if (row == 0)
 			{
@@ -233,7 +236,9 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 
 					if (this->texts.contains(onLeft))
 					{
-						messageHandler->writeMessage("DEBUG", "Button [" + title + "] onLeft: " + onLeft + " contained in table", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] in row 0 left neighbor [{}] contained in table",
+							title, onLeft), vsid::DebugLevel::Menu, true);
+
 						newButton.area.left = this->texts[onLeft].area.left + newButton.margin.left;
 					}
 				}
@@ -246,8 +251,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 				{
 					newButton.area.top = this->texts[onTop].area.bottom + newButton.margin.top;
 
-					messageHandler->writeMessage("DEBUG", "Button [" + title + "] .top: " + std::to_string(newButton.area.top) +
-						" based on [" + onTop + "] .bottom: " + std::to_string(this->texts[onTop].area.bottom), vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] .top [{}] based on [{}] .bottom [{}]",
+						title, std::to_string(newButton.area.top), onTop, std::to_string(this->texts[onTop].area.bottom)), vsid::DebugLevel::Menu, true);
 				}
 
 				if (col == 0) newButton.area.left = base.left + newButton.margin.left;
@@ -257,7 +262,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 
 					if (this->texts.contains(onLeft))
 					{
-						messageHandler->writeMessage("DEBUG", "Button [" + title + "] onLeft: " + onLeft + " contained in table", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] left neighbor [{}] contained in table", title, onLeft), vsid::DebugLevel::Menu, true);
+
 						newButton.area.left = this->texts[onLeft].area.left + newButton.margin.left;
 					}
 				}
@@ -265,8 +271,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "Tried to access an invalid table position in menu \"" +
-				this->title + "\" working on new text: \"" + newButton.title + "\". Code: " + ERROR_MENU_BTNINVTABPOS);
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Tried to access an invalid table position in menu [{}] working on new text [{}]. Code: {}",
+				this->title, newButton.title, ERROR_MENU_BTNINVTABPOS));
 			return;
 		}
 
@@ -284,8 +290,8 @@ void vsid::Menu::addButton(int type, std::string title, const CRect& base, std::
 	// insert into total text overview
 
 	if (newButton.title != "INVALID") this->buttons.insert({ title, newButton });
-	else messageHandler->writeMessage("ERROR", "Trying to add button " + title + " of invalid type to menu " +
-		this->title + ". Code: " + ERROR_MEN_BTNINVTYPE);
+	else vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add button [{}] of invalid type to menu [{}]. Code: {}",
+		title, this->title, ERROR_MEN_BTNINVTYPE));
 }
 
 void vsid::Menu::resize(int top, int right, int bottom, int left)
@@ -298,7 +304,7 @@ void vsid::Menu::resize(int top, int right, int bottom, int left)
 
 void vsid::Menu::update()
 {
-	messageHandler->writeMessage("DEBUG", "[" + this->title + "] Updating menu" , vsid::MessageHandler::DebugArea::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Updating menu", this->title), vsid::DebugLevel::Menu);
 
 	HDC hDC = GetDC(NULL);
 	CDC dc;
@@ -323,7 +329,8 @@ void vsid::Menu::update()
 	{
 		for (auto [col, elem] : columnMap)
 		{
-			messageHandler->writeMessage("DEBUG", "Text table [" + std::to_string(row) + "][" + std::to_string(col) + "]", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text table [{}][{}]", std::to_string(row), std::to_string(col)), vsid::DebugLevel::Menu, true);
+
 			if (this->texts.contains(elem))
 			{
 				vsid::Text& txt = this->texts[elem];
@@ -347,7 +354,8 @@ void vsid::Menu::update()
 				{
 					txtSize = dc.GetTextExtent("99");
 
-					messageHandler->writeMessage("DEBUG", "depcount update - size: " + std::to_string(txtSize.cx) + "/" + std::to_string(txtSize.cy), vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("depcount update - txt size x[{}] y[{}]",
+						std::to_string(txtSize.cx), std::to_string(txtSize.cy)), vsid::DebugLevel::Menu, true);
 				}
 				else txtSize = dc.GetTextExtent(txt.txt.c_str());
 
@@ -358,7 +366,7 @@ void vsid::Menu::update()
 
 				// auto [row, col] = txt.tablePos;
 
-				messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Updating text.", vsid::MessageHandler::DebugArea::Menu);
+				vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Updating text.", txt.title), vsid::DebugLevel::Menu);
 
 				// adjust text position based on neighbours
 
@@ -374,12 +382,11 @@ void vsid::Menu::update()
 							txt.area.top = txt.base.top + txt.margin.top;
 							txt.area.bottom = txt.area.top + height;
 
-							messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .top [" +
-								std::to_string(txt.area.top) + "] based on main area", vsid::MessageHandler::DebugArea::Menu);
+							vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}] based on main area",
+								txt.title, std::to_string(txt.area.top)), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .top [" + std::to_string(txt.area.top) + "] matches main area .top [" +
-							std::to_string(txt.base.top) + "] + margin .top [" + std::to_string(txt.margin.top) + "] -> " +
-							std::to_string(txt.area.top) + " == " + std::to_string(txt.base.top + txt.margin.top), vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches main area .top [{}] + margin .top [{}] -> {} == {}",
+							txt.title, txt.area.top, txt.base.top, txt.margin.top, txt.area.top, txt.base.top + txt.margin.top), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
@@ -393,13 +400,12 @@ void vsid::Menu::update()
 								txt.area.top = this->texts[toTop].area.bottom + txt.margin.top;
 								txt.area.bottom = txt.area.top + height;
 
-								messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .top [" +
-									std::to_string(txt.area.top) + "] based on above \"" + toTop + "\" .bottom [" +
-									std::to_string(this->texts[toTop].area.bottom) + "] + margin.top", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}] based on above [{}] .bottom [{}] + margin.top",
+									txt.title, txt.area.top, toTop, this->texts[toTop].area.bottom), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .top [" + std::to_string(txt.area.top) + "] matches [" + toTop + "] .bottom [" +
-								std::to_string(this->texts[toTop].area.bottom) + "] + margin .top [" + std::to_string(txt.margin.top) + "] -> " +
-								std::to_string(txt.area.top) + " == " + std::to_string(this->texts[toTop].area.bottom + txt.margin.top), vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches [{}] .bottom [{}] + margin .top [{}] -> {} == {}",
+								txt.title, txt.area.top, toTop, this->texts[toTop].area.bottom, txt.margin.top,
+								txt.area.top, this->texts[toTop].area.bottom + txt.margin.top), vsid::DebugLevel::Menu, true);
 						}
 						else if (this->buttons.contains(toTop))
 						{
@@ -409,15 +415,14 @@ void vsid::Menu::update()
 								txt.area.top = this->buttons[toTop].area.bottom + txt.margin.top;
 								txt.area.bottom = txt.area.top + height;
 
-								messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .top [" +
-									std::to_string(txt.area.top) + "] based on above \"" + toTop + "\" .bottom [" +
-									std::to_string(this->buttons[toTop].area.bottom) + "] + margin.top", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}] based on above [{}] .bottom [{}] + margin.top",
+									txt.title, txt.area.top, toTop, this->buttons[toTop].area.bottom), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .top [" + std::to_string(txt.area.top) + "] matches [" + toTop + "] .bottom [" +
-								std::to_string(this->buttons[toTop].area.bottom) + "] + margin .top [" + std::to_string(txt.margin.top) + "] -> " +
-								std::to_string(txt.area.top) + " == " + std::to_string(this->buttons[toTop].area.bottom + txt.margin.top), vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches [{}] .bottom [{}] + margin .top [{}] -> {} == {}",
+								txt.title, txt.area.top, toTop, this->buttons[toTop].area.bottom, txt.margin.top,
+								txt.area.top, this->buttons[toTop].area.bottom + txt.margin.top), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] toTop text/button [" + toTop + "] was not found.", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] toTop text/button [{}] was not found.", txt.title, toTop), vsid::DebugLevel::Menu, true);
 					}
 
 					// adjust text position in columns
@@ -430,11 +435,11 @@ void vsid::Menu::update()
 							txt.area.left = txt.base.left + txt.margin.left;
 							txt.area.right = txt.area.left + width;
 
-							messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .left [" +
-								std::to_string(txt.area.left) + "] based on main", vsid::MessageHandler::DebugArea::Menu);
+							vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on main",
+								txt.title, txt.area.left), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .left [" + std::to_string(txt.area.left) + "] matches base .left [" +
-							std::to_string(txt.base.left) + "] + margin.left [" + std::to_string(txt.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches base .left [{}] + margin.left [{}]",
+							txt.title, txt.area.left, txt.base.left, txt.margin.left), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
@@ -448,12 +453,11 @@ void vsid::Menu::update()
 								txt.area.left = this->texts[toLeft].area.right + txt.margin.left;
 								txt.area.right = txt.area.left + width;
 
-								messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .left [" +
-									std::to_string(txt.area.left) + "] based on left \"" + toLeft + "\" .right [" +
-									std::to_string(this->texts[toLeft].area.right) + " + margin.left", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on left [{}] .right [{}] + margin.left [{}]",
+									txt.title, txt.area.left, toLeft, this->texts[toLeft].area.right, txt.margin.left), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .left [" + std::to_string(txt.area.left) + "] matches [" + toLeft + "] .left [" +
-								std::to_string(txt.base.left) + "] + margin .left [" + std::to_string(txt.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches [{}] .left [{}] + margin.left [{}]",
+								txt.title, txt.area.left, toLeft, txt.base.left, txt.margin.left), vsid::DebugLevel::Menu, true);
 						}
 						else if (this->buttons.contains(toLeft))
 						{
@@ -463,20 +467,19 @@ void vsid::Menu::update()
 								txt.area.left = this->buttons[toLeft].area.right + txt.margin.left;
 								txt.area.right = txt.area.left + width;
 
-								messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjust to new .left [" +
-									std::to_string(txt.area.left) + "] based on left \"" + toLeft + "\" .right [" +
-									std::to_string(this->buttons[toLeft].area.right) + " + margin.left", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on left [{}] .right [{}] + margin.left [{}]",
+									txt.title, txt.area.left, toLeft, this->buttons[toLeft].area.right, txt.margin.left), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + txt.title + "] .left [" + std::to_string(txt.area.left) + "] matches [" + toLeft + "] .left [" +
-								std::to_string(txt.base.left) + "] + margin .left [" + std::to_string(txt.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches [{}] .left [{}] + margin.left [{}]",
+								txt.title, txt.area.left, toLeft, txt.base.left, txt.margin.left), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "toLeft text/button [" + toLeft + "] was not found", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("toLeft text/button [{}] was not found", toLeft), vsid::DebugLevel::Menu, true);
 					}
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating text [" +
-						txt.title + "]. Code: " + ERROR_MENU_TXTUPDATE);
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to update [{}] when updating text [{}]. Code: {}",
+						this->title, txt.title, ERROR_MENU_TXTUPDATE));
 				}
 
 				// adjust base area right side based on margin
@@ -487,8 +490,8 @@ void vsid::Menu::update()
 					{
 						newArea.right = txt.area.right + txt.margin.right;
 
-						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting main area to new .right [" +
-							std::to_string(newArea.right) + "]", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjusting main area to new .right [{}]",
+							txt.title, std::to_string(newArea.right)), vsid::DebugLevel::Menu, true);
 					}
 				}
 
@@ -500,12 +503,12 @@ void vsid::Menu::update()
 					{
 						newArea.bottom = txt.area.bottom + txt.margin.bottom;
 
-						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting main area to new .bottom [" +
-							std::to_string(newArea.bottom) + "]", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjusting main area to new .bottom [{}]",
+							txt.title, newArea.bottom), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
-						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom smaller", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] base area mismatch, base.bottom smaller", txt.title), vsid::DebugLevel::Menu, true);
 					}
 				}
 				else if (txt.base.bottom > txt.area.bottom + txt.margin.bottom)
@@ -514,12 +517,12 @@ void vsid::Menu::update()
 					{
 						newArea.bottom = txt.area.bottom + txt.margin.bottom;
 
-						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting main area to new .bottom [" +
-							std::to_string(newArea.bottom) + "] (reducing base area)", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjusting main area to new .bottom [{}]) (reducing base area)",
+							txt.title, newArea.bottom), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
-						messageHandler->writeMessage("DEBUG", "[" + txt.title + "] base area mismatch, base.bottom greater", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] base area mismatch, base.bottom greater", txt.title), vsid::DebugLevel::Menu, true);
 					}
 				}
 
@@ -532,8 +535,8 @@ void vsid::Menu::update()
 					newTopBar.bottom = newArea.top;
 					newTopBar.top = newTopBar.bottom - height;
 
-					messageHandler->writeMessage("DEBUG", "[topBar] Adjusting top bar area. New .bottom [" + std::to_string(newTopBar.bottom) +
-						"]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting top bar area. New .bottom[{}]",
+						newTopBar.bottom), vsid::DebugLevel::Menu, true);
 				}
 
 				if (newBottomBar.top != newArea.bottom)
@@ -543,8 +546,8 @@ void vsid::Menu::update()
 					newBottomBar.top = newArea.bottom;
 					newBottomBar.bottom = newBottomBar.top + height;
 
-					messageHandler->writeMessage("DEBUG", "[bottomBar] Adjusting bottom bar area. New .top [" + std::to_string(newTopBar.top) +
-						"]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting bottom bar area. New .top [{}]",
+						newTopBar.top), vsid::DebugLevel::Menu, true);
 				}
 
 				// move txt area based on margin and re-adjusted base area
@@ -556,8 +559,8 @@ void vsid::Menu::update()
 					txt.area.top = txt.base.top + txt.margin.top;
 					txt.area.bottom = txt.area.top + height;
 
-					messageHandler->writeMessage("DEBUG", "[" + txt.title + "] Adjusting to changed base with new .top [" +
-						std::to_string(txt.area.top) + "]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjusting to changed base with new .top [{}]",
+						txt.title, txt.area.top), vsid::DebugLevel::Menu, true);
 				}
 
 				// adjust right side of menu to the farthest
@@ -591,8 +594,7 @@ void vsid::Menu::update()
 				btn.area.right = btn.area.left + txtSize.cx;
 				btn.area.bottom = btn.area.top + txtSize.cy;
 
-				messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Updating button. (" + std::to_string(row) +
-					"/" + std::to_string(col) + ")", vsid::MessageHandler::DebugArea::Menu);
+				vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Updating button. row[{}] col[{}]", btn.title, row, col), vsid::DebugLevel::Menu, true);
 
 				// adjust text position based on neighbours
 
@@ -608,12 +610,12 @@ void vsid::Menu::update()
 							btn.area.top = btn.base.top + btn.margin.top;
 							btn.area.bottom = btn.area.top + height;
 
-							messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .top [" +
-								std::to_string(btn.area.top) + "] based on main area", vsid::MessageHandler::DebugArea::Menu);
+							vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}]",
+								btn.title, btn.area.top), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .top [" + std::to_string(btn.area.top) + "] matches main area .top [" +
-							std::to_string(btn.base.top) + "] + margin .top [" + std::to_string(btn.margin.top) + "] -> " +
-							std::to_string(btn.area.top) + " == " + std::to_string(btn.base.top + btn.margin.top), vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches main area .top [{}] + margin .top [{}] -> {} == {}",
+							btn.title, btn.area.top, btn.base.top, btn.margin.top,
+							btn.area.top, btn.base.top + btn.margin.top), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
@@ -627,13 +629,12 @@ void vsid::Menu::update()
 								btn.area.top = this->texts[toTop].area.bottom + btn.margin.top;
 								btn.area.bottom = btn.area.top + height;
 
-								messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .top [" +
-									std::to_string(btn.area.top) + "] based on above \"" + toTop + "\" .bottom [" +
-									std::to_string(this->texts[toTop].area.bottom) + "] + margin.top", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}] based on above [{}] .bottom [{}] + margin.top [{}]",
+									btn.title, btn.area.top, toTop, this->texts[toTop].area.bottom, btn.margin.top), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .top [" + std::to_string(btn.area.top) + "] matches [" + toTop + "] .bottom [" +
-								std::to_string(this->texts[toTop].area.bottom) + "] + margin .top [" + std::to_string(btn.margin.top) + "] -> " +
-								std::to_string(btn.area.top) + " == " + std::to_string(this->texts[toTop].area.bottom + btn.margin.top), vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches [{}] .bottom [{}] + margin .top [{}] -> {} == {}",
+								btn.title, btn.area.top, toTop, this->texts[toTop].area.bottom, btn.margin.top,
+								btn.area.top, this->texts[toTop].area.bottom + btn.margin.top), vsid::DebugLevel::Menu, true);
 						}
 						else if (this->buttons.contains(toTop))
 						{
@@ -643,15 +644,14 @@ void vsid::Menu::update()
 								btn.area.top = this->buttons[toTop].area.bottom + btn.margin.top;
 								btn.area.bottom = btn.area.top + height;
 
-								messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .top [" +
-									std::to_string(btn.area.top) + "] based on above \"" + toTop + "\" .bottom [" +
-									std::to_string(this->buttons[toTop].area.bottom) + "] + margin.top", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .top [{}] based on above [{}] .bottom [{}] + margin.top [{}]",
+									btn.title, btn.area.top, toTop, this->buttons[toTop].area.bottom, btn.margin.top), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .top [" + std::to_string(btn.area.top) + "] matches [" + toTop + "] .bottom [" +
-								std::to_string(this->buttons[toTop].area.bottom) + "] + margin .top [" + std::to_string(btn.margin.top) + "] -> " +
-								std::to_string(btn.area.top) + " == " + std::to_string(this->buttons[toTop].area.bottom + btn.margin.top), vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .top [{}] matches [{}] .bottom [{}] + margin .top [{}] -> {} == {}",
+								btn.title, btn.area.top, toTop, this->buttons[toTop].area.bottom, btn.margin.top,
+								btn.area.top, this->buttons[toTop].area.bottom + btn.margin.top), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "toTop text/button [" + toTop + "] was not found", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("toTop text/button [{}] was not found", toTop), vsid::DebugLevel::Menu, true);
 					}
 
 					// adjust text position in columns
@@ -664,11 +664,11 @@ void vsid::Menu::update()
 							btn.area.left = btn.base.left + btn.margin.left;
 							btn.area.right = btn.area.left + width;
 
-							messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .left [" +
-								std::to_string(btn.area.left) + "] based on main", vsid::MessageHandler::DebugArea::Menu);
+							vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on main",
+								btn.title, btn.area.left), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .left [" + std::to_string(btn.area.left) + "] matches base .left [" +
-							std::to_string(btn.base.left) + "] + margin.left [" + std::to_string(btn.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches base .left [{}] + margin.left [{}]",
+							btn.title, btn.area.left, btn.base.left, btn.margin.left), vsid::DebugLevel::Menu, true);
 					}
 					else
 					{
@@ -682,12 +682,11 @@ void vsid::Menu::update()
 								btn.area.left = this->texts[toLeft].area.right + btn.margin.left;
 								btn.area.right = btn.area.left + width;
 
-								messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .left [" +
-									std::to_string(btn.area.left) + "] based on left \"" + toLeft + "\" .right [" +
-									std::to_string(this->texts[toLeft].area.right) + " + margin.left", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on left [{}] .right [{}] + margin.left [{}]",
+									btn.title, btn.area.left, toLeft, this->texts[toLeft].area.right, btn.margin.left), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .left [" + std::to_string(btn.area.left) + "] matches [" + toLeft + "] .left [" +
-								std::to_string(btn.base.left) + "] + margin .left [" + std::to_string(btn.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches [{}] .left [{}] + margin.left [{}]",
+								btn.title, btn.area.left, toLeft, btn.base.left, btn.margin.left), vsid::DebugLevel::Menu, true);
 						}
 						else if (this->buttons.contains(toLeft))
 						{
@@ -697,20 +696,19 @@ void vsid::Menu::update()
 								btn.area.left = this->buttons[toLeft].area.right + btn.margin.left;
 								btn.area.right = btn.area.left + width;
 
-								messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjust to new .left [" +
-									std::to_string(btn.area.left) + "] based on left \"" + toLeft + "\" .right [" +
-									std::to_string(this->buttons[toLeft].area.right) + "] + margin.left", vsid::MessageHandler::DebugArea::Menu);
+								vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] Adjust to new .left [{}] based on left [{}] .right [{}] + margin.left [{}]",
+									btn.title, btn.area.left, toLeft, this->buttons[toLeft].area.right, btn.margin.left), vsid::DebugLevel::Menu, true);
 							}
-							else messageHandler->writeMessage("DEBUG", "[" + btn.title + "] .left [" + std::to_string(btn.area.left) + "] matches [" + toLeft + "] .left [" +
-								std::to_string(btn.base.left) + "] + margin .left [" + std::to_string(btn.margin.left) + "]", vsid::MessageHandler::DebugArea::Menu);
+							else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left [{}] matches [{}] .left [{}] + margin.left [{}]",
+								btn.title, btn.area.left, toLeft, btn.base.left, btn.margin.left), vsid::DebugLevel::Menu, true);
 						}
-						else messageHandler->writeMessage("DEBUG", "toLeft text [" + toLeft + "] was not found in texts", vsid::MessageHandler::DebugArea::Menu);
+						else vsid::Logger::log(vsid::LogLevel::Debug, std::format("toLeft text/button [{}] was not found in texts or buttons", toLeft), vsid::DebugLevel::Menu, true);
 					}
 				}
 				catch (std::out_of_range)
 				{
-					messageHandler->writeMessage("ERROR", "Failed to update [" + this->title + "] when updating button [" +
-						btn.title + "]. Code: " + ERROR_MENU_BTNUPDATE);
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to update [{}] when updating button [{}]. Code: {}",
+						this->title, btn.title, ERROR_MENU_BTNUPDATE));
 				}
 
 				// adjust base area right side based on margin
@@ -721,8 +719,8 @@ void vsid::Menu::update()
 					{
 						newArea.right = btn.area.right + btn.margin.right;
 
-						messageHandler->writeMessage("DEBUG", "Adjusting main area to new .right [" +
-							std::to_string(newArea.right) + "]", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting main area to new .right [{}]",
+							newArea.right), vsid::DebugLevel::Menu, true);
 					}
 				}
 
@@ -733,8 +731,8 @@ void vsid::Menu::update()
 					{
 						newArea.bottom = btn.area.bottom + btn.margin.bottom;
 
-						messageHandler->writeMessage("DEBUG", "Adjusting main area to new .bottom [" +
-							std::to_string(newArea.bottom) + "]", vsid::MessageHandler::DebugArea::Menu);
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting main area to new .bottom [{}]",
+							newArea.bottom), vsid::DebugLevel::Menu, true);
 					}
 				}
 
@@ -747,8 +745,8 @@ void vsid::Menu::update()
 					newTopBar.bottom = newArea.top;
 					newTopBar.top = newTopBar.bottom - height;
 
-					messageHandler->writeMessage("DEBUG", "[topBar] Adjusting top bar area. New .bottom [" + std::to_string(newTopBar.bottom) +
-						"]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting top bar area. New .bottom [{}]",
+						newTopBar.bottom), vsid::DebugLevel::Menu, true);
 				}
 
 				if (newBottomBar.top != newArea.bottom)
@@ -758,8 +756,8 @@ void vsid::Menu::update()
 					newBottomBar.top = newArea.bottom;
 					newBottomBar.bottom = newBottomBar.top + height;
 
-					messageHandler->writeMessage("DEBUG", "[bottomBar] Adjusting bottom bar area. New .top [" + std::to_string(newTopBar.top) +
-						"]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("Adjusting bottom bar area. New .top [{}]",
+						newTopBar.top), vsid::DebugLevel::Menu, true);
 				}
 
 				// move btn area based on margin and re-adjusted base area
@@ -771,8 +769,8 @@ void vsid::Menu::update()
 					btn.area.top = btn.base.top + btn.margin.top;
 					btn.area.bottom = btn.area.top + height;
 
-					messageHandler->writeMessage("DEBUG", "[" + btn.title + "] Adjusting to changed base with new .top [" +
-						std::to_string(btn.area.top) + "]", vsid::MessageHandler::DebugArea::Menu);
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}]] Adjusting to changed base with new .top [{}]",
+						btn.title, btn.area.top), vsid::DebugLevel::Menu, true);
 				}
 
 				// adjust right side of menu to the farthest
@@ -809,7 +807,7 @@ void vsid::Menu::update()
 		txt.area.right = txt.area.left + txtSize.cx;
 		txt.area.bottom = txt.area.top + txtSize.cy;
 
-		messageHandler->writeMessage("DEBUG", "Updating top/bottom bar text " + txt.title, vsid::MessageHandler::DebugArea::Menu);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Updating top/bottom bar text {}", txt.title), vsid::DebugLevel::Menu, true);
 
 		if (txt.type == MENU_TOP_BAR)
 		{
@@ -843,13 +841,11 @@ void vsid::Menu::update()
 				newBottomBar.right = newTopBar.right;
 			}
 
-			messageHandler->writeMessage("DEBUG", "[" + title + "] .left: " + std::to_string(txt.area.left) + " .right: " +
-				std::to_string(txt.area.right) + " .bottom: " + std::to_string(txt.area.bottom) +
-				" .top: " + std::to_string(txt.area.top), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left: {} .right: {} .bottom: {} .top: {}",
+				title, txt.area.left, txt.area.right, txt.area.bottom, txt.area.top), vsid::DebugLevel::Menu, true);
 
-			messageHandler->writeMessage("DEBUG", "[" + title + "]-BASE .left: " + std::to_string(txt.base.left) + " .right: " +
-				std::to_string(txt.base.right) + " .bottom: " + std::to_string(txt.base.bottom) +
-				" .top: " + std::to_string(txt.base.top), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}]]-BASE .left: {} .right: {} .bottom: {} .top: {}",
+				title, txt.base.left, txt.base.right, txt.base.bottom, txt.base.top), vsid::DebugLevel::Menu, true);
 
 			txt.base = newTopBar;
 		}
@@ -894,13 +890,11 @@ void vsid::Menu::update()
 				newTopBar.right = newTopBar.right;
 			}
 
-			messageHandler->writeMessage("DEBUG", "[" + title + "] .left: " + std::to_string(txt.area.left) + " .right: " +
-				std::to_string(txt.area.right) + " .bottom: " + std::to_string(txt.area.bottom) +
-				" .top: " + std::to_string(txt.area.top), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] .left: {} .right: {} .bottom: {} .top: {}",
+				title, txt.area.left, txt.area.right, txt.area.bottom, txt.area.top), vsid::DebugLevel::Menu, true);
 
-			messageHandler->writeMessage("DEBUG", "[" + title + "]-BASE .left: " + std::to_string(txt.base.left) + " .right: " +
-				std::to_string(txt.base.right) + " .bottom: " + std::to_string(txt.base.bottom) +
-				" .top: " + std::to_string(txt.base.top), vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}]]-BASE .left: {} .right: {} .bottom: {} .top: {}",
+				title, txt.base.left, txt.base.right, txt.base.bottom, txt.base.top), vsid::DebugLevel::Menu, true);
 
 			txt.base = newBottomBar;
 

@@ -162,6 +162,7 @@ namespace vsid
 		bool preferTopsky;
 		int notifyUpdate;
 		int hovWarningAlt;
+		bool logDevOnly;
 		
 	private:
 		std::set<std::filesystem::path> configPaths;
