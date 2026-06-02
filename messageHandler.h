@@ -63,15 +63,6 @@ namespace vsid
 		};
 
 		/**
-		 * @brief Writes message to the local storage - this can be used to forward messages to ES chat
-		 * 
-		 * @param sender front of msg, usually a level of DEBUG, ERROR, WARNING, INFO
-		 * @param msg 
-		 */
-		void writeMessage(std::string sender, std::string msg, DebugArea debugArea = DebugArea::All);
-
-		void writeMessage(std::string sender, std::string msg, const std::source_location& loc, DebugArea debugArea = DebugArea::All);
-		/**
 		 * @brief Retrieve the first message from the local message stack
 		 * 
 		 * @return
