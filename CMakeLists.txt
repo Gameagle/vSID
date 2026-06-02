@@ -91,6 +91,7 @@ set(SOURCES
     flightplan.cpp
     menu.cpp
     messageHandler.cpp
+    logger.cpp
     pch.cpp
     sid.cpp
     timeHandler.cpp
