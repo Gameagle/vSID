@@ -7,6 +7,8 @@
 #include <fstream>
 #include <string>
 
+#include "logger.h"
+
 #include "include/es/EuroScopePlugIn.h"
 
 // expose plug-in entry point for crash handler to identify vsid module
@@ -46,6 +48,8 @@ namespace vsid
 		//************************************
 		inline LONG WINAPI vSIDCrashHandler(EXCEPTION_POINTERS* exceptionInfo)
 		{
+			vsid::Logger::panicFlush(); // flush logs to file in case of crash
+
 			PVOID crashAdress = exceptionInfo->ExceptionRecord->ExceptionAddress;
 
 			// get the crashed module

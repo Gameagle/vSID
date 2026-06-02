@@ -5,9 +5,11 @@
 #include "messageHandler.h"
 #include "sid.h"
 #include "constants.h"
+#include "logger.h"
 
 #include <vector>
 #include <fstream>
+#include <format>
 
 vsid::ConfigParser::ConfigParser()
 {
@@ -30,20 +32,20 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 	catch(const json::parse_error &e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse main config: " + std::string(e.what()));
 	}
 	catch (const json::type_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse main config: " + std::string(e.what()));
 	}
 	catch (const json::other_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to parse main config: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse main config: " + std::string(e.what()));
 	}
 
 	if (this->vSidConfig.is_null())
 	{
-		messageHandler->writeMessage("ERROR", "Failed to parse main config. (Critical!)");
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse main config. (Critical!)");
 		return;
 	}
 
@@ -55,7 +57,13 @@ void vsid::ConfigParser::loadMainConfig()
 
 	this->notifyUpdate = this->vSidConfig.value("notifyUpdate", 1);
 
+	// set hand over warning altitude
+
 	this->hovWarningAlt = this->vSidConfig.value("hovWarningAlt", 1500);
+
+	// set logging of dev only messages
+
+	this->logDevOnly = this->vSidConfig.value("logDevOnly", false);
 
 	try
 	{
@@ -365,23 +373,23 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 	catch (std::error_code& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to import colors: " + e.message());
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to import colors: " + e.message());
 	}
 	catch (const json::parse_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "[Parse Error] in color config section: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "[Parse Error] in color config section: " + std::string(e.what()));
 	}
 	catch (const json::type_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "[Type Error] in color config section: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "[Type Error] in color config section: " + std::string(e.what()));
 	}
 	catch (const json::other_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "[Other Error] in color config section: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "[Other Error] in color config section: " + std::string(e.what()));
 	}
 	catch (const json::out_of_range& e)
 	{
-		messageHandler->writeMessage("ERROR", "[Out of Range] in color config section: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "[Out of Range] in color config section: " + std::string(e.what()));
 	}
 
 	// get request times
@@ -393,7 +401,7 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 	catch (json::parse_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to get request timers: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get request timers: " + std::string(e.what()));
 	}
 
 	// get clrf min values
@@ -407,7 +415,7 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 	catch (json::out_of_range& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to get clrf min values: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get clrf min values: " + std::string(e.what()));
 	}
 
 	// get indicator reference values
@@ -420,7 +428,7 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 	catch (json::out_of_range& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to get indicator default reference values: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get indicator default reference values: " + std::string(e.what()));
 	}
 }
 
@@ -444,13 +452,13 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 	}
 	else
 	{
-		messageHandler->writeMessage("ERROR", "No config path for airports in main config");
+		vsid::Logger::log(vsid::LogLevel::Error, "No config path for airports in main config");
 		return;
 	}
 
 	if (!std::filesystem::exists(basePath))
 	{
-		messageHandler->writeMessage("ERROR", "No airport config folder found at: " + basePath.string());
+		vsid::Logger::log(vsid::LogLevel::Error, "No airport config folder found at: " + basePath.string());
 		return;
 	}
 
@@ -559,17 +567,18 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
 									if (lat == "" || lon == "")
 									{
-										messageHandler->writeMessage("ERROR", "Couldn't read LAT or LON value for \"" +
-											coord.key() + "\" in area \"" + area.key() + "\" at \"" +
-											icao + "\"");
+										vsid::Logger::log(vsid::LogLevel::Error,
+											std::format("Couldn't read LAT or LON value for [{}] in area [{}] at [{}]",
+												coord.key(), area.key(), icao));
 										break;
 									}
 									coords.push_back({ lat, lon });
 								}
 								if (coords.size() < 3)
 								{
-									messageHandler->writeMessage("ERROR", "Area \"" + area.key() + "\" in \"" +
-										icao + "\" has not enough points configured (less than 3).");
+									vsid::Logger::log(vsid::LogLevel::Error,
+										std::format("Area [{}] in [{}] has not enough points configured (less than 3).",
+											area.key(), icao));
 									continue;
 								}
 								if (savedAreas.contains(icao))
@@ -732,8 +741,8 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 									fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);
 									fixedNumber = sidField.key().back();
 
-									messageHandler->writeMessage("DEBUG", "[" + sidField.key() + "] contained a number - setting as fixed SID number: " +
-										fixedNumber, vsid::MessageHandler::DebugArea::Conf);
+									vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] contained a number - setting as fixed SID number [{}]",
+										sidField.key(), fixedNumber), vsid::DebugLevel::Conf);
 								}
 								else
 								{
@@ -1190,26 +1199,26 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
 
 												// #dev - debugging msgs for evaluation of sid restriction levels
-												std::string sidName = newSid.base + ((newSid.number.empty()) ? "_" : newSid.number) + newSid.designator + " (ID: " + newSid.id + ")";
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wpt: " + newSid.waypoint, vsid::MessageHandler::DebugArea::Conf);
+												std::string sidName = std::format("{}{}{} (ID: {})", newSid.base, (newSid.number.empty()) ? "_" : newSid.number, newSid.designator, newSid.id);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wpt: {}", sidName, newSid.waypoint), vsid::DebugLevel::Conf);
 												for (auto& [_, trans] : newSid.transition)
 												{
-													messageHandler->writeMessage("DEBUG", "[" + sidName + "] trans: " + trans.base + "_" + trans.designator, vsid::MessageHandler::DebugArea::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] trans: {}", sidName, trans.base + "_" + trans.designator), vsid::DebugLevel::Conf);
 												}
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] rwys: " + vsid::utils::join(newSid.rwys, ','), vsid::MessageHandler::DebugArea::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rwys: {}", sidName, vsid::utils::join(newSid.rwys, ',')), vsid::DebugLevel::Conf);
 												for (auto& [sEquip, allow] : newSid.equip)
 												{
-													messageHandler->writeMessage("DEBUG", "[" + sidName + "] equip: " + sEquip + " allowed " + ((allow) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] equip: {} allowed {}", sidName, sEquip, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
 												}
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] initial: " + std::to_string(newSid.initialClimb), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] via: " + ((newSid.climbvia) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] prio: " + std::to_string(newSid.prio), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] pilotfiled: " + ((newSid.pilotfiled) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] initialClimb: {}", sidName, newSid.initialClimb), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] climb via: {}", sidName, (newSid.climbvia) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] prio: {}", sidName, newSid.prio), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] pilotfiled: {}", sidName, (newSid.pilotfiled) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
 												for (auto& [actArrList, arrType] : newSid.actArrRwy)
 												{
 													for(auto& [arrWhich, actArr] : arrType)
 													{
-														messageHandler->writeMessage("DEBUG", "[" + sidName + "] actArrRwy: " + actArrList + " - " + arrWhich + " - " + actArr, vsid::MessageHandler::DebugArea::Conf);
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actArrRwy: {} - {} - {}", sidName, actArrList, arrWhich, actArr), vsid::DebugLevel::Conf);
 													}
 													
 												}
@@ -1217,36 +1226,36 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 												{
 													for (auto& [depWhich, actDep] : depType)
 													{
-														messageHandler->writeMessage("DEBUG", "[" + sidName + "] actDepRwy: " + actDepList + " - " + depWhich + " - " + actDep, vsid::MessageHandler::DebugArea::Conf);
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actDepRwy: {} - {} - {}", sidName, actDepList, depWhich, actDep), vsid::DebugLevel::Conf);
 													}
 													
 												}
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wtc: " + newSid.wtc, vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] engType: " + newSid.engineType, vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] wingType: " + newSid.wingType, vsid::MessageHandler::DebugArea::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wtc: {}", sidName, newSid.wtc), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engType: {}", sidName, newSid.engineType), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wingType: {}", sidName, newSid.wingType), vsid::DebugLevel::Conf);
 												for (auto& [sAcftType, allow] : newSid.acftType)
 												{
-													messageHandler->writeMessage("DEBUG", "[" + sidName + "] acftType: " + sAcftType + " allowed " + ((allow) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] acftType: {} allowed {}", sidName, sAcftType, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
 												}
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] engCount: " + std::to_string(newSid.engineCount), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] mtow: " + std::to_string(newSid.mtow), vsid::MessageHandler::DebugArea::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engCount: {}", sidName, newSid.engineCount), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] mtow: {}", sidName, newSid.mtow), vsid::DebugLevel::Conf);
 												for (auto& [sDest, allow] : newSid.dest)
 												{
-													messageHandler->writeMessage("DEBUG", "[" + sidName + "] dest: " + sDest + " allow " + ((allow) ? "TRUE" : "FALSE"), vsid::MessageHandler::DebugArea::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] dest: {} allow {}", sidName, sDest, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
 												}
 												for (auto& [allow, routeList] : newSid.route)
 												{
 													for (auto& [sId, sRoute] : routeList)
 													{
-														messageHandler->writeMessage("DEBUG", "[" + sidName + "] route: " + allow + " id: " +
-															sId + " routing: " + vsid::utils::join(sRoute, ','), vsid::MessageHandler::DebugArea::Conf);
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] route [{}] id [{}] routing [{}]",
+															sidName, allow, sId, vsid::utils::join(sRoute, ',')), vsid::DebugLevel::Conf);
 													}
 												}
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] rule: " + newSid.customRule, vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] area: " + newSid.area, vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] lvp: " + std::to_string(newSid.lvp), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeFrom: " + std::to_string(newSid.timeFrom), vsid::MessageHandler::DebugArea::Conf);
-												messageHandler->writeMessage("DEBUG", "[" + sidName + "] timeTo: " + std::to_string(newSid.timeTo), vsid::MessageHandler::DebugArea::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rule: {}", sidName, newSid.customRule), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] area: {}", sidName, newSid.area), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] lvp: {}", sidName, newSid.lvp), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeFrom: {}", sidName, newSid.timeFrom), vsid::DebugLevel::Conf);
+												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeTo: {}", sidName, newSid.timeTo), vsid::DebugLevel::Conf);
 												// end dev - debugging msgs for sid restriction levels
 											}
 										}
@@ -1258,23 +1267,23 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 				}
 				catch (const json::parse_error& e)
 				{
-					messageHandler->writeMessage("ERROR", "[Parse] Failed to load airport config (" + icao + "): " + std::string(e.what()));
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[Parse] Failed to load airport config ({}): {}", icao, e.what()));
 				}
 				catch (const json::type_error& e)
 				{
-					messageHandler->writeMessage("ERROR", "[Type] Failed to load airport config (" + icao + "): " + std::string(e.what()));
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[Type] Failed to load airport config ({}): {}", icao, e.what()));
 				}
 				catch (const json::out_of_range& e)
 				{
-					messageHandler->writeMessage("ERROR", "[Range] Failed to load airport config (" + icao + "): " + std::string(e.what()));
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[Range] Failed to load airport config ({}): {}", icao, e.what()));
 				}
 				catch (const json::other_error& e)
 				{
-					messageHandler->writeMessage("ERROR", "[Other] Failed to load airport config (" + icao + "): " + std::string(e.what()));
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[Other] Failed to load airport config ({}): {}", icao, e.what()));
 				}
 				catch (const std::exception &e)
 				{
-					messageHandler->writeMessage("ERROR", "Failure in config (" + icao + "): " + std::string(e.what()));
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("Failure in config ({}): {}", icao, e.what()));
 				}
 
 				/* DOCUMENTATION on how to get all values below a key
@@ -1294,7 +1303,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 		if (aptConfig.contains(it->first)) ++it;
 		else
 		{
-			messageHandler->writeMessage("INFO", "No config found for: " + it->first);
+			vsid::Logger::log(vsid::LogLevel::Info, "No config found for: " + it->first);
 			it = activeAirports.erase(it);
 		}
 	}
@@ -1315,7 +1324,7 @@ void vsid::ConfigParser::loadGrpConfig()
 
 	if (!std::filesystem::exists(basePath))
 	{
-		messageHandler->writeMessage("ERROR", "No grp config found in: " + basePath.string());
+		vsid::Logger::log(vsid::LogLevel::Error, "No grp config found in: " + basePath.string());
 		return;
 	}
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
@@ -1332,11 +1341,11 @@ void vsid::ConfigParser::loadGrpConfig()
 			}
 			catch (const json::parse_error& e)
 			{
-				messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to load grp config: {}", e.what()));
 			}
 			catch (const json::type_error& e)
 			{
-				messageHandler->writeMessage("ERROR:", "Failed to load grp config: " + std::string(e.what()));
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to load grp config: {}", e.what()));
 			}
 		}
 	}
@@ -1357,7 +1366,7 @@ void vsid::ConfigParser::loadRnavList()
 
 	if (!std::filesystem::exists(basePath))
 	{
-		messageHandler->writeMessage("ERROR", "Path to check for RNAV List does not exist: " + basePath.string());
+		vsid::Logger::log(vsid::LogLevel::Error, "Path to check for RNAV List does not exist: " + basePath.string());
 		return;
 	}
 
@@ -1375,16 +1384,16 @@ void vsid::ConfigParser::loadRnavList()
 		}
 		catch (const json::parse_error& e)
 		{
-			messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to load rnav list: {}", e.what()));
 		}
 		catch (const json::type_error& e)
 		{
-			messageHandler->writeMessage("ERROR:", "Failed to load rnav list: " + std::string(e.what()));
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to load rnav list: {}", e.what()));
 		}
 		
 		if (rnavConfigFile.empty())
 		{
-			messageHandler->writeMessage("ERROR", "RNAV List is empty. Is it present besides the plugin DLL file?");
+			vsid::Logger::log(vsid::LogLevel::Error, "RNAV List is empty. Is it present besides the plugin DLL file?");
 			return;
 		}
 
@@ -1394,12 +1403,12 @@ void vsid::ConfigParser::loadRnavList()
 		}
 		catch (json::type_error &e)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to read rnav list: " + std::string(e.what()));
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to read rnav list: {}", e.what()));
 		}
 
 		return;
 	}
-	messageHandler->writeMessage("ERROR", "No RNAV capable list found at: " + basePath.string());
+	vsid::Logger::log(vsid::LogLevel::Error, "No RNAV capable list found at: " + basePath.string());
 }
 
 const COLORREF vsid::ConfigParser::getColor(std::string color)
@@ -1414,7 +1423,7 @@ const COLORREF vsid::ConfigParser::getColor(std::string color)
 	{
 		if (!messageHandler->genErrorsContains(ERROR_CONF_COLOR + "_" + color))
 		{
-			messageHandler->writeMessage("ERROR", "Failed to retrieve color: \"" + color + "\". Code: " + ERROR_CONF_COLOR);
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to retrieve color: [{}]. Code: {}", color, ERROR_CONF_COLOR));
 			messageHandler->addGenError(ERROR_CONF_COLOR + "_" + color);
 		}
 		// return purple if color could not be found to signal error
@@ -1431,7 +1440,7 @@ int vsid::ConfigParser::getReqTime(std::string time)
 	}
 	else
 	{
-		messageHandler->writeMessage("ERROR", "Failed to retrieve request time setting for key \"" + time + "\"");
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to retrieve request time setting for key [{}]", time));
 		return 0;
 	}
 }

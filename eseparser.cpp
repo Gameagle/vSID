@@ -2,15 +2,18 @@
 
 #include "eseparser.h"
 #include "flightplan.h"
+#include "logger.h"
+
+#include <format>
 
 void vsid::EseParser::parseEse(const std::filesystem::path& path)
 {
-	messageHandler->writeMessage("DEBUG", "Ese path to parse: \"" + path.string() + "\"", vsid::MessageHandler::DebugArea::Conf);
+	vsid::Logger::log(vsid::LogLevel::Debug, "Path to .ese for parsing: " + path.string(), vsid::DebugLevel::Conf);
 
 	std::ifstream in(path);
 	if (!in)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to open .ese file in path: " + path.string());
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to open .ese file in path: " + path.string());
 		return;
 	}
 
@@ -87,11 +90,9 @@ void vsid::EseParser::line(Section s, std::string_view l)
 				{
 					if (visLat.empty() || visLon.empty())
 					{
-						messageHandler->writeMessage("WARNING", "Empty coordinate string found for ATC station \"" + atcVec.at(0) +
-							"\" vis point (lat: \"" + visLat + "\" / lon: \"" + visLon + "\"! Skipping coordinate.");
-
-						messageHandler->writeMessage("DEBUG", "[ESE] empty vispoint lat (\"" + visLat + "\" / lon (\"" + visLon +
-							"\" in line : " + std::string(l), vsid::MessageHandler::DebugArea::Conf);
+						vsid::Logger::log(vsid::LogLevel::Warning, std::format("Empty coordinate string found for ATC station [{}] vis point (lat [{}] lon [{}]! Skipping coordinate.",
+							atcVec.at(0), visLat, visLon));
+						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[ESE] vis point in line : {}", l), vsid::DebugLevel::Conf);
 
 						++idx;
 						continue;
@@ -141,7 +142,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 		}
 		catch (std::out_of_range& e)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to parse ATC: " + std::string(e.what()));
+			vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse ATC: " + std::string(e.what()));
 		}
 
 		break;
@@ -160,13 +161,10 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			auto [sid, trans] = vsid::fplnhelper::splitTransition(currSid);
 
-			messageHandler->writeMessage("DEBUG", "[ESE] Parsing SID \"" + currSid + "\" - sid: " + sid + " / trans : " + trans, vsid::MessageHandler::DebugArea::Dev);
-
-			//const bool lastIsDigit = vsid::utils::lastIsDigit(sid);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Parsing SID [{}] - sid: [{}] / trans : [{}]", currSid, sid, trans), vsid::DebugLevel::Ese, true);
 
 			vsid::SectionTransition sectionTrans("", std::nullopt, std::nullopt);
-			vsid::SectionSID sectionSid("", "", '\0', std::nullopt, "", sectionTrans, "");
-			
+			vsid::SectionSID sectionSid("", "", '\0', std::nullopt, "", sectionTrans, "");		
 
 			if (!sid.empty())
 			{
@@ -213,17 +211,17 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			sectionSid.trans = std::move(sectionTrans);
 
-			messageHandler->writeMessage("DEBUG", "[ESE] Stored value: [" + sectionSid.base + sectionSid.number +
-				((sectionSid.desig) ? std::string(1, *sectionSid.desig) : "") +
-				"] and trans: [" + sectionSid.trans.base + ((sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : "") +
-				((sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : "") + "]",
-				vsid::MessageHandler::DebugArea::Dev);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Stored SID [{}{}{}] and transition: [{}{}{}]",
+				sectionSid.base, sectionSid.number, (sectionSid.desig) ? std::string(1, *sectionSid.desig) : "",
+				sectionSid.trans.base, (sectionSid.trans.number) ? std::string(1, *sectionSid.trans.number) : "",
+				(sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : ""),
+				vsid::DebugLevel::Ese, true);
 
 			this->sectionSids_.emplace(std::move(sectionSid));
 		}
 		catch (const std::out_of_range& e)
 		{
-			messageHandler->writeMessage("ERROR", "Failed to parse SID: " + std::string(e.what()) + " in line: " + std::string(l));
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to parse SID [{}] in .ese line [{}]", e.what(), l));
 		}
 
 		break;
@@ -239,10 +237,10 @@ void vsid::EseParser::exit(Section s)
 	switch (s)
 	{
 	case Section::Positions:
-		messageHandler->writeMessage("INFO", "Parsed " + std::to_string(this->sectionAtc_.size()) + " atc stations.");
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("Parsed {} atc stations.", this->sectionAtc_.size()));
 		break;
 	case Section::SidsStars:
-		messageHandler->writeMessage("INFO", "Parsed " + std::to_string(this->sectionSids_.size()) + " SIDs.");
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("Parsed {} SIDs.", this->sectionSids_.size()));
 		break;
 
 	case Section::Unknown:

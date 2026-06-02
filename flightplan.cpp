@@ -4,6 +4,9 @@
 #include "utils.h"
 #include "messageHandler.h"
 #include "constants.h"
+#include "logger.h"
+
+#include <format>
 
 std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightPlan &FlightPlan, std::string filedSidWpt)
 {
@@ -24,8 +27,8 @@ std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightP
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route at first entry. ADEP: " + origin +
-				" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNFIRST);
+			vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] Error during cleaning of route at first entry. ADEP [{}] with route [{}]. Code: {}",
+				callsign, origin, vsid::utils::join(filedRoute), ERROR_FPLN_CLNFIRST));
 		}
 	}
 
@@ -44,8 +47,8 @@ std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightP
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-											" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNSPDLVL);
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] Error during cleaning of route. Cleaning was continued after false entry. "
+					"ADEP [{}] with route [{}]. Code: {}", callsign, origin, vsid::utils::join(filedRoute), ERROR_FPLN_CLNSPDLVL));
 			}
 			if (*it == filedSidWpt) break;
 			it = filedRoute.erase(it);
@@ -63,8 +66,9 @@ std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightP
 			}
 			catch (std::out_of_range)
 			{
-				messageHandler->writeMessage("ERROR", "[" + callsign + "] Error during cleaning of route. Cleaning was continued after false entry. ADEP: " + origin +
-					" with route \"" + vsid::utils::join(filedRoute) + "\". Code: " + ERROR_FPLN_CLNSPDLVL);
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] Error during cleaning of route. Cleaning was continued "
+					"after false entry. ADEP [{}] with route [{}]. Code: {}",
+					callsign, origin, vsid::utils::join(filedRoute), ERROR_FPLN_CLNSPDLVL));
 			}
 			if (*it != origin) break;
 			it = filedRoute.erase(it);
@@ -73,9 +77,9 @@ std::vector<std::string> vsid::fplnhelper::clean(const EuroScopePlugIn::CFlightP
 
 	if (filedRoute.size() == 0 && vsid::utils::split(fplnData.GetRoute(), ' ').size() != 0)
 	{
+		vsid::Logger::log(vsid::LogLevel::Warning, std::format("[{}] did not clean route as cleaning resulted in an empty route "
+			"(possible error in the filed route). Returning original route.", callsign));
 
-		messageHandler->writeMessage("WARNING", "[" + callsign +
-									"] did not clean route as cleaning resulted in an empty route (possible error in the filed route). Returning original route.");
 		return vsid::utils::split(fplnData.GetRoute(), ' ');
 	}
 
@@ -96,8 +100,7 @@ std::string vsid::fplnhelper::getTransition(const EuroScopePlugIn::CFlightPlan& 
 		if (std::find(route.begin(), route.end(), base) == route.end()) continue;
 		return trans.base + trans.number + trans.designator;
 	}
-	messageHandler->writeMessage("DEBUG", "[" + std::string(FlightPlan.GetCallsign()) +
-		"] no matching transition wpt found", vsid::MessageHandler::DebugArea::Sid);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] no matching transition wpt found", FlightPlan.GetCallsign()), vsid::DebugLevel::Sid);
 	return ""; // fallback if no transition could be matched
 }
 
@@ -159,8 +162,9 @@ std::pair<std::string, std::string> vsid::fplnhelper::getAtcBlock(const EuroScop
 		{
 			if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_ATCBLOCK))
 			{
-				messageHandler->writeMessage("ERROR", "[" + callsign + "] Failed to get ATC block. First route entry: " +
-					filedRoute.at(0) + ". Code: " + ERROR_FPLN_ATCBLOCK);
+				vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] Failed to get ATC block. First route entry [{}]. Code: {}",
+					callsign, filedRoute.at(0), ERROR_FPLN_ATCBLOCK));
+
 				messageHandler->addFplnError(callsign, ERROR_FPLN_ATCBLOCK);
 			}
 		}
@@ -233,11 +237,9 @@ std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& Fligh
 	/* default state - if an aircraft is known rnav capable skip checks */
 	if (rnav.contains(FlightPlan.GetFlightPlanData().GetAircraftFPType()))
 	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign +
-			"] found in RNAV list. Returning \"SDE2E3FGIJ1RWY\"", vsid::MessageHandler::DebugArea::Sid);
-
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] found in RNAV list. Returning [SDE2E3FGIJ1RWY]", callsign), vsid::DebugLevel::Sid);
 		return "SDE2E3FGIJ1RWY";
-		}
+	}
 	else if (vecEquip.size() >= 2)
 	{
 		vecEquip = vsid::utils::split(vecEquip.at(1), '/');
@@ -248,17 +250,15 @@ std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& Fligh
 		}
 		catch (std::out_of_range)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign +
-				"] failed to get equipment, Nothing will be returned.", vsid::MessageHandler::DebugArea::Sid);
-
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to get equipment, Nothing will be returned.", callsign), vsid::DebugLevel::Sid);
 			return "";
 		}
 	}
 	else if (cap != ' ')
 	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign +
-									"] failed to get equipment, falling back to capability checking. Reported equipment \"" +
-									equip + "\". Reported capability \"" + cap + "\"", vsid::MessageHandler::DebugArea::Sid);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to get equipment, falling back to capability checking. "
+			"Reported equipment [{}]. Reported capability [{}]",
+			callsign, equip, cap), vsid::DebugLevel::Sid);
 
 		std::map<char, std::string> faaToIcao = {
 			// X disabled due to too many occurences with fplns that are RNAV capable
@@ -279,8 +279,7 @@ std::string vsid::fplnhelper::getEquip(const EuroScopePlugIn::CFlightPlan& Fligh
 	}
 	else
 	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to get equipment or capabilities. Returning empty equipment",
-									vsid::MessageHandler::DebugArea::Sid);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to get equipment or capabilities. Returning empty equipment", callsign), vsid::DebugLevel::Sid);
 		return "";
 	}
 }
@@ -312,7 +311,7 @@ std::string vsid::fplnhelper::getPbn(const EuroScopePlugIn::CFlightPlan& FlightP
 
 void vsid::fplnhelper::saveFplnInfo(const std::string& callsign, vsid::Fpln fplnInfo, std::map<std::string, vsid::Fpln>& savedFplnInfo)
 {
-	messageHandler->writeMessage("DEBUG", "[" + callsign + "] saving flight plan info for possible reconnection.", vsid::MessageHandler::DebugArea::Fpln);
+	vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] saving flight plan info for possible reconnection.", callsign), vsid::DebugLevel::Fpln);
 	savedFplnInfo[callsign] = std::move(fplnInfo);
 
 	savedFplnInfo[callsign].sid = {};
@@ -332,12 +331,13 @@ bool vsid::fplnhelper::restoreFplnInfo(const std::string& callsign, std::map<std
 
 	if (processed.contains(callsign))
 	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] successfully  restored.", vsid::MessageHandler::DebugArea::Fpln);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] flight plan info successfully  restored.", callsign), vsid::DebugLevel::Fpln);
 		return true;
 	}
 	else
 	{
-		messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to restore from saved info.", vsid::MessageHandler::DebugArea::Fpln); 
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to restore flight plan info. Info is stored, "
+			"but callsign no longer in processed", callsign), vsid::DebugLevel::Fpln);
 		return false;
 	}
 }
@@ -368,11 +368,14 @@ bool vsid::fplnhelper::restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CF
 		{
 			int initialClimb = (fplnInfo.customSid.initialClimb > fplnData.GetFinalAltitude()) ?
 				fplnData.GetFinalAltitude() : fplnInfo.customSid.initialClimb;
+
 			if (!cad.SetClearedAltitude(initialClimb))
 			{
 				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
 				{
-					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] - failed to set altitude using custom SID. Code: {}",
+						callsign, ERROR_FPLN_SETALT_RESET));
+
 					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
 				}
 				return false;
@@ -387,11 +390,14 @@ bool vsid::fplnhelper::restoreIC(const vsid::Fpln& fplnInfo, EuroScopePlugIn::CF
 		{
 			int initialClimb = (fplnInfo.sid.initialClimb > fplnData.GetFinalAltitude()) ?
 				fplnData.GetFinalAltitude() : fplnInfo.sid.initialClimb;
+
 			if (!cad.SetClearedAltitude(initialClimb))
 			{
 				if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_SETALT_RESET))
 				{
-					messageHandler->writeMessage("ERROR", "[" + callsign + "] - failed to set altitude. Code: " + ERROR_FPLN_SETALT_RESET);
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("[{}] - failed to set altitude using SID. Code: {}",
+						callsign, ERROR_FPLN_SETALT_RESET));
+
 					messageHandler->addFplnError(callsign, ERROR_FPLN_SETALT_RESET);
 				}
 				return false;

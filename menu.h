@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "messageHandler.h"
+#include "logger.h"
 
 #include "Windows.h"
 #include "afxwin.h"
@@ -31,6 +32,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <map>
 #include <utility>
 #include <set>
+#include <format>
 
 
 namespace vsid {
@@ -55,7 +57,7 @@ namespace vsid {
 			type(type), title(title), base(base), txt(txt), minWidth(minWidth), height(height), weight(weight), margin(margin), relElem(relElem), render(render),
 			 textColor(textColor), bg(bg), tablePos(tablePos)
 			{
-				messageHandler->writeMessage("DEBUG", "Text " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+				vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] was created", title), vsid::DebugLevel::Menu);
 			};
 
 		/**
@@ -67,7 +69,7 @@ namespace vsid {
 			weight(other.weight), margin(other.margin), relElem(other.relElem), render(other.render), textColor(other.textColor),
 			bg(other.bg), tablePos(other.tablePos), area(other.area)
 		{
-			messageHandler->writeMessage("DEBUG", "(copy) Text " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("(copy) Text [{}] was created", title), vsid::DebugLevel::Menu);
 		};
 
 		/**
@@ -79,10 +81,10 @@ namespace vsid {
 			minWidth(other.minWidth), height(other.height), weight(other.weight), margin(std::move(other.margin)), relElem(std::move(other.relElem)),
 			render(other.render), textColor(other.textColor), bg(other.bg), tablePos(other.tablePos), area(std::move(other.area))
 		{
-			messageHandler->writeMessage("DEBUG", "(move) Text " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("(move) Text [{}] was created", title), vsid::DebugLevel::Menu);
 		};
 
-		virtual ~Text() { messageHandler->writeMessage("DEBUG", "Text " + title + " was destroyed", vsid::MessageHandler::DebugArea::Menu); };
+		virtual ~Text() { vsid::Logger::log(vsid::LogLevel::Debug, std::format("Text [{}] was destroyed", title), vsid::DebugLevel::Menu); };
 
 		int type;
 		std::string title;
@@ -121,7 +123,7 @@ namespace vsid {
 			type(type), title(title), base(base), label(label), height(height), weight(weight), margin(margin), relElem(relElem), render(render),
 			textColor(textColor), bg(bg), border(border), tablePos(tablePos)
 		{
-			messageHandler->writeMessage("DEBUG", "Button " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] was created", title), vsid::DebugLevel::Menu);
 		};
 		
 		/**
@@ -133,7 +135,7 @@ namespace vsid {
 			height(other.height), weight(other.weight), margin(other.margin), relElem(other.relElem), render(other.render), textColor(other.textColor),
 			bg(other.bg), border(other.border), tablePos(other.tablePos), area(other.area)
 		{
-			messageHandler->writeMessage("DEBUG", "(copy) Button " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("(copy) Button [{}] was created", title), vsid::DebugLevel::Menu);
 		};
 
 		/**
@@ -145,10 +147,10 @@ namespace vsid {
 			height(other.height), weight(other.weight), margin(std::move(other.margin)), relElem(std::move(other.relElem)), render(other.render),
 			textColor(other.textColor), bg(other.bg), border(other.border), tablePos(std::move(other.tablePos)), area(std::move(other.area))
 		{
-			messageHandler->writeMessage("DEBUG", "(move) Button " + title + " was created", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("(move) Button [{}] was created", title), vsid::DebugLevel::Menu);
 		};
 
-		virtual ~Button() { messageHandler->writeMessage("DEBUG", "Button " + title + " was destroyed", vsid::MessageHandler::DebugArea::Menu); };
+		virtual ~Button() { vsid::Logger::log(vsid::LogLevel::Debug, std::format("Button [{}] was destroyed", title), vsid::DebugLevel::Menu); };
 
 		int type;
 		std::string title;
@@ -185,7 +187,7 @@ namespace vsid {
 		// default
 		Menu() : type(0), title(""), parent(""), area(), topBar(), bottomBar(), render(false), maxCol(1), border(defaultBorder), bg(defaultBg)
 		{
-			messageHandler->writeMessage("DEBUG", "Creating menu (default Constructor)", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, "Creating menu (default Constructor)", vsid::DebugLevel::Menu);
 		};
 		// standard
 		Menu(int type, std::string title, std::string parent, int top, int left, int minWidth, int minHeight, bool render = false, int maxCol = 1,
@@ -195,7 +197,7 @@ namespace vsid {
 			bottomBar(other.bottomBar), render(other.render), maxCol(other.maxCol), border(other.border), bg(other.bg), texts(other.texts),
 			buttons(other.buttons), table(other.table), submenues(other.submenues)
 		{
-			messageHandler->writeMessage("DEBUG", "Creating menu (copy Constructor): \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Creating menu (copy Constructor): [{}]", title), vsid::DebugLevel::Menu);
 		};
 		// move
 		Menu(vsid::Menu&& other) noexcept : type(other.type), title(std::move(other.title)), parent(std::move(other.parent)), area(std::move(other.area)),
@@ -203,9 +205,9 @@ namespace vsid {
 			bg(other.bg), texts(std::move(other.texts)), buttons(std::move(other.buttons)),
 			table(other.table), submenues(std::move(other.submenues))
 		{
-			messageHandler->writeMessage("DEBUG", "Creating menu (move Constructor): \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Creating menu (move Constructor): [{}]", title), vsid::DebugLevel::Menu);
 		};
-		virtual ~Menu() { messageHandler->writeMessage("DEBUG", "Deleting menu \"" + title + "\"", vsid::MessageHandler::DebugArea::Menu); };
+		virtual ~Menu() { vsid::Logger::log(vsid::LogLevel::Debug, std::format("Deleting menu [{}]", title), vsid::DebugLevel::Menu); };
 
 		/**
 		 * @brief adds a text to the menu

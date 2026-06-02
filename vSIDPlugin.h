@@ -32,6 +32,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <deque>
 #include <list>
 
+#include <format>
+
 #include <curl/curl.h> // only to call the update check
 
 #include "include/es/EuroScopePlugIn.h"
@@ -42,6 +44,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "eseparser.h"
 #include "versionchecker.h"
+
+#include "logger.h"
 
 namespace vsid
 {
@@ -471,6 +475,10 @@ namespace vsid
 		// if curl init was successfull
 		bool curlInit = false;
 
+		// #dev scratchpad storage
+		std::string lastScratchCS;
+		std::string lastScratchMsg;
+
 		//************************************
 		// Description: Loads and updates the active airports with available configs
 		// Method:    UpdateActiveAirports
@@ -505,8 +513,8 @@ namespace vsid
 		//************************************
 		inline void addSyncQueue(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] adding scratch to queue. New: \"" +
-				newScratch + "\" | Old: \"" + oldScratch + "\"", vsid::MessageHandler::DebugArea::Dev);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] adding scratch to queue. New [{}] | Old: [{}]", callsign,
+				newScratch, oldScratch), vsid::DebugLevel::Sync);
 
 			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
 			this->syncQueue[callsign].push_back({newScratch, oldScratch});
@@ -523,10 +531,10 @@ namespace vsid
 		//************************************
 		inline void updateSPSyncRelease(std::string callsign)
 		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] updating sync release", vsid::MessageHandler::DebugArea::Dev);
+			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] updating sync release", callsign), vsid::DebugLevel::Sync);
 
 			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			else messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to update sync release. Not held in release list.", vsid::MessageHandler::DebugArea::Dev);
+			else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to update sync release. Not held in release list.", callsign), vsid::DebugLevel::Sync);
 		}
 
 		//************************************

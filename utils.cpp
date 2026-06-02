@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <sstream>
 #include <algorithm>
+#include <format>
 
 std::string vsid::utils::ltrim(const std::string& string)
 {
@@ -146,7 +148,7 @@ double vsid::utils::toDeg(const std::string& coord)
 {
 	if (coord.empty())
 	{
-		messageHandler->writeMessage("WARNING", "Empty coordinate string found! Skipping coordinate.");
+		vsid::Logger::log(vsid::LogLevel::Warning, "Empty coordinate string found! Skipping coordinate.");
 		return 0.0;
 	}
 
@@ -156,7 +158,7 @@ double vsid::utils::toDeg(const std::string& coord)
 	try
 	{
 		if (dms.size() < 4)
-			throw std::out_of_range("Coordinate string \"" + coord + "\" does not contain enough parts for DMS conversion!");
+			throw std::out_of_range(std::format("Coordinate string [{}] does not contain enough parts for DMS conversion!", coord));
 
 		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
 
@@ -168,14 +170,14 @@ double vsid::utils::toDeg(const std::string& coord)
 	}
 	catch (std::out_of_range& e)
 	{
-		messageHandler->writeMessage("ERROR", "Out of bounds while calculating coordinate: " + coord + ". " + e.what());
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Out of bounds while calculating coordinate [{}]. {}", coord, e.what()));
 	}
 	catch (const std::invalid_argument& e)
 	{
-		messageHandler->writeMessage("ERROR", "Invalid number format in coord " + coord + ". " + e.what());
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Invalid number format in coord [{}]. {}", coord, e.what()));
 	}
 
-	messageHandler->writeMessage("WARNING", "Fallback state for \"" + coord + "\"! Failed to calculate. DMS will be set to 0.0");
+	vsid::Logger::log(vsid::LogLevel::Warning, std::format("Fallback state for [{}]! Failed to calculate. DMS will be set to 0.0", coord));
 
 	return 0.0;
 }
