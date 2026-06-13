@@ -283,10 +283,21 @@ namespace vsid
 		// Parameter: std::string_view a
 		// Parameter: std::string_view b
 		//************************************
-		inline bool svEqualCi(std::string_view a, std::string_view b)
+		inline constexpr bool svEqualCi(std::string_view a, std::string_view b)
 		{
 			if (a.length() != b.length()) return false;
-			return std::ranges::equal(a, b, [](unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); });	
+
+			// non-constexpr return std::ranges::equal(a, b, [](unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); });
+
+			return std::ranges::equal(a, b, [](unsigned char c1, unsigned char c2)
+				{
+					auto toLower = [](unsigned char c) constexpr -> unsigned char
+						{
+							return (c >= 'A' && c <= 'Z') ? (unsigned char)(c + 32) : c;
+						};
+
+					return toLower(c1) == toLower(c2);
+				});
 		}
 	}
 }
