@@ -24,7 +24,7 @@
 *	ATC - FMP stations are skipped in controller detection (#410)
 *	ATC - if a controller disconnects that was on the list for failed SI determination the callsign will be removed to enable new evaluation upon new connection
 *	CMD - refactored command system enabling multiple parameters to be dynamically evaluated
-*	CMD - request command now also evaluates rwy request lists (as of now only 'startup')
+*	CMD - request command now also evaluates rwy request lists (as of now only 'startup') (#42)
 
 :gear: **Changed Features / Behaviour**
 *	ATC - after too many tries (10) evaluation for SI is stopped as it probably cannot be matched anymore (not reported by ES / the network and not present in the .ese file)
@@ -44,7 +44,7 @@
 	* .vsid auto [icaolist] - toggles automode force mode for given ICAOs (more than 1 parameter is usually only used for top-down services)
 *	CMD - new behaviour for rule command
 	* .vsid rule (ICAO) - lists all rules for the given airport
-	* .vsid rule (RULENAME) - toggles the given rule at any active airport
+	* .vsid rule (RULENAME) - toggles the given rule at any active airport (#421)
 	* .vsid rule (ICAO) [rulelist] - toggles all given rules for the specified airport
 
 :lady_beetle: **Fixes**
