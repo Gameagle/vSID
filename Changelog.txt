@@ -27,12 +27,19 @@
 :gear: **Changed Features / Behaviour**
 *	ATC - after too many tries (10) evaluation for SI is stopped as it probably cannot be matched anymore (not reported by ES / the network and not present in the .ese file)
 *	GEN - debugging console cannot be closed via the 'X' anymore (as this would also close ES)
+*	CMD - new behaviour for debug command
+	* .vsid debug - toggles console and sets all debug level as active, if console being opened
+	* .vsid debug all [level(s)] - activates all debug level without the level specified as further parameters
+	* .vsid debug none [level(s)] - deactivates all debug level without the level specified as further parameters
+	* .vsid debug [level(s)] - allows to toggle the specified levels as parameters
 
 :lady_beetle: **Fixes**
 *	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points
 	* due to a wrong coordinate in the .ese file the split was wrong and parameters missing - now guarded against
 *	GEN - version check could report newer remote version if minor or patch was newer but major was older
 *	FPLN - fulfilled restrictions could overwrite "pilot filed only" SIDs, even if it was not filed by the pilot
+
+* [pre-release fix] MENU - fixed false positiv error messages after switching to new logging system
 
 [Changelog v0.14.4]
 :gear: **Changed Features / Behaviour**
