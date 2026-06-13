@@ -9,6 +9,10 @@
 #include <optional>
 #include <fstream>
 #include <filesystem>
+#include <array>
+#include <vector>
+
+#include "utils.h"
 
 namespace vsid
 {
@@ -21,6 +25,7 @@ namespace vsid
 	};
 
 	enum class DebugLevel {
+		All,
 		Dev,
 		Menu,
 		Atc,
@@ -33,7 +38,9 @@ namespace vsid
 		Ese,
 		Gen,
 		Func,
-		Sync
+		Sync,
+		Cmd,
+		None
 	};
 
 	struct LogMessage {
@@ -99,14 +106,34 @@ namespace vsid
 		static std::vector<std::string> fetchEsMsgs();
 
 		//************************************
-		// Description: Toggles the console on or off
+		// Description: Enables console
 		// Method:    toggleConsole
 		// FullName:  vsid::Logger::toggleConsole
 		// Access:    public static 
 		// Returns:   void
 		// Qualifier:
 		//************************************
-		static void toggleConsole();
+		static void enableConsole();
+
+		//************************************
+		// Description: Disables console
+		// Method:    disableConsole
+		// FullName:  vsid::Logger::disableConsole
+		// Access:    public static 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		static void disableConsole();
+
+		//************************************
+		// Description: Returns the current state of console (open / closed)
+		// Method:    getConsoleState
+		// FullName:  vsid::Logger::getConsoleState
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		//************************************
+		inline static bool getConsoleState() { return newConsole; }
 
 		//************************************
 		// Description: Flushes all pending log messages to the console immediately, used in crash situations to save pending log msgs
@@ -128,7 +155,46 @@ namespace vsid
 		//************************************
 		inline static void setLogDevOnly(bool devOnly) { logDevOnly = devOnly; }
 
+		//************************************
+		// Description: Return wether only dev-level debug messages are logged
+		// Method:    getLogDevOnly
+		// FullName:  vsid::Logger::getLogDevOnly
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		//************************************
 		inline static bool getLogDevOnly() { return logDevOnly; }
+
+		//************************************
+		// Description: Toggles all debug levels contained in the list
+		// Method:    setDebugLevel
+		// FullName:  vsid::Logger::setDebugLevel
+		// Access:    public static 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::vector<std::string_view> & lvlList
+		//************************************
+		static void toggleDebugLevel(const std::vector<std::string_view>& lvlList);
+
+		//************************************
+		// Description: Get all current / active debug levels as array and state
+		// Method:    getDebugLevel
+		// FullName:  vsid::Logger::getDebugLevel
+		// Access:    public static 
+		// Returns:   std::array<bool, 16>
+		// Qualifier:
+		//************************************
+		inline static std::array<bool, 16> getDebugLevel() { return currentDebugLvl; }
+
+		//************************************
+		// Description: Sets up all active debug levels in one string for logging
+		// Method:    getDebugLevelString
+		// FullName:  vsid::Logger::getDebugLevelString
+		// Access:    public static 
+		// Returns:   std::string
+		// Qualifier:
+		//************************************
+		static std::string getDebugLevelString();
 
 	private:
 
@@ -142,6 +208,15 @@ namespace vsid
 		//************************************
 		static void workerThread();
 
+		//************************************
+		// Description: Transform a log level into a readable string
+		// Method:    logLvlToString
+		// FullName:  vsid::Logger::logLvlToString
+		// Access:    private static 
+		// Returns:   constexpr std::string_view
+		// Qualifier:
+		// Parameter: LogLevel lvl
+		//************************************
 		inline static constexpr std::string_view logLvlToString(LogLevel lvl)
 		{
 			switch (lvl)
@@ -154,6 +229,15 @@ namespace vsid
 			}
 		};
 
+		//************************************
+		// Description: Transform a debug level into a readable string
+		// Method:    debugLvlToString
+		// FullName:  vsid::Logger::debugLvlToString
+		// Access:    private static 
+		// Returns:   constexpr std::string_view
+		// Qualifier:
+		// Parameter: DebugLevel lvl
+		//************************************
 		inline static constexpr std::string_view debugLvlToString(DebugLevel lvl)
 		{
 			switch (lvl)
@@ -171,9 +255,58 @@ namespace vsid
 			case DebugLevel::Gen: return "GEN";
 			case DebugLevel::Func: return "FUNC";
 			case DebugLevel::Sync: return "SYNC";
+			case DebugLevel::Cmd: return "CMD";
 			default: return "N/A";
 			}
 		};
+
+		//************************************
+		// Description: Transform a string command into a debug level
+		// Method:    stringToDebugLvl
+		// FullName:  vsid::Logger::stringToDebugLvl
+		// Access:    private static 
+		// Returns:   constexpr vsid::DebugLevel
+		// Qualifier:
+		// Parameter: std::string_view lvl
+		//************************************
+		inline static constexpr DebugLevel stringToDebugLvl(std::string_view lvl)
+		{
+			if (vsid::utils::svEqualCi(lvl, "all")) return DebugLevel::All;
+			if (vsid::utils::svEqualCi(lvl, "dev")) return DebugLevel::Dev;
+			if (vsid::utils::svEqualCi(lvl, "menu")) return DebugLevel::Menu;
+			if (vsid::utils::svEqualCi(lvl, "atc")) return DebugLevel::Atc;
+			if (vsid::utils::svEqualCi(lvl, "sid")) return DebugLevel::Sid;
+			if (vsid::utils::svEqualCi(lvl, "fpln")) return DebugLevel::Fpln;
+			if (vsid::utils::svEqualCi(lvl, "req")) return DebugLevel::Req;
+			if (vsid::utils::svEqualCi(lvl, "conf")) return DebugLevel::Conf;
+			if (vsid::utils::svEqualCi(lvl, "rwy")) return DebugLevel::Rwy;
+			if (vsid::utils::svEqualCi(lvl, "area")) return DebugLevel::Area;
+			if (vsid::utils::svEqualCi(lvl, "ese")) return DebugLevel::Ese;
+			if (vsid::utils::svEqualCi(lvl, "gen")) return DebugLevel::Gen;
+			if (vsid::utils::svEqualCi(lvl, "func")) return DebugLevel::Func;
+			if (vsid::utils::svEqualCi(lvl, "sync")) return DebugLevel::Sync;
+			if (vsid::utils::svEqualCi(lvl, "cmd")) return DebugLevel::Cmd;
+
+			return DebugLevel::None;
+		}
+
+		//************************************
+		// Description: Checks if the given debug level is active
+		// Method:    isDebugLevelActive
+		// FullName:  vsid::Logger::isDebugLevelActive
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: DebugLevel lvl
+		//************************************
+		inline static bool isDebugLevelActive(DebugLevel lvl)
+		{
+			std::size_t idx = static_cast<std::size_t>(lvl);
+
+			if (idx >= currentDebugLvl.size()) return false;
+
+			return currentDebugLvl[idx];
+		}
 
 		//************************************
 		// Description: Rotates log files by flushing, closing and then opening a new file
@@ -186,6 +319,7 @@ namespace vsid
 		static void rotateLogs();
 
 		inline static bool logDevOnly;
+		inline static std::array<bool, 16> currentDebugLvl;
 		inline static std::queue<LogMessage> bgQueue;
 		inline static std::queue<std::string> esQueue;
 		inline static HANDLE fileLockMutex{ NULL };

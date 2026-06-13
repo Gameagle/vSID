@@ -84,46 +84,50 @@ void vsid::Logger::shutdown() {
 	}	
 }
 
-void vsid::Logger::toggleConsole()
+void vsid::Logger::enableConsole()
+{
+	if (newConsole) return;
+
+	std::lock_guard lock(consoleMutex);
+
+	if (AllocConsole())
+	{
+		newConsole = true;
+
+		// disable close button to prevent ES closing
+		HWND hwnd = GetConsoleWindow();
+		if (hwnd != NULL)
+		{
+			HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+			if (hMenu != NULL)
+			{
+				DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+			}
+			SetWindowTextA(hwnd, "Console Logger");
+		}
+
+		freopen_s(&consoleOut, "CONOUT$", "w", stdout);
+
+		log(LogLevel::Info, "Console output enabled.");
+	}
+}
+
+void vsid::Logger::disableConsole()
 {
 	std::lock_guard lock(consoleMutex);
 
-	if (!newConsole)
+	if (!newConsole) return;
+
+	log(LogLevel::Info, "Console output disabled.");
+
+	if (consoleOut)
 	{
-		if (AllocConsole())
-		{
-			newConsole = true;
-
-			// disable close button to prevent ES closing
-			HWND hwnd = GetConsoleWindow();
-			if (hwnd != NULL)
-			{
-				HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-				if (hMenu != NULL)
-				{
-					DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
-				}
-				SetWindowTextA(hwnd, "Console Logger");
-			}
-
-			freopen_s(&consoleOut, "CONOUT$", "w", stdout);
-
-			log(LogLevel::Info, "Console output enabled.");
-		}
+		fclose(consoleOut);
+		consoleOut = nullptr;
 	}
-	else
-	{
-		log(LogLevel::Info, "Console output disabled.");
 
-		if (consoleOut)
-		{
-			fclose(consoleOut);
-			consoleOut = nullptr;
-		}
-
-		FreeConsole();
-		newConsole = false;
-	}
+	FreeConsole();
+	newConsole = false;
 }
 
 std::vector<std::string> vsid::Logger::fetchEsMsgs()
@@ -189,10 +193,15 @@ void vsid::Logger::workerThread()
 			if(msg.level >= LogLevel::Warning)
 				logFile.flush();
 
-			if (logFile.tellp() >= 10 * 1024 * 1024) rotateLogs(); // rotate if log file exceeds 10 MB
+			if (logFile.tellp() >= 5 * 1024 * 1024) rotateLogs(); // rotate if log file exceeds 5 MB
 		}
 
 		// console output
+		if (msg.level == LogLevel::Debug && msg.debugLevel.has_value()) // skip console output if debug level is not active
+		{
+			if (!isDebugLevelActive(msg.debugLevel.value())) continue;
+		}
+
 		{
 			std::lock_guard lock(consoleMutex);
 
@@ -233,6 +242,7 @@ void vsid::Logger::rotateLogs()
 
 	std::error_code ec;
 
+	// shift logs by one index backwards to not overwrite files before moving
 	for (int i = 3; i >= 1; --i)
 	{
 		std::filesystem::path src = logFilePath.parent_path() / std::format("{}.{}{}", logFilePath.stem().string(), i, logFilePath.extension().string());
@@ -246,6 +256,8 @@ void vsid::Logger::rotateLogs()
 	}
 
 	std::filesystem::path firstLog = logFilePath.parent_path() / std::format("{}.1{}", logFilePath.stem().string(), logFilePath.extension().string());
+	
+	// main log file is rotated to index .1
 	if (std::filesystem::exists(logFilePath, ec))
 	{
 		std::filesystem::remove(firstLog, ec);
@@ -287,4 +299,51 @@ void vsid::Logger::panicFlush()
 
 		bgMutex.unlock();
 	}
+}
+
+void vsid::Logger::toggleDebugLevel(const std::vector<std::string_view>& lvlList)
+{
+	for (std::string_view svLvl : lvlList)
+	{
+		DebugLevel lvl = stringToDebugLvl(svLvl);
+
+		if (lvl == DebugLevel::None)
+		{
+			currentDebugLvl.fill(false);
+			continue;
+		}
+
+		if (lvl == DebugLevel::All)
+		{
+			currentDebugLvl.fill(true);
+			continue; // activates all debug level but continues to allow disabling of some levels (as further params)
+		}
+
+		std::size_t idx = static_cast<std::size_t>(lvl);
+
+		currentDebugLvl[idx] = !currentDebugLvl[idx];
+	}
+}
+
+std::string vsid::Logger::getDebugLevelString()
+{
+	std::string result;
+	bool first = true;
+
+	for (std::size_t i = 0; i < currentDebugLvl.size(); ++i)
+	{
+		if (!currentDebugLvl[i]) continue;
+
+		DebugLevel lvl = static_cast<DebugLevel>(i);
+
+		if (lvl != DebugLevel::All && lvl != DebugLevel::None)
+		{
+			if (!first) result += " | ";
+			result += debugLvlToString(lvl);
+
+			first = false;
+		}
+	}
+
+	return result.empty() ? "NONE" : result;
 }
