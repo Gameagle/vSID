@@ -131,12 +131,12 @@ void vsid::version::checkForUpdates(int notify, const std::optional<vsid::versio
 
 	if (!localVersion)
 	{
-		vsid::Logger::log(vsid::LogLevel::Debug, "Failed to get local version. Value was empty", vsid::DebugLevel::Dev);
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get local version. Value was empty");
 		return;
 	}
 	if (!ghv)
 	{
-		vsid::Logger::log(vsid::LogLevel::Debug, "Failed to get github version. Value was empty", vsid::DebugLevel::Dev);
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get github version. Value was empty");
 		return;
 	}
 	else
