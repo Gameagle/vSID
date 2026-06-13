@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "area.h"
 #include "sid.h"
+#include "utils.h"
 
 #include <string>
 #include <vector>
@@ -47,10 +48,9 @@ namespace vsid
 
 	struct Airport
 	{
-		/**
-		 * @brief Compare operator for custom request sorting.
-		 *
-		 */
+		//************************************
+		// Description: Compare operator for custom request sorting.
+		//************************************
 		struct compreq
 		{
 			bool operator()(auto l, auto r) const
@@ -59,6 +59,41 @@ namespace vsid
 			}
 		};
 
+		//************************************
+		// Description: Rules map with case insensitive compare
+		// first: std::string - rule name
+		// second: bool - if the rule is active
+		//************************************
+		using CustomRulesMap = std::map<std::string, bool, vsid::utils::CICompare>;
+
+		//************************************
+		// Description: Area map with case insensitive compare
+		// first: std::string - area name
+		// second: vsid::Area
+		//************************************
+		using CustomAreaMap = std::map<std::string, vsid::Area, vsid::utils::CICompare>;
+
+		//************************************
+		// Description: Set containing pair of callsign and request time
+		// std::pair first: std::string - callsign
+		// std::pair second: long long - request time
+		//************************************
+		using RequestSet = std::set<std::pair<std::string, long long>, compreq>;
+
+		//************************************
+		// Description: Request map with case insensitive compare
+		// first: std::string - request name
+		// std::pair second: RequestSet
+		//************************************
+		using CustomRequestMap = std::map<std::string, RequestSet, vsid::utils::CICompare>;
+
+		//************************************
+		// Description: RWY Request map with case insensitive compare
+		// first: std::string - request name
+		// second: std::map<std::string (rwy), RequestSet>
+		//************************************
+		using CustomRwyRequestMap = std::map<std::string, std::map<std::string, RequestSet, vsid::utils::CICompare>, vsid::utils::CICompare>;
+
 		std::string icao = "";
 		int elevation = 0;
 		bool equipCheck = true;
@@ -66,8 +101,8 @@ namespace vsid
 		std::vector<std::string> allRwys = {};
 		std::set<std::string> depRwys = {};
 		std::set<std::string> arrRwys = {};
-		std::map<std::string, bool> customRules = {};
-		std::map<std::string, vsid::Area> areas = {};
+		CustomRulesMap customRules = {};
+		CustomAreaMap areas = {};
 		//************************************
 		// Description: Stores rwy intersections for intsec menu
 		// Param 1: std::string - rwy
@@ -90,7 +125,7 @@ namespace vsid
 		// Param 2 (pair): std::string - callsign
 		// Param 3 (pair): long long - time
 		//************************************
-		std::map<std::string, std::set<std::pair<std::string, long long>, compreq>> requests = {};
+		CustomRequestMap requests = {};
 		//************************************
 		// Description: Stores runway requests
 		// Param 1: std::string - request type
@@ -98,7 +133,7 @@ namespace vsid
 		// Param 3 (pair): std::string - callsign
 		// Param 4 (pair): long long - time
 		//************************************
-		std::map<std::string, std::map< std::string, std::set<std::pair<std::string, long long>, compreq>>> rwyrequests = {};
+		CustomRwyRequestMap rwyrequests = {};
 		bool forceAuto = false;
 		/**
 		 * @brief Checks if another controller with a lower facility is online

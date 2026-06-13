@@ -432,12 +432,12 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 }
 
-void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
-										std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
+void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport, vsid::utils::CICompare>& activeAirports,
+										std::map<std::string, vsid::Airport::CustomRulesMap>& savedCustomRules,
 										std::map<std::string, std::map<std::string, bool>>& savedSettings,
-										std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-										std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
-										std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
+										std::map<std::string, vsid::Airport::CustomAreaMap>& savedAreas,
+										std::map<std::string, vsid::Airport::CustomRequestMap>& savedRequests,
+										std::map<std::string, vsid::Airport::CustomRwyRequestMap>& savedRwyRequests
 										)
 {
 	// get the current path where plugins .dll is stored
@@ -512,7 +512,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport> 
 
 						// customRules
 
-						std::map<std::string, bool> customRules;
+						vsid::Airport::CustomRulesMap customRules;
 						for (auto &el : this->parsedConfig.at(icao).value("customRules", std::map<std::string, bool>{}))
 						{
 							std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
