@@ -144,9 +144,9 @@ void vsid::Menu::addText(int type, std::string title, const CRect &base, std::st
 	// insert into total text overview
 
 	if (newText.title != "INVALID") this->texts.insert({ title, newText });
-
-	vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add text [{}] of invalid type to menu [{}]. Code: {}",
-		title, this->title, ERROR_MEN_TXTINVTYPE), vsid::DebugLevel::Menu);
+	else
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Trying to add text [{}] of invalid type to menu [{}]. Code: {}", 
+			title, this->title, ERROR_MEN_TXTINVTYPE), vsid::DebugLevel::Menu);
 }
 
 void vsid::Menu::removeText(const std::string& title)
