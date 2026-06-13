@@ -595,13 +595,13 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 void vsid::Display::OnAirportRunwayActivityChanged()
 {
-	vsid::Logger::log(vsid::LogLevel::Debug, "[MENU] Runway Activity Changed()", vsid::DebugLevel::Menu);
+	vsid::Logger::log(vsid::LogLevel::Debug, "Runway Activity Changed()", vsid::DebugLevel::Menu);
 
 	if (this->menues.empty()) return;
 
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
 	{
-		vsid::Logger::log(vsid::LogLevel::Debug, "[MENU] Shared Ptr valid.", vsid::DebugLevel::Menu, true);
+		vsid::Logger::log(vsid::LogLevel::Debug, "Shared Ptr valid.", vsid::DebugLevel::Menu, true);
 
 		// re-create mainmenu
 
@@ -735,7 +735,9 @@ void vsid::Display::openStartupMenu(const std::string apt, const std::string par
 
 		this->menues.insert({ title, std::move(newMenu) });
 	}
-	vsid::Logger::log(vsid::LogLevel::Error, std::format("Tried to create startup menu for [{}] but plugin couldn't be accessed. Code: {}", apt, ERROR_DSP_MENUSUCREATE));
+	else
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Tried to create startup menu for [{}] but plugin couldn't be accessed. Code: {}",
+			apt, ERROR_DSP_MENUSUCREATE));
 }
 
 void vsid::Display::removeMenu(const std::string &title)
@@ -748,13 +750,15 @@ void vsid::Display::removeMenu(const std::string &title)
 		}
 		this->menues.erase(title);
 	}
-	vsid::Logger::log(vsid::LogLevel::Error, std::format("Called to remove menu [{}] but it wasn't found in the menues list. Code: {}", title, ERROR_DSP_RMMENU));
+	else
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Called to remove menu [{}] but it wasn't found in the menues list. Code: {}", title, ERROR_DSP_RMMENU));
 }
 
 void vsid::Display::closeMenu(const std::string &title)
 {
 	if (this->menues.contains(title)) this->menues[title].toggleRender();
-	vsid::Logger::log(vsid::LogLevel::Error, std::format("Couldn't close menu [{}] because it is not in the menu list. Code: {}", title, ERROR_DSP_RMMENU));
+	else
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Couldn't close menu [{}] because it is not in the menu list. Code: {}", title, ERROR_DSP_RMMENU));
 }
 
 EuroScopePlugIn::CPosition vsid::Display::calculateIndicatorMeterOffset(double lat, double lon, double offset, double deg)

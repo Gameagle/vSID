@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "pch.h"
 
 #include "airport.h"
+#include "utils.h"
 #include "include/nlohmann/json.hpp"
 
 #include <string>
@@ -95,12 +96,12 @@ namespace vsid
 		 * @param savedSettings - settings that are transferred in between rwy change updates
 		 * @param savedAreas - area settings that are transferred in between rwy change updates
 		 */
-		void loadAirportConfig(std::map<std::string, vsid::Airport> &activeAirports,
-							std::map<std::string, std::map<std::string, bool>>& savedCustomRules,
+		void loadAirportConfig(std::map<std::string, vsid::Airport, vsid::utils::CICompare>& activeAirports,
+							std::map<std::string, vsid::Airport::CustomRulesMap>& savedCustomRules,
 							std::map<std::string, std::map<std::string, bool>>& savedSettings,
-							std::map<std::string, std::map<std::string, vsid::Area>>& savedAreas,
-							std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>& savedRequests,
-							std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>>& savedRwyRequests
+							std::map<std::string, vsid::Airport::CustomAreaMap>& savedAreas,
+							std::map<std::string, vsid::Airport::CustomRequestMap>& savedRequests,
+							std::map<std::string, vsid::Airport::CustomRwyRequestMap>& savedRwyRequests
 							);
 		/**
 		 * @brief Loads vsid config

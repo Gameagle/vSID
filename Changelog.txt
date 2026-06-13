@@ -23,16 +23,37 @@
 	* "hovWarning" (default: red) - warning color
 *	ATC - FMP stations are skipped in controller detection (#410)
 *	ATC - if a controller disconnects that was on the list for failed SI determination the callsign will be removed to enable new evaluation upon new connection
+*	CMD - refactored command system enabling multiple parameters to be dynamically evaluated
+*	CMD - request command now also evaluates rwy request lists (as of now only 'startup')
 
 :gear: **Changed Features / Behaviour**
 *	ATC - after too many tries (10) evaluation for SI is stopped as it probably cannot be matched anymore (not reported by ES / the network and not present in the .ese file)
 *	GEN - debugging console cannot be closed via the 'X' anymore (as this would also close ES)
+*	CMD - new behaviour for debug command
+	* .vsid debug - toggles console and sets all debug level as active, if console being opened
+	* .vsid debug all [level(s)] - activates all debug level without the level specified as further parameters
+	* .vsid debug none [level(s)] - deactivates all debug level without the level specified as further parameters
+	* .vsid debug [level(s)] - allows to toggle the specified levels as parameters
+*	CMD - new behaviour for req command
+	* .vsid req (ICAO) - lists all requests for the given airport
+	* .vsid req (ICAO) reset [listname] - resets all request lists for the given airport or only a given list (e.g. startup)
+*	CMD - new behaviour for area command
+	* .vsid area (ICAO) [arealist] - toggles area(s) for the given airport. Multiple areas are space separated (e.g. area1 area2)
+	* .vsid area off - switches off all areas
+*	CMD - new behaviour for auto command
+	* .vsid auto [icaolist] - toggles automode force mode for given ICAOs (more than 1 parameter is usually only used for top-down services)
+*	CMD - new behaviour for rule command
+	* .vsid rule (ICAO) - lists all rules for the given airport
+	* .vsid rule (RULENAME) - toggles the given rule at any active airport
+	* .vsid rule (ICAO) [rulelist] - toggles all given rules for the specified airport
 
 :lady_beetle: **Fixes**
 *	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points
 	* due to a wrong coordinate in the .ese file the split was wrong and parameters missing - now guarded against
 *	GEN - version check could report newer remote version if minor or patch was newer but major was older
 *	FPLN - fulfilled restrictions could overwrite "pilot filed only" SIDs, even if it was not filed by the pilot
+
+* [pre-release fix] MENU - fixed false positiv error messages after switching to new logging system
 
 [Changelog v0.14.4]
 :gear: **Changed Features / Behaviour**

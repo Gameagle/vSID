@@ -55,6 +55,11 @@ namespace vsid
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
 
+	struct Command {
+		std::string_view command;
+		std::vector<std::string_view> params;
+	};
+
 	class Display; // forward declaration
 
 	class VSIDPlugin : public EuroScopePlugIn::CPlugIn
@@ -78,10 +83,10 @@ namespace vsid
 		// Method:    getActiveApts
 		// FullName:  vsid::VSIDPlugin::getActiveApts
 		// Access:    public 
-		// Returns:   const std::map<std::string, vsid::Airport>&
+		// Returns:   const std::map<std::string, vsid::Airport, vsid::utils::CICompare>&
 		// Qualifier: const
 		//************************************
-		inline const std::map<std::string, vsid::Airport>& getActiveApts() const { return this->activeAirports; };
+		inline const std::map<std::string, vsid::Airport, vsid::utils::CICompare>& getActiveApts() const { return this->activeAirports; };
 
 		//************************************
 		// Description: Returns the SID waypoint found in the route or empty if none was found. Checks ES determined SID first.
@@ -395,7 +400,7 @@ namespace vsid
 			int FunctionId, POINT Pt, RECT Area);
 		
 	private:
-		std::map<std::string, vsid::Airport> activeAirports;
+		std::map<std::string, vsid::Airport, vsid::utils::CICompare> activeAirports;
 		std::map<std::string, vsid::Fpln> processed;
 		/**
 		 * @param std::map<std::string,> callsign
@@ -405,8 +410,8 @@ namespace vsid
 		vsid::ConfigParser configParser;
 		std::string configPath;
 		std::map<std::string, std::map<std::string, bool>> savedSettings;
-		std::map<std::string, std::map<std::string, bool>> savedRules;
-		std::map<std::string, std::map<std::string, vsid::Area>> savedAreas;
+		std::map<std::string, vsid::Airport::CustomRulesMap> savedRules;
+		std::map<std::string, vsid::Airport::CustomAreaMap> savedAreas;
 		std::map<std::string, vsid::Fpln> savedFplnInfo = {};
 		//************************************
 		// Description: Stores requests during airport updates
@@ -415,7 +420,7 @@ namespace vsid
 		// Param 3 (pair): std::string - callsign
 		// Param 4 (pair): long long - time
 		//************************************
-		std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>> savedRequests = {};
+		std::map<std::string, vsid::Airport::CustomRequestMap> savedRequests = {};
 		//************************************
 		// Description: Stores runway requests during airport updates
 		// Param 1: std::string - airport icao
@@ -424,7 +429,7 @@ namespace vsid
 		// Param 4 (pair): std::string - callsign
 		// Param 5 (pair): long long - time
 		//************************************
-		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {};
+		std::map<std::string, vsid::Airport::CustomRwyRequestMap> savedRwyRequests = {};
 		// list of ground states set by controllers
 		std::string gsList;
 		std::map<std::string, std::string> actAtc;
@@ -570,5 +575,7 @@ namespace vsid
 		// Parameter: const vsid::SectionAtc & local
 		//************************************
 		bool atcFreqMatch(const EuroScopePlugIn::CController& other, const vsid::SectionAtc& local);
+
+		std::optional<vsid::Command> parseCommand(const std::string_view commandLine);
 	};
 }
