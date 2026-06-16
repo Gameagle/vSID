@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <exception>
 
 #include "logger.h"
 
@@ -48,7 +49,9 @@ namespace vsid
 		//************************************
 		inline LONG WINAPI vSIDCrashHandler(EXCEPTION_POINTERS* exceptionInfo)
 		{
-			vsid::Logger::panicFlush(); // flush logs to file in case of crash
+			// early-exit in case of 0xE06D7363 (MSVC exeption code)
+			if (exceptionInfo->ExceptionRecord->ExceptionCode == 0xE06D7363)
+				return EXCEPTION_CONTINUE_SEARCH;
 
 			PVOID crashAdress = exceptionInfo->ExceptionRecord->ExceptionAddress;
 
@@ -69,9 +72,39 @@ namespace vsid
 			if (crashedModule != NULL && crashedModule == vsidModule)
 			{
 				writeStackTrace(exceptionInfo);
+				vsid::Logger::panicFlush(); // flush logs to file in case of crash
 			}
 			
 			return EXCEPTION_CONTINUE_SEARCH;
+		}
+
+		//************************************
+		// Description: Handles all unhandled exceptions in the plugin, logs and then force crashes ES
+		// Method:    vSIDTerminateHandler
+		// FullName:  vsid::crashhandler::vSIDTerminateHandler
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		inline void vSIDTerminateHandler()
+		{
+			try
+			{
+				if (auto ep = std::current_exception())
+					std::rethrow_exception(ep);
+			}
+			catch (const std::exception& e)
+			{
+				vsid::Logger::log(LogLevel::Error, std::format("[CRASH DUMP] Unhandled Exception occured in vSID! {}", e.what()));
+			}
+			catch (...)
+			{
+				vsid::Logger::log(LogLevel::Error, "[CRASH DUMP] Unknown Unhandled Exception occured in vSID!");
+			}
+
+			vsid::Logger::panicFlush();
+
+			abort(); // 
 		}
 
 		//************************************
