@@ -30,6 +30,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 #include <compare>
 
+#include <mutex>
+
 #include "utils.h"
 #include "area.h" // only for point calculation
 
@@ -81,15 +83,18 @@ namespace vsid
 		auto operator<=> (const vsid::SectionSID&) const = default;
 	};
 
+	struct EseBuffer {
+		std::set<vsid::SectionAtc> sectionAtc;
+		std::set<vsid::SectionSID> sectionSids;
+	};
+
 	class EseParser
 	{
 	public:
-		EseParser(std::set<vsid::SectionAtc>& sectionAtc, std::set<vsid::SectionSID>& sectionSid) :
-			sectionAtc_(sectionAtc), sectionSids_(sectionSid)
-		{
-		}
 
-		void parseEse(const std::filesystem::path& path);
+		void parseEse(const std::filesystem::path& folder, const std::filesystem::path& file);
+
+		inline EseBuffer getBuffer() { return std::move(this->tmpBuffer_); }
 
 	private:
 		enum class Section { None, Positions, SidsStars, Unknown };
@@ -135,6 +140,7 @@ namespace vsid
 
 		//************************************
 		// Description: Work to be done on leaving a section of the ese file
+		// --- currently no function ---
 		// Method:    exit
 		// FullName:  vsid::EseParser::exit
 		// Access:    private 
@@ -177,9 +183,6 @@ namespace vsid
 			return c == ';';
 		};
 
-		Section currSection = Section::None;
-		std::set<vsid::SectionAtc>& sectionAtc_;
-		std::set<vsid::SectionSID>& sectionSids_;
-
+		EseBuffer tmpBuffer_;
 	};
 }

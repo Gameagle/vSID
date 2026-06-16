@@ -133,6 +133,35 @@ std::pair<std::string, std::string> vsid::fplnhelper::splitTransition(std::strin
 	return { atcSid, ""};
 }
 
+std::pair<std::string_view, std::string_view> vsid::fplnhelper::splitTransitionSV(std::string_view atcSid)
+{
+	if (atcSid.size() < 2) return { "", "" };
+	atcSid = vsid::utils::trimSV(atcSid);
+
+	std::size_t pos = 0;
+	std::pair<std::string_view, std::string_view> fb = { atcSid, "" };
+
+	while ((pos = atcSid.find_first_of("xX", pos)) != std::string_view::npos)
+	{
+		if (pos == 0 || pos >= atcSid.size() - 1) { ++pos; continue; }
+
+		const std::string_view sid = atcSid.substr(0, pos);
+		const std::string_view trans = atcSid.substr(pos + 1);
+
+		if (sid.size() >= 3 && trans.size() >= 3 && vsid::utils::containsDigit(sid))
+		{
+			if (trans.front() != 'x' && trans.front() != 'X') return { sid, trans };
+			if (fb.second.empty()) fb = { sid, trans }; // save trans starting with x as fallback
+		}
+
+		++pos;
+	}
+
+	if (!fb.second.empty()) return fb;
+
+	return { atcSid, "" };
+}
+
 std::pair<std::string, std::string> vsid::fplnhelper::getAtcBlock(const EuroScopePlugIn::CFlightPlan &FlightPlan)
 {
 	std::vector<std::string> filedRoute = vsid::utils::split(FlightPlan.GetFlightPlanData().GetRoute(), ' ');

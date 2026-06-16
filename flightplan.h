@@ -98,6 +98,17 @@ namespace vsid
 		std::pair<std::string, std::string> splitTransition(std::string atcSid); // #refactor - std::optional as return, string_view as param
 
 		//************************************
+		// Description: Splits the SID at 'X' for use with SIDxTRANS as string_view
+		// Method:    splitTransitionSV
+		// FullName:  vsid::fplnhelper::splitTransitionSV
+		// Access:    public 
+		// Returns:   std::pair<std::string_view, std::string_view>
+		// Qualifier:
+		// Parameter: std::string_view atcSid
+		//************************************
+		std::pair<std::string_view, std::string_view> splitTransitionSV(std::string_view atcSid);
+
+		//************************************
 		// Description: Retrieves the "atc block" from a route (SID/RWY or ICAO/RWY)
 		// Method:    getAtcBlock
 		// FullName:  vsid::fplnhelper::getAtcBlock

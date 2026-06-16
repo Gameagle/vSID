@@ -6,22 +6,43 @@
 
 #include <format>
 
-void vsid::EseParser::parseEse(const std::filesystem::path& path)
-{
-	vsid::Logger::log(vsid::LogLevel::Debug, "Path to .ese for parsing: " + path.string(), vsid::DebugLevel::Conf);
+#include <thread>
 
-	std::ifstream in(path);
+void vsid::EseParser::parseEse(const std::filesystem::path& folder, const std::filesystem::path& file)
+{
+	std::filesystem::path fullPath = folder / file;
+	std::string fileICAO = file.string().substr(0, 4);
+
+	size_t currAtcSize = this->tmpBuffer_.sectionAtc.size();
+	size_t currSidSize = this->tmpBuffer_.sectionSids.size();
+
+	vsid::Logger::log(vsid::LogLevel::Debug, "Path to .ese for parsing: " + fullPath.string(), vsid::DebugLevel::Conf);
+
+	std::ifstream in(fullPath, std::ios::binary | std::ios::ate);
 	if (!in)
 	{
-		vsid::Logger::log(vsid::LogLevel::Error, "Failed to open .ese file in path: " + path.string());
-		return;
+		throw std::runtime_error("Failed to open .ese file in path: " + fullPath.string());
 	}
 
-	std::string l;
+	std::streamsize size = in.tellg();
+	in.seekg(0, std::ios::beg);
 
-	while (std::getline(in, l))
+	std::string fileContent(size, '\0');
+	if (!in.read(fileContent.data(), size))
 	{
-		if (isEmptyOrComment(l)) continue;
+		throw std::runtime_error("Failed to read .ese file content");
+	}
+
+	in.close();
+
+	std::vector<std::string_view> lines = vsid::utils::splitSV(fileContent, '\n');
+
+	Section currSection = Section::None;
+
+	for(std::string_view l : lines)
+	{
+		l = vsid::utils::trimSV(l);
+		if(l.empty() || l.front() == ';') continue;
 
 		if (isHeader(l)) // set new section and leave old one if active
 		{
@@ -32,16 +53,18 @@ void vsid::EseParser::parseEse(const std::filesystem::path& path)
 			continue;
 		}
 
-		if (currSection != Section::None && !isEmptyOrComment(l)) // work through non-empty and non-comment lines
+		if (currSection != Section::None) // work through non-empty and non-comment lines
 		{
-			line(currSection, std::string_view(l));
-			
+			line(currSection, l);	
 		}
 	}
 
 	if (currSection != Section::None) exit(currSection);
 
-	currSection = Section::None;
+	size_t atcAdded = this->tmpBuffer_.sectionAtc.size() - currAtcSize;
+	size_t sidAdded = this->tmpBuffer_.sectionSids.size() - currSidSize;
+
+	vsid::Logger::log(LogLevel::Debug, std::format("Parsed [{}] - Added [{}] stations | [{}] SIDs", fileICAO, atcAdded, sidAdded));
 }
 
 void vsid::EseParser::enter(vsid::EseParser::Section s)
@@ -49,12 +72,12 @@ void vsid::EseParser::enter(vsid::EseParser::Section s)
 	switch (s)
 	{
 	case Section::Positions:
-		this->sectionAtc_.clear();
+		vsid::Logger::log(LogLevel::Debug, "Started parsing of Positions.", DebugLevel::Ese);
 
 		break;
 
 	case Section::SidsStars:
-		this->sectionSids_.clear();
+		vsid::Logger::log(LogLevel::Debug, "Started parsing of Sids/Stars.", DebugLevel::Ese);
 		break;
 
 	case Section::Unknown:
@@ -69,15 +92,25 @@ void vsid::EseParser::line(Section s, std::string_view l)
 	{
 	case Section::Positions:
 	{
-		std::vector<std::string> atcVec = vsid::utils::split(vsid::utils::trim(std::string(l)), ':', true);
+		std::vector<std::string_view> atcVec = vsid::utils::splitSV(l, ':', true);
 		std::vector<EuroScopePlugIn::CPosition> visPoints = {};
 
 		if (atcVec.size() > 10)
 		{
 			for (size_t idx = 11; idx + 1 < std::min(atcVec.size(), static_cast<size_t>(20)); ++idx)
 			{
-				std::string& visLat = atcVec.at(idx);
-				std::string& visLon = atcVec.at(idx + 1);
+				std::string_view visLat = atcVec.at(idx);
+				std::string_view visLon = atcVec.at(idx + 1);
+
+				if (visLat.empty() || visLon.empty())
+				{
+					vsid::Logger::log(vsid::LogLevel::Warning, std::format("Empty coordinate string found for ATC station [{}] vis point (lat [{}] lon [{}]! Skipping coordinate.",
+						atcVec.at(0), visLat, visLon));
+					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[ESE] vis point in line : {}", l), vsid::DebugLevel::Conf);
+
+					++idx;
+					continue;
+				}
 
 				if (visLat.size() < 2 || visLon.size() < 2)
 				{
@@ -88,17 +121,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 				if (((visLat.front() == 'N' || visLat.front() == 'S') && std::isdigit(static_cast<unsigned char>(visLat.back()))) &&
 					((visLon.front() == 'E' || visLon.front() == 'W') && std::isdigit(static_cast<unsigned char>(visLon.back()))))
 				{
-					if (visLat.empty() || visLon.empty())
-					{
-						vsid::Logger::log(vsid::LogLevel::Warning, std::format("Empty coordinate string found for ATC station [{}] vis point (lat [{}] lon [{}]! Skipping coordinate.",
-							atcVec.at(0), visLat, visLon));
-						vsid::Logger::log(vsid::LogLevel::Debug, std::format("[ESE] vis point in line : {}", l), vsid::DebugLevel::Conf);
-
-						++idx;
-						continue;
-					}
-
-					visPoints.push_back(vsid::utils::toPoint({ visLat, visLon }));
+					visPoints.push_back(vsid::utils::toPoint({ std::string(visLat), std::string(visLon) }));
 				}
 
 				++idx;
@@ -109,12 +132,12 @@ void vsid::EseParser::line(Section s, std::string_view l)
 		{
 			int facility = 0;
 
-			if (atcVec.at(1).find("Information") != std::string::npos) facility = 1;
+			if (atcVec.at(1).find("Information") != std::string_view::npos) facility = 1;
 			else
 			{
 				std::optional<std::string> callsignFac = std::nullopt;
 
-				if(std::vector<std::string> callsignSplit = vsid::utils::split(atcVec.at(0), '_'); callsignSplit.size() > 2) 
+				if(std::vector<std::string_view> callsignSplit = vsid::utils::splitSV(atcVec.at(0), '_'); callsignSplit.size() > 2) 
 					callsignFac = callsignSplit.at(2);
 				else if(callsignSplit.size() > 1)
 					callsignFac = callsignSplit.at(1);
@@ -132,11 +155,11 @@ void vsid::EseParser::line(Section s, std::string_view l)
 				}
 			}
 
-			this->sectionAtc_.emplace(
-				atcVec.at(0), // callsign
-				atcVec.at(3), // si
+			this->tmpBuffer_.sectionAtc.emplace(
+				std::string(atcVec.at(0)), // callsign
+				std::string(atcVec.at(3)), // si
 				facility,
-				std::stod(atcVec.at(2)), // freq
+				std::stod(std::string(atcVec.at(2))), // freq
 				visPoints // additional vis points
 			); 
 		}
@@ -149,17 +172,17 @@ void vsid::EseParser::line(Section s, std::string_view l)
 	}
 	case Section::SidsStars:
 	{
-		std::vector<std::string> sidVec = vsid::utils::split(vsid::utils::trim(std::string(l)), ':');
+		std::vector<std::string_view> sidVec = vsid::utils::splitSV(l, ':');
 
 		try
 		{
 			if (sidVec.empty() || sidVec.at(0) == "STAR") break; // only parse SIDs
 
-			std::string currSid = vsid::utils::trim(sidVec.at(3));
+			std::string_view currSid = vsid::utils::trimSV(sidVec.at(3));
 
 			if (currSid.length() < 3) break; // protection for num / desig extraction
 
-			auto [sid, trans] = vsid::fplnhelper::splitTransition(currSid);
+			auto [sid, trans] = vsid::fplnhelper::splitTransitionSV(currSid);
 
 			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Parsing SID [{}] - sid: [{}] / trans : [{}]", currSid, sid, trans), vsid::DebugLevel::Ese, true);
 
@@ -168,9 +191,9 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			if (!sid.empty())
 			{
-				sectionSid.apt = vsid::utils::trim(sidVec.at(1));
-				sectionSid.rwy = vsid::utils::trim(sidVec.at(2));
-				if(sidVec.size() > 4) sectionSid.route = vsid::utils::trim(sidVec.at(4));
+				sectionSid.apt = vsid::utils::trimSV(sidVec.at(1));
+				sectionSid.rwy = vsid::utils::trimSV(sidVec.at(2));
+				if(sidVec.size() > 4) sectionSid.route = vsid::utils::trimSV(sidVec.at(4));
 
 				if (vsid::utils::lastIsDigit(sid))
 				{
@@ -217,7 +240,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 				(sectionSid.trans.desig) ? std::string(1, *sectionSid.trans.desig) : ""),
 				vsid::DebugLevel::Ese, true);
 
-			this->sectionSids_.emplace(std::move(sectionSid));
+			this->tmpBuffer_.sectionSids.emplace(std::move(sectionSid));
 		}
 		catch (const std::out_of_range& e)
 		{
@@ -237,10 +260,8 @@ void vsid::EseParser::exit(Section s)
 	switch (s)
 	{
 	case Section::Positions:
-		vsid::Logger::log(vsid::LogLevel::Info, std::format("Parsed {} atc stations.", this->sectionAtc_.size()));
 		break;
 	case Section::SidsStars:
-		vsid::Logger::log(vsid::LogLevel::Info, std::format("Parsed {} SIDs.", this->sectionSids_.size()));
 		break;
 
 	case Section::Unknown:

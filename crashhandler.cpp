@@ -148,6 +148,8 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 void vsid::crashhandler::initCrashHandler()
 {
 	if (vehHandler == NULL) vehHandler = AddVectoredExceptionHandler(1, vsid::crashhandler::vSIDCrashHandler);
+
+	std::set_terminate(vsid::crashhandler::vSIDTerminateHandler);
 }
 
 void vsid::crashhandler::removeCrashHandler()

@@ -32,6 +32,32 @@ std::vector<std::string> vsid::utils::split(std::string_view sv, const char del,
 	return elems;
 }
 
+std::vector<std::string_view> vsid::utils::splitSV(std::string_view sv, const char del, const bool keepEmpty)
+{
+	std::vector<std::string_view> elems;
+
+	size_t start = 0;
+	size_t end = sv.find(del);
+
+	while (end != std::string_view::npos)
+	{
+		auto next = vsid::utils::trimSV(sv.substr(start, end - start));
+
+		if (keepEmpty || !next.empty())
+			elems.emplace_back(next);
+
+		start = end + 1;
+		end = sv.find(del, start);
+	}
+
+	auto last = vsid::utils::trimSV(sv.substr(start));
+
+	if (keepEmpty || !last.empty())
+		elems.emplace_back(last);
+
+	return elems;
+}
+
 bool vsid::utils::containsDigit(int number, int digit)
 {
 	if (!number)
@@ -103,10 +129,12 @@ double vsid::utils::toDeg(const std::string& coord)
 	catch (std::out_of_range& e)
 	{
 		vsid::Logger::log(vsid::LogLevel::Error, std::format("Out of bounds while calculating coordinate [{}]. {}", coord, e.what()));
+		return 0.0;
 	}
 	catch (const std::invalid_argument& e)
 	{
 		vsid::Logger::log(vsid::LogLevel::Error, std::format("Invalid number format in coord [{}]. {}", coord, e.what()));
+		return 0.0;
 	}
 
 	vsid::Logger::log(vsid::LogLevel::Warning, std::format("Fallback state for [{}]! Failed to calculate. DMS will be set to 0.0", coord));
