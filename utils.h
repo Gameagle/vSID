@@ -59,7 +59,8 @@ namespace vsid
 		//************************************
 		constexpr std::string_view ltrim(std::string_view sv)
 		{
-			size_t start = sv.find_first_not_of(' ');
+			constexpr std::string_view ws = " \t\r\n\v\f";
+			size_t start = sv.find_first_not_of(ws);
 			return (start == std::string_view::npos) ? "" : sv.substr(start);
 		}
 		
@@ -74,7 +75,8 @@ namespace vsid
 		//************************************
 		constexpr std::string_view rtrim(std::string_view sv)
 		{
-			size_t end = sv.find_last_not_of(' ');
+			constexpr std::string_view ws = " \t\r\n\v\f";
+			size_t end = sv.find_last_not_of(ws);
 			return (end == std::string_view::npos) ? "" : sv.substr(0, end + 1);
 		}
 		
@@ -87,10 +89,24 @@ namespace vsid
 		// Qualifier:
 		// Parameter: const std::string_view sv
 		//************************************
-		inline std::string trim(const std::string_view sv)
+		inline std::string trim(std::string_view sv)
+		{
+			return std::string(ltrim(rtrim(sv)));
+		}
+
+		//************************************
+		// Description: Trims spaces on both sides of a string_view and returns string_view
+		// Method:    trimSV
+		// FullName:  vsid::utils::trimSV
+		// Access:    public 
+		// Returns:   std::string_view
+		// Qualifier:
+		// Parameter: const std::string_view sv
+		//************************************
+		inline constexpr std::string_view trimSV(std::string_view sv)
 		{
 			// return std::string(ltrim(rtrim(sv)));
-			return std::string(ltrim(rtrim(sv)));
+			return ltrim(rtrim(sv));
 		}
 		
 		//************************************
@@ -105,6 +121,21 @@ namespace vsid
 		// Parameter: const bool keepEmpty
 		//************************************
 		std::vector<std::string> split(std::string_view sv, const char del, const bool keepEmpty = false);
+
+
+		//************************************
+		// Description: Splits a string_view into a vector of string views based on a given delimiter, optionally keeping empty elements
+		// Method:    splitSV
+		// FullName:  vsid::utils::splitSV
+		// Access:    public 
+		// Returns:   std::vector<std::string_view>
+		// Qualifier:
+		// Parameter: std::string_view sv
+		// Parameter: const char del
+		// Parameter: const bool keepEmpty
+		//************************************
+		std::vector<std::string_view> splitSV(std::string_view sv, const char del, const bool keepEmpty = false);
+		std::vector<std::string_view> splitSV(std::string&&, const char del, const bool keepEmpty = false) = delete;
 
 		//************************************
 		// Description: Joins a container of strings / string_views into one string with a given delimiter
@@ -193,7 +224,8 @@ namespace vsid
 		//************************************
 		inline bool lastIsDigit(std::string_view s)
 		{
-			return std::isdigit(s.back());
+			if (s.empty()) return false;
+			return std::isdigit(static_cast<unsigned char>(s.back()));
 		}
 
 		//************************************
