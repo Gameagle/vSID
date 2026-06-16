@@ -2,6 +2,9 @@
 >[!WARNING]
 >SID evaluation slightly changed due to the bug fixing of restrictions overruling pilot filed SIDs. If you encounter odd or unexpected evaluation results please feel free to report back.
 
+>[!NOTE]
+> First version of multi file ESE parsing implemented. Feedback welcome regarding performance and reliability
+
 :new: **New Features**
 *	GEN - add crash handling
 	* a .txt file is generated with a small stacktrace showing the line or offset, depending if the pdb file was present at the time of the crash
@@ -22,7 +25,6 @@
 	* "hovNeutral" (default: orange) - caution / information color
 	* "hovWarning" (default: red) - warning color
 *	CONF - implemented multi file ESE parsing (#430)
-	* Feedback welcome regarding performance and reliability
 *	ATC - FMP stations are skipped in controller detection (#410)
 *	ATC - if a controller disconnects that was on the list for failed SI determination the callsign will be removed to enable new evaluation upon new connection
 *	CMD - refactored command system enabling multiple parameters to be dynamically evaluated
