@@ -76,8 +76,6 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 
 	this->loadEse(); // load and parse ese file
 
-	UpdateActiveAirports(); // preload rwy settings
-
 	if (curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
 		vsid::Logger::log(LogLevel::Error, "Failed to init curl_global");
 	else this->curlInit = true;
@@ -1718,40 +1716,86 @@ void vsid::VSIDPlugin::loadEse()
 		return;
 	}
 
-	char path[MAX_PATH + 1] = { 0 };
-	GetModuleFileNameA((HINSTANCE)&__ImageBase, path, MAX_PATH);
-	PathRemoveFileSpecA(path);
-	std::filesystem::path basePath = path;
-	std::string esePath = vSidConfig.at("esePath");
-	std::filesystem::path fullEsePath;
+	std::string pathBuffer(MAX_PATH, '\0');
+	DWORD len = GetModuleFileNameA((HINSTANCE)&__ImageBase, pathBuffer.data(), MAX_PATH);
+	pathBuffer.resize(len);
 
-	basePath.append(esePath).make_preferred();
-	
+	std::filesystem::path basePath = pathBuffer;
+	basePath.remove_filename();
+
+	std::string esePath = vSidConfig.at("esePath");
+	basePath.append(esePath);
+	basePath = basePath.lexically_normal();
+	basePath.make_preferred();
+
+	std::vector<std::filesystem::path> eseFileNames;
+		
 	try
 	{
 		for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
 		{
 			if (!std::filesystem::is_directory(entry) && entry.extension() == ".ese")
 			{
-				fullEsePath = entry;
-				fullEsePath = std::filesystem::canonical(fullEsePath.make_preferred());
+				eseFileNames.push_back(entry.filename());
 			}
 		}
 
-		if (fullEsePath.empty())
+		if (eseFileNames.empty())
 		{
-			vsid::Logger::log(LogLevel::Error, std::format("Couldn't find .ese file. Checked in [{}]", basePath.lexically_normal().string()));
+			vsid::Logger::log(LogLevel::Error, std::format("Couldn't find .ese file(s) in [{}]", basePath.string()));
 			return;
 		}
 	}
 	catch (std::filesystem::filesystem_error& e)
 	{
-		vsid::Logger::log(LogLevel::Error, std::format("Failed to validate ese path [{}]", e.what()));
+		vsid::Logger::log(LogLevel::Error, std::format("Failed to scan ese directory [{}]", e.what()));
 	}
 	
+	bool expected = false;
+	if (!this->parsingActive_.compare_exchange_strong(expected, true))
+	{
+		vsid::Logger::log(LogLevel::Warning, "ESE parsing already running in the background.");
+		return;
+	}
 
-	vsid::EseParser eseParser(this->sectionAtc, this->sectionSids);
-	eseParser.parseEse(fullEsePath);
+	this->parserThread_ = std::jthread([this, basePath, eseFileNames = std::move(eseFileNames)]()
+		{
+			vsid::Logger::log(LogLevel::Debug, "Started async parsing", DebugLevel::Ese);
+			try
+			{
+				vsid::EseParser eseParser;
+				
+
+				for (const auto& fileName : eseFileNames)
+				{
+					eseParser.parseEse(basePath, fileName);
+				}
+
+				vsid::EseBuffer tmpBuffer = eseParser.getBuffer();
+
+				vsid::Logger::log(LogLevel::Info,
+					std::format("ESE parsing complete. [{}] stations | [{}] SIDs",
+						tmpBuffer.sectionAtc.size(),
+						tmpBuffer.sectionSids.size()));
+
+				{
+					std::lock_guard<std::mutex> lock(this->bufferMtx_);
+					this->eseBuffer_ = std::move(tmpBuffer);
+				}		
+
+				this->eseDataRdy_ = true;
+			}
+			catch (const std::exception& e)
+			{
+				vsid::Logger::log(LogLevel::Error, std::format("Critical error in async ESE parsing: {}", e.what()));
+			}
+			catch (...)
+			{
+				vsid::Logger::log(LogLevel::Error, "Unknown error occured in async ESE parsing.");
+			}
+
+			this->parsingActive_ = false;
+		});
 }
 
 void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
@@ -5937,6 +5981,25 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 	//	}
 	//	catch (std::out_of_range) {} // no error reporting, we just do nothing
 	//}
+
+	if (this->eseDataRdy_)
+	{
+		std::lock_guard<std::mutex> lock(this->bufferMtx_);
+
+		if (this->eseBuffer_.has_value())
+		{
+			this->sectionAtc = std::move(this->eseBuffer_->sectionAtc);
+			this->sectionSids = std::move(this->eseBuffer_->sectionSids);
+
+			vsid::Logger::log(LogLevel::Info, "Updated ESE data from async buffer");
+
+			UpdateActiveAirports();
+
+			eseBuffer_.reset();
+		}
+
+		this->eseDataRdy_ = false;
+	}
 
 	std::vector<std::string> esLogs = vsid::Logger::fetchEsMsgs();
 

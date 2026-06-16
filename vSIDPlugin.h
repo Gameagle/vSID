@@ -31,6 +31,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sstream>
 #include <deque>
 #include <list>
+#include <optional>
+#include <thread>
 
 #include <format>
 
@@ -400,6 +402,13 @@ namespace vsid
 			int FunctionId, POINT Pt, RECT Area);
 		
 	private:
+		// buffer to tmp store extracted values after ese parsing until update
+		std::optional<vsid::EseBuffer> eseBuffer_; 
+		std::atomic<bool> eseDataRdy_{ false }; // flag to update if parsed data is rdy
+		std::mutex bufferMtx_;
+		std::jthread parserThread_;
+		std::atomic<bool> parsingActive_{ false }; // block multiple parsing
+
 		std::map<std::string, vsid::Airport, vsid::utils::CICompare> activeAirports;
 		std::map<std::string, vsid::Fpln> processed;
 		/**
