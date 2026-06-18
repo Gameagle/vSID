@@ -52,6 +52,7 @@
 	* .vsid rule (ICAO) [rulelist] - toggles all given rules for the specified airport
 *	GEN - changed syncing (requests, gnd states, etc) to new internal states and reduced update code call (updates are now with every scratch pad entry, but only evaluated if a state for the callsign is held)
 	* syncing is moved to a syncManager
+	* watch dog stops sync spamming in case a state cannot be switched and restores the old scratch pad entry
 
 :lady_beetle: **Fixes**
 *	CONF - fix crash during coordinate conversion while parsing the .ese file for atc stations and vis points

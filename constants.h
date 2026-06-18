@@ -124,3 +124,7 @@ const std::string ERROR_ATC_ICAOSPLIT_FREQ_OTH = "E070-1";
 const std::string ERROR_ATC_ICAOSPLIT_FREQ_MY = "E070-2";
 
 const std::string ERROR_REQ_RWYSPLIT = "E080";
+
+// other values
+
+const double SYNC_TIMEOUT_SECONDS = 0.5;
