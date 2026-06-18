@@ -46,6 +46,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "eseparser.h"
 #include "versionchecker.h"
+#include "syncManager.h"
 
 #include "logger.h"
 
@@ -458,28 +459,13 @@ namespace vsid
 		std::set<vsid::SectionAtc> sectionAtc;
 		// internal storage of parsed sids
 		std::set<vsid::SectionSID> sectionSids;
-		//************************************
-		// Description: Tracks if multiple scratch pad entries for the same callsign are save to be sent
-		// Param 1: std::string - callsign
-		// Param 2: std::string - last entry processed
-		//************************************
-		std::unordered_map<std::string, bool> spReleased;
 
-		//************************************
-		// Description: List of messages to be send for syncing infos for different callsigns
-		// Param 1: std::string - callsign
-		// Param 2: std::deque - messages list
-		// Param 2a: std::string - new scratch pad msg
-		// Param 2b: std::string - old scratch pad msg (to be restored)
-		//************************************
-		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
+		vsid::sync::SyncManager syncManager;
 
 		// internal squawn assignment queue
 		std::list<std::string> squawkQueue;
 		// time of last squawk assignment
 		std::chrono::utc_clock::time_point lastSquawkTP;
-		// scratch pad sync queue is active - try to suppress recieved scratch pad entries
-		bool spWorkerActive = false;
 		// if scratch pad sync queue is being worked on
 		std::atomic_bool queueInProcess = false;
 		// counter how often a false SI was reported by ES
@@ -501,55 +487,7 @@ namespace vsid
 		// Returns:   void
 		// Qualifier:
 		//************************************
-		void UpdateActiveAirports();
-		
-		//************************************
-		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
-		// for new msgs
-		// Method:    processSPQueue
-		// FullName:  vsid::VSIDPlugin::processSPQueue
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		//************************************
-		void processSPQueue();
-
-		//************************************
-		// Description: Adds a new msg pair to the sync queue
-		// Method:    addSyncQueue
-		// FullName:  vsid::VSIDPlugin::addSyncQueue
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: const std::string & callsign
-		// Parameter: const std::string & newScratch
-		// Parameter: const std::string & oldScratch
-		//************************************
-		inline void addSyncQueue(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch)
-		{
-			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] adding scratch to queue. New [{}] | Old: [{}]", callsign,
-				newScratch, oldScratch), vsid::DebugLevel::Sync);
-
-			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			this->syncQueue[callsign].push_back({newScratch, oldScratch});
-		}		
-		
-		//************************************
-		// Description: Updates a callsign to be released for new scratch pad messages to be sent
-		// Method:    updateSPSyncRelease
-		// FullName:  vsid::VSIDPlugin::updateSPSyncRelease
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: std::string callsign
-		//************************************
-		inline void updateSPSyncRelease(std::string callsign)
-		{
-			vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] updating sync release", callsign), vsid::DebugLevel::Sync);
-
-			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			else vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] failed to update sync release. Not held in release list.", callsign), vsid::DebugLevel::Sync);
-		}
+		void UpdateActiveAirports();	
 
 		//************************************
 		// Description: Load ese file and parse it if found

@@ -94,6 +94,7 @@ set(SOURCES
     logger.cpp
     pch.cpp
     sid.cpp
+    syncManager.cpp
     timeHandler.cpp
     utils.cpp
     versionchecker.cpp

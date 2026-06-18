@@ -1150,7 +1150,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] syncing [{}] with scratch. New [{}] | Old [{}]", callsign,
 				fpln.request, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString()), DebugLevel::Req);
 
-			this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+			this->syncManager.add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 
 		this->syncStates(FlightPlan);
@@ -1160,7 +1160,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 		if (this->activeAirports.contains(ades) && fpln.ctl)
 		{
 			std::string newScratch = ".VSID_CTL_TRUE";
-			this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+			this->syncManager.add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
 	else if(this->processed.contains(callsign))
@@ -1402,7 +1402,7 @@ void vsid::VSIDPlugin::processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPla
 			if (this->activeAirports[fplnData.GetOrigin()].settings["auto"])
 			{
 				std::string newScratch = ".vsid_auto_" + std::string(ControllerMyself().GetCallsign());
-				this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+				this->syncManager.add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 			}
 			this->processed[callsign].atcRWY = true;
 		}
@@ -1511,7 +1511,7 @@ void vsid::VSIDPlugin::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 					std::string newScratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
 
-					this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+					this->syncManager.add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 
 					stop = true;
 					break;
@@ -1528,7 +1528,7 @@ void vsid::VSIDPlugin::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 				std::string newScratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
 
-				this->addSyncQueue(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+				this->syncManager.add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 
 				break;
 			}
@@ -1546,12 +1546,12 @@ void vsid::VSIDPlugin::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
 	{
 		if (FlightPlan.GetClearenceFlag())
 		{
-			this->addSyncQueue(callsign, "CLEA", FlightPlan.GetControllerAssignedData().GetScratchPadString());
+			this->syncManager.add(callsign, "CLEA", FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 		
 		if (this->processed[callsign].gndState != "")
 		{
-			this->addSyncQueue(callsign, this->processed[callsign].gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+			this->syncManager.add(callsign, this->processed[callsign].gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
 }
@@ -1613,89 +1613,6 @@ bool vsid::VSIDPlugin::outOfVis(EuroScopePlugIn::CFlightPlan& FlightPlan)
 		return true;
 	}
 	return false;
-}
-
-void vsid::VSIDPlugin::processSPQueue()
-{
-	if (queueInProcess || this->syncQueue.empty()) return;
-
-	vsid::Logger::log(LogLevel::Debug, "Started sync processing queue...", DebugLevel::Dev, true);
-
-	queueInProcess = true;
-
-	for (std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>>::iterator it = this->syncQueue.begin(); it != this->syncQueue.end();)
-	{
-		std::string callsign = it->first;
-
-		EuroScopePlugIn::CFlightPlan FlightPlan = FlightPlanSelect(callsign.c_str());
-
-		if (!FlightPlan.IsValid())
-		{
-			this->spReleased.erase(callsign);
-			it = this->syncQueue.erase(it);
-			continue;
-		}
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] queue processing... total msg queue size [{}]", callsign, it->second.size()), DebugLevel::Dev, true);
-
-		if (this->spReleased.contains(callsign) && this->spReleased[callsign])
-		{
-			std::pair<std::string, std::string> scratchPair = std::move(it->second.front());
-			it->second.pop_front();
-
-			// #evaluate - removing double entries - + 8 lines below
-
-			size_t pos = 0;
-			for (auto jt = it->second.begin(); jt != it->second.end(); ++jt)
-			{
-				if (jt->first == scratchPair.first && jt->second == scratchPair.second) ++pos;
-			}
-
-			if (pos != 0 && pos <= it->second.size())
-			{
-				it->second.erase(it->second.begin(), it->second.begin() + pos);
-			}
-
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] #1 (Queue) sync released... [{}]", callsign, (this->spReleased[callsign]) ? "TRUE" : "FALSE"), DebugLevel::Dev, true);
-
-			this->spReleased[callsign] = false;
-			spWorkerActive = true; // reset on received update
-
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] (Queue) scratch pad sending scratch. New [{}] | Old [{}]", callsign,
-				scratchPair.first, scratchPair.second), DebugLevel::Dev);
-
-			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.first).c_str());
-			FlightPlan.GetControllerAssignedData().SetScratchPadString(vsid::utils::trim(scratchPair.second).c_str());
-
-			// pre-release sync lock as mentioned ES msgs are never received #checkforremoval - check now moved to flightplandataupate (CTR_..)
-			
-			// if (scratchPair.first == "CLEA" || scratchPair.first == "NOTC") this->updateSPSyncRelease(callsign);
-		}
-		else if (this->spReleased.contains(callsign) && !this->spReleased[callsign]) // #dev - sync - remove (only debugging)
-		{
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] #2 (Queue) sync released... [{}]", callsign, (this->spReleased[callsign]) ? "TRUE" : "FALSE"), DebugLevel::Dev, true);
-		}
-		else if (!spReleased.contains(callsign))
-		{
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] (Queue) release check not found...", callsign), DebugLevel::Dev, true);
-
-			this->spReleased.erase(callsign);
-			it = this->syncQueue.erase(it);
-			continue;
-		}
-
-		if (it->second.size() == 0)
-		{
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] no more messages in queue. Removing...", callsign), DebugLevel::Dev);
-			it = this->syncQueue.erase(it);
-			this->spReleased.erase(callsign);
-			continue;
-		}
-
-		++it;
-	}
-	queueInProcess = false;
-
-	vsid::Logger::log(LogLevel::Debug, "Finished sync processing queue...", DebugLevel::Dev);
 }
 
 void vsid::VSIDPlugin::loadEse()
@@ -2578,7 +2495,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 				newScratch = ".vsid_req_" + std::string(sItemString) + "/" + std::to_string(now); // #refactor - now check for empty string needed
 
-				if (!newScratch.empty()) this->addSyncQueue(callsign, newScratch, fpln.GetControllerAssignedData().GetScratchPadString());
+				if (!newScratch.empty()) this->syncManager.add(callsign, newScratch, fpln.GetControllerAssignedData().GetScratchPadString());
 			}
 		}
 
@@ -2612,7 +2529,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				(atcSid == "" || atcSid == adep))
 				this->processFlightplan(fpln, false, atcRwy);
 
-			if (std::string(fpln.GetGroundState()) == "") this->addSyncQueue(callsign, "STUP", fpln.GetControllerAssignedData().GetScratchPadString()); // # dev - sync
+			if (std::string(fpln.GetGroundState()) == "") this->syncManager.add(callsign, "STUP", fpln.GetControllerAssignedData().GetScratchPadString()); // # dev - sync
 		}
 
 		if (FunctionId == TAG_FUNC_VSID_INTS_SET)
@@ -2641,10 +2558,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			else
 			{
 				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_SET, "");
-				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".vsid_int_none_false", fpln.GetControllerAssignedData().GetScratchPadString());
+				else if (std::string(sItemString) == "Clear") this->syncManager.add(callsign, ".vsid_int_none_false", fpln.GetControllerAssignedData().GetScratchPadString());
 				else if (std::string(sItemString) == "NO RWY") return;
 				else if (std::string(sItemString) == "NO INTS") return;
-				else this->addSyncQueue(callsign, ".vsid_int_" + std::string(sItemString).substr(0, 3) + "_true", fpln.GetControllerAssignedData().GetScratchPadString());
+				else this->syncManager.add(callsign, ".vsid_int_" + std::string(sItemString).substr(0, 3) + "_true", fpln.GetControllerAssignedData().GetScratchPadString());
 			}
 		}
 
@@ -2674,10 +2591,10 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 			else
 			{
 				if (std::string(sItemString) == "Custom") this->OpenPopupEdit(Area, TAG_FUNC_VSID_INTS_ABLE, "");
-				else if (std::string(sItemString) == "Clear") this->addSyncQueue(callsign, ".VSID_INT_NONE_FALSE", fpln.GetControllerAssignedData().GetScratchPadString());
+				else if (std::string(sItemString) == "Clear") this->syncManager.add(callsign, ".VSID_INT_NONE_FALSE", fpln.GetControllerAssignedData().GetScratchPadString());
 				else if (std::string(sItemString) == "NO RWY") return;
 				else if (std::string(sItemString) == "NO INTS") return;
-				else this->addSyncQueue(callsign, ".VSID_INT_" + std::string(sItemString).substr(0, 3) + "_FALSE", fpln.GetControllerAssignedData().GetScratchPadString());
+				else this->syncManager.add(callsign, ".VSID_INT_" + std::string(sItemString).substr(0, 3) + "_FALSE", fpln.GetControllerAssignedData().GetScratchPadString());
 			}
 		}
 
@@ -2690,7 +2607,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		if (FunctionId == TAG_FUNC_VSID_HOV)
 		{
 			this->processed[callsign].hov = !this->processed[callsign].hov;
-			this->addSyncQueue(callsign, std::format(".VSID_HOV_{}", this->processed[callsign].hov ? "TRUE" : "FALSE"),
+			this->syncManager.add(callsign, std::format(".VSID_HOV_{}", this->processed[callsign].hov ? "TRUE" : "FALSE"),
 				fpln.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
@@ -2700,7 +2617,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		this->processed[callsign].ctl = !this->processed[callsign].ctl;
 
 		std::string ctl = (this->processed[callsign].ctl) ? "TRUE" : "FALSE";
-		this->addSyncQueue(callsign, ".VSID_CTL_" + ctl, fpln.GetControllerAssignedData().GetScratchPadString());
+		this->syncManager.add(callsign, ".VSID_CTL_" + ctl, fpln.GetControllerAssignedData().GetScratchPadString());
 	}
 
 	if (FunctionId == TAG_FUNC_VSID_CTL_LOCAL)
@@ -2713,7 +2630,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 {
 	if (!FlightPlan.IsValid()) return;
 
-	this->processSPQueue(); // process sync queue on each tagItem update
+	this->syncManager.processQueue(this); // process sync queue on each tagItem update
 
 	if (this->outOfVis(FlightPlan)) return;
 
@@ -4278,7 +4195,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 					if (std::string_view intersection = fpln.intsec.first; !intersection.empty())
 					{
-						this->addSyncQueue(callsign,
+						this->syncManager.add(callsign,
 							std::format(".VSID_INT_{}_{}", intersection, fpln.intsec.second ? "TRUE" : "FALSE"),
 							oldScratchPad);
 					}
@@ -4290,7 +4207,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					vsid::Logger::log(LogLevel::Debug, std::format("[{}] syncing ctlf.", callsign), vsid::DebugLevel::Sync);
 
-					this->addSyncQueue(callsign, std::format(".VSID_CTL_{}", fpln.ctl ? "TRUE" : "FALSE"), oldScratchPad);
+					this->syncManager.add(callsign, std::format(".VSID_CTL_{}", fpln.ctl ? "TRUE" : "FALSE"), oldScratchPad);
 				}
 			}
 			return true;
@@ -4827,15 +4744,9 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			lastScratchMsg = scratchpad;
 		}
 
-		if (spWorkerActive) // #dev - new scratchpad skipping - only toggling workerActive as long as other skip is enabled
-		{
-			//messageHandler->writeMessage("DEBUG", "SP sync worker active. Skipping current scratch evaluation", vsid::MessageHandler::DebugArea::Dev); #dev - new logger
-			// vsid::Logger::log(LogLevel::Debug, "SP sync worker active. Skipping current scratch evaluation", vsid::DebugLevel::Dev);
-			spWorkerActive = false;
-			// return;
-		}
-
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Scratchpad [{}]", callsign, scratchpad), vsid::DebugLevel::Dev);
+
+		this->syncManager.update(FlightPlan);
 
 		// set clearance flag
 
@@ -4847,8 +4758,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			bool ctl = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
 
 			this->processed[callsign].ctl = ctl; // #evaluate - setting 'false' could delete from processed if ades is not active (protection against too many entries)
-
-			if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 		}
 
 		if (this->processed.contains(callsign) && scratchpad.size() > 0)
@@ -4895,32 +4804,18 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 							FlightPlan.GetFlightPlanData().GetSidName(), atc));
 					}
 				}
-
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
 			// sync release if GRP states are synced - ES is released on gnd state updates
 
 			if (scratchpad.find("NOSTATE") != std::string::npos)
-			{
 				this->processed[callsign].gndState = "NOSTATE";
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
-			}
 			if (scratchpad.find("ONFREQ") != std::string::npos)
-			{
 				this->processed[callsign].gndState = "ONFREQ";
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
-			}
 			if (scratchpad.find("DE-ICE") != std::string::npos)
-			{
 				this->processed[callsign].gndState = "DE-ICE";
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
-			}
 			if (scratchpad.find("LINEUP") != std::string::npos)
-			{
 				this->processed[callsign].gndState = "LINEUP";
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
-			}
 
 			// clearance flag released while sending - (now temp. below GND states here)
 
@@ -5050,8 +4945,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						messageHandler->addFplnError(callsign, ERROR_FPLN_REQSET);
 					}
 				}
-
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
 			// intersections
@@ -5079,8 +4972,6 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						messageHandler->addFplnError(callsign, ERROR_FPLN_INTSET);
 					}
 				}
-
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 
 			// handover flag
@@ -5093,21 +4984,19 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				bool hov = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
 
 				this->processed[callsign].hov = hov;
-
-				if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
 			}
 		}
 	}
 
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_GROUND_STATE) // updating sync release for ES states as they're not always seen in scratch pad
 	{
-		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+		this->syncManager.update(FlightPlan, "GND");
 	}
 
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_CLEARENCE_FLAG) //#dev updating sync release for ES clearance flag as it is not seen in scratch pad
 	{
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] received clearance flag update", callsign), vsid::DebugLevel::Dev);
-		if (this->spReleased.contains(callsign)) this->updateSPSyncRelease(callsign);
+		this->syncManager.update(FlightPlan, "CLEA");
 	}
 
 	if (this->activeAirports.contains(adep))
@@ -6039,8 +5928,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 			}
 		}
 
-		this->syncQueue.clear();
-		this->spReleased.clear();
+		this->syncManager.clear();
 	}
 
 	// check squawk queue each second if new squawk can be set
