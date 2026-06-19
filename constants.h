@@ -128,3 +128,4 @@ const std::string ERROR_REQ_RWYSPLIT = "E080";
 // other values
 
 const double SYNC_TIMEOUT_SECONDS = 0.5;
+const int MAX_ATC_FAIL_COUNT = 5;
