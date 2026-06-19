@@ -48,6 +48,24 @@ namespace vsid
 			}
 		};
 
+		// hash to enable unordered_map/_set to use string_view for search ops
+		struct StringHash {
+			using is_transparent = void; // Enable heterogeneous lookup
+
+			[[nodiscard]] size_t operator()(std::string_view txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const std::string& txt) const
+			{
+				return std::hash<std::string>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const char* txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
+			}
+		};
+
 		//************************************
 		// Description: Trims spaces on the left side of a string_view
 		// Method:    ltrim
