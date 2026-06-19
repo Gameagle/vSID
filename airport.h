@@ -29,21 +29,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <chrono>
 
-// dev
-#include "messageHandler.h"
-// end dev
-
 namespace vsid
 {
-	struct Controller
-	{
-		std::string si = "";
-		int facility = 0;
-		double freq = 0.0;
+	struct AtcData {
+		std::string si;
+		int facility;
+		double freq;
+		std::unordered_set<std::string> Icaos;
 	};
 
 	struct Airport
@@ -118,7 +116,7 @@ namespace vsid
 		int maxInitialClimb = 0;
 		bool autoHandoff = true;
 		std::map<std::string, bool> settings = {};
-		std::map<std::string, vsid::Controller> controllers = {};
+		std::unordered_map<std::string, vsid::AtcData, vsid::utils::StringHash, std::equal_to<>> controllers = {};
 		//************************************
 		// Description: Stores requests during airport updates
 		// Param 1: std::string - request type

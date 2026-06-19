@@ -26,10 +26,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <algorithm>
-#include <sstream>
-#include <deque>
 #include <list>
 #include <optional>
 #include <thread>
@@ -442,8 +441,8 @@ namespace vsid
 		std::map<std::string, vsid::Airport::CustomRwyRequestMap> savedRwyRequests = {};
 		// list of ground states set by controllers
 		std::string gsList;
-		std::map<std::string, std::string> actAtc;
-		std::set<std::string> ignoreAtc;
+		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> activeAtc;
+		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> ignoredAtc;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
 		//************************************
@@ -468,8 +467,8 @@ namespace vsid
 		std::chrono::utc_clock::time_point lastSquawkTP;
 		// if scratch pad sync queue is being worked on
 		std::atomic_bool queueInProcess = false;
-		// counter how often a false SI was reported by ES
-		std::map<std::string, int> atcSiFailCounter;
+		// counter how often atc is considered invalid (not a controller / number SI)
+		std::unordered_map<std::string, int> atcFailCounter;
 		// was the update check already issued
 		bool updateInformed = false;
 		// if curl init was successfull

@@ -5188,22 +5188,38 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 
 void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController Controller)
 {
-	const std::string atcCallsign = Controller.GetCallsign();
-	std::string atcSI = Controller.GetPositionId();
-	const int atcFac = Controller.GetFacility();
-	const double atcFreq = Controller.GetPrimaryFrequency();
-	std::string atcIcao;
+	vsid::AtcData data;
+	std::string_view atcIcao;
+
+	const std::string atcCallsign = Controller.GetCallsign(); // #continue - transform to string_view
+	
+	data.si = Controller.GetPositionId();
+	data.facility = Controller.GetFacility();
+	data.freq = Controller.GetPrimaryFrequency();
+
+	bool invalidFreq = data.freq < 0.1 || data.freq > 199.0;
+
+	auto failit = this->atcFailCounter.find(atcCallsign);
+	bool inFailCounter = (failit != this->atcFailCounter.end());
 
 	if (atcCallsign == ControllerMyself().GetCallsign()) return;
-	if (this->actAtc.contains(atcSI) || this->ignoreAtc.contains(atcSI)) return;
-	if (this->atcSiFailCounter.contains(atcCallsign) && this->atcSiFailCounter[atcCallsign] >= 10) return;
+	if (this->activeAtc.contains(atcCallsign) || this->ignoredAtc.contains(atcCallsign)) return;
+
+	if (inFailCounter)
+	{
+		if (failit->second >= MAX_ATC_FAIL_COUNT)
+		{
+			this->ignoredAtc.insert({ atcCallsign, data });
+			return;
+		}
+	}
 
 	try
 	{
-		atcIcao = vsid::utils::split(atcCallsign, '_').at(0);
+		atcIcao = vsid::utils::splitSV(atcCallsign, '_').at(0);
 		messageHandler->removeGenError(ERROR_ATC_ICAOSPLIT + "_" + atcCallsign);
 	}
-	catch (std::out_of_range)
+	catch (const std::out_of_range &e)
 	{
 		if (!messageHandler->genErrorsContains(ERROR_ATC_ICAOSPLIT + "_" + atcCallsign))
 		{
@@ -5214,147 +5230,195 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 		}
 	}
 
-	// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
-
-	if (this->atcSiFailCounter.contains(atcCallsign) && this->atcSiFailCounter[atcCallsign] > 2 && this->atcSiFailCounter[atcCallsign] < 6)
-	{
-		for (const vsid::SectionAtc &sAtc : this->sectionAtc)
-		{
-			if (atcCallsign == sAtc.callsign || atcFreqMatch(Controller, sAtc))
-			{
-				atcSI = sAtc.si;
-
-				vsid::Logger::log(LogLevel::Debug, std::format("[{}] match found in parsed stations. Setting SI [{}]",
-					atcCallsign, atcSI), vsid::DebugLevel::Atc);
-
-				break;
-			}
-		}
-	}
-	
-	if (!Controller.IsController())
-	{
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping ATC because it is not a controller.",
-			atcCallsign), vsid::DebugLevel::Atc);
-
-		return;
-	}
-	
 	if (atcCallsign.find("ATIS") != std::string::npos)
 	{
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Adding ATIS to ignore list.", atcCallsign), vsid::DebugLevel::Atc);
-		this->ignoreAtc.insert(atcSI);
+
+		this->ignoredAtc.insert({ atcCallsign, data });
 		return;
 	}
 
 	if (atcCallsign.ends_with("FMP"))
 	{
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping FMP station.", atcCallsign), vsid::DebugLevel::Atc);
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Adding FMP station to ignore list.", atcCallsign), vsid::DebugLevel::Atc);
+
+		this->ignoredAtc.insert({ atcCallsign, data });
 		return;
 	}
 
-	if (atcFreq < 0.1 || atcFreq > 199.0)
+	if (!Controller.IsController())
 	{
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping ATC because the freq is invalid [{}].", atcCallsign, atcFreq), vsid::DebugLevel::Atc);
-		return;
-	}
-
-	if (atcFac < 2)
-	{
-		if (!std::all_of(atcSI.begin(), atcSI.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); }))
+		if (inFailCounter)
 		{
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Adding SI to ignore list because the facility is below 2 (usually FIS).", atcCallsign), vsid::DebugLevel::Atc);
+			++failit->second;
 
-			this->ignoreAtc.insert(atcSI);
-
+			vsid::Logger::log(LogLevel::Debug, std::format("[{}] is not a controller. Increasing fail count [{}/{}]",
+				atcCallsign, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
+			
 			return;
 		}
-		
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping ATC because the facility is below 2 (usually FIS) and SI [{}] cannot be stored.",
-			atcCallsign, atcSI), vsid::DebugLevel::Atc);
 
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] ATC is not a controller. Adding to fail count.",
+			atcCallsign), vsid::DebugLevel::Atc);
+
+		this->atcFailCounter.insert({ atcCallsign, 1 });
+
+		return;
+	}
+
+	if (invalidFreq)
+	{
+		if (inFailCounter)
+		{
+			++failit->second;
+
+			vsid::Logger::log(LogLevel::Debug, std::format("[{}] has invalid frequency [{}]. Increasing fail count [{}/{}]",
+				atcCallsign, data.freq, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
+			
+			return;
+		}
+
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] has invalid frequency [{}]. Adding to fail count.",
+			atcCallsign, data.freq), vsid::DebugLevel::Atc);
+
+		this->atcFailCounter.insert({ atcCallsign, 1 });
+
+		return;
+	}
+
+	if (data.facility < 2)
+	{		
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] has facility below 2 (usually FIS). Adding to ignore list.",
+			atcCallsign), vsid::DebugLevel::Atc);
+
+		this->ignoredAtc.insert({ atcCallsign, data });
 		return;
 	}
 	
-	if (atcSI.empty())
+	if (data.si.empty())
 	{
-		if (this->atcSiFailCounter.contains(atcCallsign)) this->atcSiFailCounter[atcCallsign]++;
-		else this->atcSiFailCounter[atcCallsign] = 1;
+		if (inFailCounter)
+		{
+			++failit->second;
 
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping ATC because the SI is empty. Failed SI count [{}]",
-			atcCallsign, this->atcSiFailCounter[atcCallsign]), vsid::DebugLevel::Atc);
+			vsid::Logger::log(LogLevel::Debug, std::format("[{}] is skipped because the SI is empty. Increasing fail count [{}/{}]",
+				atcCallsign, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);		
+
+			return;
+		}
+
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] is skipped because the SI is empty. Adding to fail count.",
+			atcCallsign), vsid::DebugLevel::Atc);
+
+		this->atcFailCounter.insert({ atcCallsign, 1 });
 
 		return;
 	}
-	else if (std::all_of(atcSI.begin(), atcSI.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); }))
+
+	if (std::all_of(data.si.begin(), data.si.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); }))
 	{
-		if (this->atcSiFailCounter.contains(atcCallsign)) this->atcSiFailCounter[atcCallsign]++;
-		else this->atcSiFailCounter[atcCallsign] = 1;
+		if (inFailCounter)
+		{
+			++failit->second;
 
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] Skipping ATC because the SI contains a number [{}]. Failed SI count [{}]",
-			atcCallsign, atcSI, this->atcSiFailCounter[atcCallsign]), vsid::DebugLevel::Atc);
+			vsid::Logger::log(LogLevel::Debug, std::format("[{}] is skipped because the SI is a number [{}]. Increasing fail count [{}/{}]",
+				atcCallsign, data.si, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
 
-		if (this->atcSiFailCounter[atcCallsign] == 10)
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Failed to get valid SI after 10 attempts. No more evaluation.",
-				atcCallsign), vsid::DebugLevel::Atc);
+			return;
+		}
 
-		return;
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] is skipped because the SI is a number [{}]. Adding to fail count.",
+			atcCallsign, data.si), vsid::DebugLevel::Atc);
+
+		this->atcFailCounter.insert({ atcCallsign, 1 });
 	}
-	else if (this->atcSiFailCounter.contains(atcCallsign))
+	else if (this->atcFailCounter.contains(atcCallsign))
 	{
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] removing from SI Fail Counter after SI [{}] is valid.", atcCallsign, atcSI), vsid::DebugLevel::Atc);
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] is removed from fail counter after "
+			"SI [{}] is valid.", atcCallsign, data.si), vsid::DebugLevel::Atc);
 
-		this->atcSiFailCounter.erase(atcCallsign);
+		this->atcFailCounter.erase(failit);
+		inFailCounter = false;
+	}
+
+	// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
+	if (inFailCounter)
+	{
+		if (failit->second > 2 && failit->second < MAX_ATC_FAIL_COUNT)
+		{
+			for (const vsid::SectionAtc& sAtc : this->sectionAtc)
+			{
+				if (vsid::utils::svEqualCi(atcCallsign, sAtc.callsign) || atcFreqMatch(Controller, sAtc))
+				{
+					data.si = sAtc.si;
+					data.freq = sAtc.freq;
+					data.facility = sAtc.facility;
+
+					vsid::Logger::log(LogLevel::Debug, std::format("[{}] match found in parsed stations. Setting SI [{}] | FREQ [{}] | FAC [{}]",
+						atcCallsign, data.si, data.freq, data.facility), vsid::DebugLevel::Atc);
+
+					this->atcFailCounter.erase(failit);
+					inFailCounter = false;
+
+					break;
+				}
+			}
+		}
 	}
 
 	EuroScopePlugIn::CController atcMyself = ControllerMyself();
 	std::set<std::string> atcIcaos;
-	if (atcFac < 6 && atcIcao != "")
-	{
-		atcIcaos.insert(atcIcao);
-	}
 
-	if (atcFac >= 5 && !this->actAtc.contains(atcSI) && !this->ignoreAtc.contains(atcSI))
+	if (data.facility < 6 && !atcIcao.empty())
+		atcIcaos.insert(std::string(atcIcao));
+
+	if (data.facility >= 5)
 	{
 		bool ignore = true;
-		for (std::pair<const std::string, vsid::Airport> &apt : this->activeAirports)
+
+		for (const auto& [icao, aptInfo] : this->activeAirports)
 		{
-			if (apt.second.appSI.contains(atcSI))
+			if (aptInfo.appSI.contains(data.si))
 			{
 				ignore = false;
-				atcIcaos.insert(apt.first);
+				atcIcaos.insert(icao);
 			}
-			else if (apt.first == atcIcao)
-			{
+			else if (icao == atcIcao)
 				ignore = false;
-			}
 		}
+
 		if (ignore)
 		{
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Adding ATC to ignore list.", atcCallsign), vsid::DebugLevel::Atc);
-			this->ignoreAtc.insert(atcSI);
+			vsid::Logger::log(LogLevel::Debug, std::format("[{}] adding to ignore list because SI "
+				"[{}] is not mentioned in config and ICAO [{}] does not match airport.",
+				atcCallsign, data.si, atcIcao), vsid::DebugLevel::Atc);
+
+			this->ignoredAtc.insert({atcCallsign, data});
 			return;
 		}
 	}
 
 	for (const std::string& atcIcao : atcIcaos)
 	{
-		if (!this->activeAirports.contains(atcIcao)) continue;
-
-		if (!this->activeAirports[atcIcao].controllers.contains(atcSI))
+		if (auto it = this->activeAirports.find(atcIcao); it != this->activeAirports.end())
 		{
-			this->activeAirports[atcIcao].controllers[atcSI] = { atcSI, atcFac, atcFreq };
-			this->actAtc[atcSI] = vsid::utils::join(atcIcaos, ',');
+			auto& airport = it->second;
 
-			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Adding ATC to active ATC list.", atcCallsign), vsid::DebugLevel::Atc);
-		}
+			if (auto jt = airport.controllers.find(data.si); jt == airport.controllers.end())
+			{
+				data.Icaos.insert(atcIcao);
+				airport.controllers.insert({ atcCallsign, data });
+				this->activeAtc.insert({ atcCallsign, data });
 
-		if (this->activeAirports[atcIcao].settings["auto"] &&
-			!this->activeAirports[atcIcao].forceAuto &&
-			this->activeAirports[atcIcao].hasLowerAtc(atcMyself))
-		{
-			this->activeAirports[atcIcao].settings["auto"] = false;
-			vsid::Logger::log(LogLevel::Info, std::format("Disabling auto mode for [{}]. [{}] now online.", atcIcao, atcCallsign), vsid::DebugLevel::Atc);
+				vsid::Logger::log(LogLevel::Debug, std::format("[{}] adding to active ATC list in [{}].", atcCallsign, atcIcao), vsid::DebugLevel::Atc);
+			}
+
+			if (airport.settings["auto"] && !airport.forceAuto && airport.hasLowerAtc(atcMyself))
+			{
+				vsid::Logger::log(LogLevel::Info, std::format("[{}] Disabling auto mode. [{}] now online.", atcIcao, atcCallsign), vsid::DebugLevel::Atc);
+
+				airport.settings["auto"] = false;				
+			}
 		}
 	}
 }
@@ -5364,29 +5428,33 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 	std::string atcCallsign = Controller.GetCallsign();
 	std::string atcSI = Controller.GetPositionId();
 
-	if (this->actAtc.contains(atcSI) && this->activeAirports.contains(this->actAtc[atcSI]))
+	if (auto it = this->activeAtc.find(atcCallsign); it != this->activeAtc.end())
 	{
-		if (this->activeAirports[this->actAtc[atcSI]].controllers.contains(atcSI))
+		for (auto& [icao, airport] : this->activeAirports)
 		{
+			if (!it->second.Icaos.contains(icao)) continue;
+
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from ATC list for [{}].", atcCallsign,
-				this->actAtc[atcSI]), vsid::DebugLevel::Atc);
-			this->activeAirports[this->actAtc[atcSI]].controllers.erase(atcSI);
+				icao), vsid::DebugLevel::Atc);
+
+			airport.controllers.erase(atcSI);
 		}
 
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from general active ATC list.", atcCallsign), vsid::DebugLevel::Atc);
-		this->actAtc.erase(atcSI);
+
+		this->activeAtc.erase(it);
 	}
 
-	if (this->ignoreAtc.contains(atcSI))
+	if (this->ignoredAtc.contains(atcCallsign))
 	{
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from ignore list.", atcCallsign), vsid::DebugLevel::Atc);
-		this->ignoreAtc.erase(atcSI);
+		this->ignoredAtc.erase(atcCallsign);
 	}
 
-	if (this->atcSiFailCounter.contains(atcCallsign))
+	if (this->atcFailCounter.contains(atcCallsign))
 	{
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from SI fail counter list.", atcCallsign), vsid::DebugLevel::Atc);
-		this->atcSiFailCounter.erase(atcCallsign);
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from fail counter list.", atcCallsign), vsid::DebugLevel::Atc);
+		this->atcFailCounter.erase(atcCallsign);
 	}
 }
 
