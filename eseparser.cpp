@@ -64,7 +64,7 @@ void vsid::EseParser::parseEse(const std::filesystem::path& folder, const std::f
 	size_t atcAdded = this->tmpBuffer_.sectionAtc.size() - currAtcSize;
 	size_t sidAdded = this->tmpBuffer_.sectionSids.size() - currSidSize;
 
-	vsid::Logger::log(LogLevel::Debug, std::format("Parsed [{}] - Added [{}] stations | [{}] SIDs", fileICAO, atcAdded, sidAdded));
+	vsid::Logger::log(LogLevel::Debug, std::format("Parsed [{}] - Added [{}] stations | [{}] SIDs", fileICAO, atcAdded, sidAdded), DebugLevel::Ese);
 }
 
 void vsid::EseParser::enter(vsid::EseParser::Section s)
