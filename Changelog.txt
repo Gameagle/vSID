@@ -12,7 +12,7 @@
 	* the pdb file is generated during the build process
 *	GEN - new logger added
 	* logs are now stored in a "logs" folder next to the dll
-	* logs are rotated on ES start or when reaching 10 MB per file (maximum 5 logs are stored)
+	* logs are rotated on ES start or when reaching 5 MB per file (maximum 5 logs are stored)
 	* new command ".vsid log dev" to enable logging of development messages (disabled by default)
 	* new main config setting "logDevOnly" as boolean value
 *	FPLN - add "handover" flag for airports where the TWR controller sends pilots over to radar
@@ -59,6 +59,7 @@
 	* due to a wrong coordinate in the .ese file the split was wrong and parameters missing - now guarded against
 *	GEN - version check could report newer remote version if minor or patch was newer but major was older
 *	FPLN - fulfilled restrictions could overwrite "pilot filed only" SIDs, even if it was not filed by the pilot
+*	GEN - possible fix for crashes under Wine. While Wine itself will not be directly supported the plugin should not crash any longer during time operations (#420)
 
 [Changelog v0.14.4]
 :gear: **Changed Features / Behaviour**
