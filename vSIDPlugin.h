@@ -415,7 +415,7 @@ namespace vsid
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
 		 */
-		std::map<std::string, std::pair< std::chrono::utc_clock::time_point, bool>> removeProcessed;
+		std::map<std::string, std::pair< std::chrono::system_clock::time_point, bool>> removeProcessed;
 		vsid::ConfigParser configParser;
 		std::string configPath;
 		std::map<std::string, std::map<std::string, bool>> savedSettings;
@@ -464,7 +464,7 @@ namespace vsid
 		// internal squawn assignment queue
 		std::list<std::string> squawkQueue;
 		// time of last squawk assignment
-		std::chrono::utc_clock::time_point lastSquawkTP;
+		std::chrono::steady_clock::time_point lastSquawkTP;
 		// if scratch pad sync queue is being worked on
 		std::atomic_bool queueInProcess = false;
 		// counter how often atc is considered invalid (not a controller / number SI)

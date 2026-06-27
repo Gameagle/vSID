@@ -56,7 +56,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 	DWORD displacement;
 	DWORD64 symDisplacement = 0;
 
-	logFile << "--- CRITICAL ERROR [" << vsid::time::getDate() << " - " << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] ---" << std::endl;
+	logFile << "--- CRITICAL ERROR [" << vsid::time::getFormattedTime(std::chrono::system_clock::now()) << "] ---" << std::endl;
 	logFile << "Crash Address: 0x" << std::hex << crashAdress << std::dec << std::endl;
 
 	// print the crash address symbol and line info if available otherwise print the offset
@@ -138,7 +138,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 		}
 	}
 
-	logFile << "--- CRITICAL ERROR END [" << vsid::time::getDate() << " - " << vsid::time::toTimeString(vsid::time::getUtcNow()) << "] ---\n" << std::endl;
+	logFile << "--- CRITICAL ERROR END [" << vsid::time::getFormattedTime(std::chrono::system_clock::now()) << "] ---\n" << std::endl;
 
 	free(symbol);
 	SymCleanup(process);

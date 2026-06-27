@@ -1717,7 +1717,7 @@ void vsid::VSIDPlugin::loadEse()
 
 void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
 {
-	long long timeDiff = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count();
+	long long timeDiff = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastSquawkTP).count();
 
 	if (timeDiff >= 2)
 	{
@@ -1727,7 +1727,7 @@ void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
 
 			this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
 
-			this->lastSquawkTP = std::chrono::utc_clock::now();
+			this->lastSquawkTP = std::chrono::steady_clock::now();
 		}
 		else if (this->ccamsLoaded)
 		{
@@ -1735,7 +1735,7 @@ void vsid::VSIDPlugin::addOrSetSquawk(const std::string& callsign, bool forceTS)
 
 			this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
 
-			this->lastSquawkTP = std::chrono::utc_clock::now();
+			this->lastSquawkTP = std::chrono::steady_clock::now();
 		}
 	}
 	else
@@ -2407,7 +2407,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				
 				bool isFplRwyReq = this->processed[callsign].request.find("rwy") != std::string::npos;
 				std::string newScratch = "";
-				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now()).time_since_epoch().count();
+				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
 
 				// check existing requests to preserve request times when switching from norm to rwy request and vice versa
 
@@ -3226,7 +3226,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			if (this->processed.contains(callsign) && this->processed[callsign].request != "")
 			{
 				*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
-				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now()).time_since_epoch().count();
+				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
 
 				std::string& request = this->processed[callsign].request;
 
@@ -5116,7 +5116,7 @@ void vsid::VSIDPlugin::OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan Fligh
 
 		this->removeFromRequests(callsign, icao);
 
-		this->removeProcessed[callsign] = { std::chrono::utc_clock::now() + std::chrono::minutes{1}, true };
+		this->removeProcessed[callsign] = { std::chrono::system_clock::now() + std::chrono::minutes{1}, true };
 
 		messageHandler->removeCallsignFromErrors(callsign);
 	}
@@ -6001,7 +6001,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 	// check squawk queue each second if new squawk can be set
 
-	if (this->squawkQueue.size() > 0 && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::utc_clock::now() - lastSquawkTP).count() >= 2)
+	if (!this->squawkQueue.empty() && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - lastSquawkTP).count() >= 2)
 	{
 		if (EuroScopePlugIn::CFlightPlan FlightPlan = this->FlightPlanSelectASEL(); FlightPlan.IsValid())
 		{
@@ -6015,7 +6015,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 				this->callExtFunc(callsign.c_str(), "TopSky plugin", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "TopSky plugin", 667, POINT(), RECT());
 
-				this->lastSquawkTP = std::chrono::utc_clock::now();
+				this->lastSquawkTP = std::chrono::steady_clock::now();
 			}
 			else if (this->ccamsLoaded)
 			{
@@ -6023,7 +6023,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 				this->callExtFunc(callsign.c_str(), "CCAMS", EuroScopePlugIn::TAG_ITEM_TYPE_CALLSIGN, callsign.c_str(), "CCAMS", 871, POINT(), RECT());
 
-				this->lastSquawkTP = std::chrono::utc_clock::now();
+				this->lastSquawkTP = std::chrono::steady_clock::now();
 			}
 
 			this->SetASELAircraft(FlightPlan);
@@ -6047,7 +6047,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 				{
 					vsid::Logger::log(LogLevel::Debug, std::format("[{}] is invalid. Removal in 1 min.", it->first), vsid::DebugLevel::Fpln);
 
-					auto now = std::chrono::utc_clock::now() + std::chrono::minutes{ 1 };
+					auto now = std::chrono::system_clock::now() + std::chrono::minutes{ 1 };
 					this->removeProcessed[it->first] = { now, true }; // assume fpln is disconnected for some reason, might come back
 				}			
 				++it;
@@ -6098,7 +6098,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 	if (this->removeProcessed.size() > 0 && Counter % 20 == 0)
 	{
-		auto now = std::chrono::utc_clock::now();
+		auto now = std::chrono::system_clock::now();
 
 		for (auto it = this->removeProcessed.begin(); it != this->removeProcessed.end();)
 		{
