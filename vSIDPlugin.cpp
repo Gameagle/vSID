@@ -3223,14 +3223,35 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 		if (ItemCode == TAG_ITEM_VSID_REQTIMER)
 		{
-			if (this->processed.contains(callsign) && this->processed[callsign].request != "")
+			if (this->processed.contains(callsign) && !this->processed[callsign].request.empty())
 			{
 				*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 				long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
 
-				std::string& request = this->processed[callsign].request;
+				std::string request = this->processed[callsign].request;
+				bool isFplRwyReq = request.find("rwy") != std::string::npos;
 
-				// determine rwy request timer
+				if (isFplRwyReq)
+				{
+					try
+					{
+						request = vsid::utils::split(request, ' ').at(1);
+
+						messageHandler->removeFplnError(callsign, ERROR_FPLN_REQSPLIT);
+					}
+					catch (std::out_of_range&)
+					{
+						if (!messageHandler->getFplnErrors(callsign).contains(ERROR_FPLN_REQSPLIT))
+						{
+							vsid::Logger::log(LogLevel::Error, std::format("[{}] failed to split stored request [{}] on tagItem update. Code: {}",
+								callsign, request, ERROR_FPLN_REQSPLIT));
+
+							messageHandler->addFplnError(callsign, ERROR_FPLN_REQSPLIT);
+						}
+					}
+				}
+
+				// determine rwy request timer on rwy requests
 				if (this->activeAirports[adep].rwyrequests.contains(request))
 				{
 					for (auto& [rwy, rwyReq] : this->activeAirports[adep].rwyrequests[request])
