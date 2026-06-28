@@ -29,8 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <ranges>
 #include <cctype>
-
-#include <set> // #dev - added due to disabling airport.h
+#include <windows.h>
 
 namespace vsid
 {
@@ -45,6 +44,24 @@ namespace vsid
 					{
 						return std::tolower(ac) < std::tolower(bc);
 					});
+			}
+		};
+
+		// hash to enable unordered_map/_set to use string_view for search ops
+		struct StringHash {
+			using is_transparent = void; // Enable heterogeneous lookup
+
+			[[nodiscard]] size_t operator()(std::string_view txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const std::string& txt) const
+			{
+				return std::hash<std::string>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const char* txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
 			}
 		};
 
@@ -330,6 +347,27 @@ namespace vsid
 
 					return toLower(c1) == toLower(c2);
 				});
+		}
+
+		//************************************
+		// Description: Checks if Wine is being used - used for some Wine workarounds
+		// Method:    usingWine
+		// FullName:  vsid::utils::usingWine
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier: noexcept
+		//************************************
+		inline bool usingWine() noexcept
+		{
+			static const bool wine = []()
+				{
+					if (HMODULE hntdll = GetModuleHandleA("ntdll.dll"))
+						return GetProcAddress(hntdll, "wine_get_version") != nullptr;
+
+					return false;
+				}();
+
+			return wine;
 		}
 	}
 }

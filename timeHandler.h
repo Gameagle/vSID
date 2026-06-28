@@ -25,6 +25,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <chrono>
 #include <format>
+#include <unordered_map>
+
+#include "constants.h"
+#include "utils.h"
+#include "logger.h"
+#include "messageHandler.h"
+
 namespace vsid
 {
 	namespace time
@@ -40,19 +47,6 @@ namespace vsid
 		bool isActive(const std::string& timezone, const int start, const int end);
 
 		//************************************
-		// Description: Get the current time in utc (ceiled in seconds)
-		// Method:    getUtcNow
-		// FullName:  vsid::time::getUtcNow
-		// Access:    public 
-		// Returns:   std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds>
-		// Qualifier:
-		//************************************
-		inline std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> getUtcNow()
-		{
-			return std::chrono::ceil<std::chrono::seconds>(std::chrono::utc_clock::now());
-		}
-
-		//************************************
 		// Description: Get the current date as string in format YYYY-MM-DD
 		// Method:    getDate
 		// FullName:  vsid::time::getDate
@@ -62,8 +56,70 @@ namespace vsid
 		//************************************
 		inline std::string getDate()
 		{
-			std::chrono::sys_time sysTime = std::chrono::clock_cast<std::chrono::system_clock>(vsid::time::getUtcNow());
-			return std::format("{:%Y-%m-%d}", sysTime);
+			return std::format("{:%Y-%m-%d}", std::chrono::system_clock::now());
+		}
+
+		//************************************
+		// Description: Special workaround function to use legacy code for Wine or where modern C++ isn't available
+		// Method:    getFormattedTime
+		// FullName:  vsid::time::getFormattedTime
+		// Access:    public 
+		// Returns:   std::string
+		// Qualifier:
+		// Parameter: std::chrono::system_clock::time_point tp
+		// Parameter: std::string_view fmtStr
+		//************************************
+		std::string getFormattedTime(std::chrono::system_clock::time_point tp = std::chrono::system_clock::now(), std::string_view fmtStr = "%Y-%m-%d %H:%M:%S");
+
+		//************************************
+		// Description: Caches timezone and provides fallback if timezone unavailable
+		// Method:    getCachedTimeZone
+		// FullName:  vsid::time::getCachedTimeZone
+		// Access:    public 
+		// Returns:   const std::chrono::time_zone* - using "UTC" if using Wine or on timezone error
+		// Qualifier:
+		// Parameter: const std::string & tzName
+		//************************************
+		inline const std::chrono::time_zone* getCachedTimeZone(const std::string& tzName)
+		{
+			thread_local std::unordered_map<std::string, const std::chrono::time_zone*> tzCache;
+
+			if (auto it = tzCache.find(tzName); it != tzCache.end()) return it->second;
+
+			const std::chrono::time_zone* tz = nullptr;
+
+			try
+			{
+				tz = std::chrono::locate_zone(vsid::utils::usingWine() ? "UTC" : tzName);
+
+				messageHandler->removeGenError(ERROR_TIME_ZONE);
+			}
+			catch (const std::runtime_error&e )
+			{
+				tz = std::chrono::locate_zone("UTC");
+
+				if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
+				{
+					vsid::Logger::log(vsid::LogLevel::Warning, std::format("Invalid timezone [{}]. Fallback to UTC - [{}]", tzName, e.what()));
+
+					messageHandler->addGenError(ERROR_TIME_ZONE);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				tz = std::chrono::locate_zone("UTC");
+
+				if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
+				{
+					vsid::Logger::log(vsid::LogLevel::Error, std::format("Unexpected exception on timezone [{}]. Fallback to UTC - [{}]", tzName, e.what()));
+
+					messageHandler->addGenError(ERROR_TIME_ZONE);
+				}
+			}
+
+			tzCache[tzName] = tz;
+
+			return tz;
 		}
 
 		/**

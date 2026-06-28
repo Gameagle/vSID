@@ -95,11 +95,11 @@ namespace vsid
 			}
 			catch (const std::exception& e)
 			{
-				vsid::Logger::log(LogLevel::Error, std::format("[CRASH DUMP] Unhandled Exception occured in vSID! {}", e.what()));
+				vsid::Logger::log(LogLevel::Error, std::string("[CRASH DUMP] Unhandled Exception occurred in vSID!") + e.what());
 			}
 			catch (...)
 			{
-				vsid::Logger::log(LogLevel::Error, "[CRASH DUMP] Unknown Unhandled Exception occured in vSID!");
+				vsid::Logger::log(LogLevel::Error, "[CRASH DUMP] Unknown Unhandled Exception occurred in vSID!");
 			}
 
 			vsid::Logger::panicFlush();

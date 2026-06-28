@@ -2,6 +2,7 @@
 
 #include "logger.h"
 #include "timeHandler.h"
+#include "utils.h"
 
 #include <format>
 #include <iterator>
@@ -177,8 +178,18 @@ void vsid::Logger::workerThread()
 		if (logFile.is_open())
 		{
 			// format file log message 
-			std::string fout = std::format("[{:%Y-%m-%d %H:%M:%S}] [{}]",
-				vsid::time::getUtcNow(), logLvlToString(msg.level));
+
+			std::string fout;
+			auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+
+			if (!vsid::utils::usingWine())
+			{
+				fout = std::format("[{:%Y-%m-%d %H:%M:%S}] [{}]", now, logLvlToString(msg.level));
+			}
+			else // wine workaround
+			{
+				fout = std::format("[{}] [{}]", vsid::time::getFormattedTime(now), logLvlToString(msg.level));
+			}
 
 			if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
 				std::format_to(std::back_inserter(fout), " [{}]", debugLvlToString(msg.debugLevel.value()));
@@ -209,7 +220,7 @@ void vsid::Logger::workerThread()
 			{
 				// format console log message
 				std::string out = std::format("[{}] [{}]",
-					vsid::time::toTimeString(vsid::time::getUtcNow()),
+					vsid::time::toTimeString(std::chrono::system_clock::now()),
 					logLvlToString(msg.level));
 
 				if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
@@ -282,8 +293,8 @@ void vsid::Logger::panicFlush()
 
 			if (logFile.is_open())
 			{
-				std::string fout = std::format("[{:%Y-%m-%d %H:%M:%S}] [CRASH DUMP] [{}]",
-					vsid::time::getUtcNow(), logLvlToString(msg.level));
+				std::string fout = std::format("[{}] [CRASH DUMP] [{}]",
+					vsid::time::getFormattedTime(std::chrono::system_clock::now()), logLvlToString(msg.level));
 
 				if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
 					fout += std::format(" [{}]", debugLvlToString(msg.debugLevel.value()));
