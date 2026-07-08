@@ -3,14 +3,22 @@
 #include "area.h"
 #include "messageHandler.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <algorithm>
 #include <stdexcept>
+#include <format>
 
 vsid::Area::Area(std::vector<std::pair<std::string, std::string>> &coords, bool isActive, bool arrAsDep)
 {
 	for (std::pair<std::string, std::string>& coord : coords)
 	{
+		if(coord.first.empty() || coord.second.empty())
+		{
+			vsid::Logger::log(vsid::LogLevel::Warning, std::format("Empty coordinate string found (first: [{}] / second: [{}]!  Skipping coordinate.",
+				coord.first, coord.second));
+			continue;
+		}
 		this->points.push_back(toPoint(coord));
 	}
 
@@ -37,41 +45,17 @@ void vsid::Area::showline()
 {
 	for (auto& line : this->lines)
 	{
-		messageHandler->writeMessage("DEBUG", "line: " + std::to_string(line.first.lon) + ":" + std::to_string(line.first.lat) + " - " + std::to_string(line.second.lon) + "." + std::to_string(line.second.lat));
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("area line: {}:{} - {}:{}",
+			line.first.lon, line.first.lat, line.second.lon, line.second.lat), vsid::DebugLevel::Area);
 	}
 }
 
 vsid::Area::Point vsid::Area::toPoint(std::pair<std::string, std::string> &pos)
 {
-	double lat = toDeg(pos.first);
-	double lon = toDeg(pos.second);
+	double lat = vsid::utils::toDeg(pos.first);
+	double lon = vsid::utils::toDeg(pos.second);
 
 	return {lat, lon};
-}
-
-double vsid::Area::toDeg(std::string& coord)
-{
-	std::vector<std::string> dms = vsid::utils::split(coord, '.');
-	int multi = 0; // default state in exception case
-
-	try
-	{
-		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
-	}
-	catch (std::out_of_range)
-	{
-		messageHandler->writeMessage("ERROR", "Failed to get multiplier while calculating coordinate: " + coord);
-	}
-
-	double deg = std::stod(dms[0].substr(1, dms[0].length()));
-	double min = std::stod(dms[1]) / 60;
-	double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
-
-	if (multi == 0)
-	{
-		messageHandler->writeMessage("WARNING", "Coordinate \"" + coord + "\" will be multiplied with 0 which will render false results!");
-	}
-	return (deg + min + sec) * multi;
 }
 
 bool vsid::Area::inside(const EuroScopePlugIn::CPosition& fplnPos)

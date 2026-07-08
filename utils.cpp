@@ -1,101 +1,61 @@
 #include "pch.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <sstream>
 #include <algorithm>
+#include <format>
 
-std::string vsid::utils::ltrim(const std::string& string)
-{
-	std::string string_to_trim = string;
-	string_to_trim.erase(string.find_last_not_of(' ') + 1);
-	return string_to_trim;
-}
-
-std::string vsid::utils::rtrim(const std::string& string)
-{
-	std::string string_to_trim = string;
-	string_to_trim.erase(0, string.find_first_not_of(' '));
-	return string_to_trim;
-}
-
-std::string vsid::utils::trim(const std::string& string)
-{
-	return vsid::utils::ltrim(vsid::utils::rtrim(string));
-}
-
-std::vector<std::string> vsid::utils::split(const std::string &string, const char &del, const bool keepWhitespace)
-{
-	std::istringstream ss(string);
-	std::vector<std::string> elems;
-	std::string elem;
-
-	while (std::getline(ss, elem, del))
-	{
-		if (elem == "" && !keepWhitespace) continue; // remove excessive whitespaces to prevent a crash caused by wrong routes
-		elems.push_back(vsid::utils::trim(elem));
-	}
-	return elems;
-}
-
-std::string vsid::utils::join(const std::vector<std::string>& toJoin, const char del)
-{
-	if (toJoin.empty()) return "";
-	std::ostringstream ss;
-	for (const auto& elem : toJoin) // possible improvement back to a copy function
-	{
-		ss << elem << del;
-	}
-	std::string joinedStr = ss.str();
-	return joinedStr.erase(joinedStr.length() - 1, 1);
-}
-
-std::string vsid::utils::join(const std::set<std::string>& toJoin, char del)
-{
-	if (toJoin.empty()) return "";
-	std::ostringstream ss;
-	for (const auto& elem : toJoin) // possible improvement back to a copy function
-	{
-		ss << elem << del;
-	}
-	std::string joinedStr = ss.str();
-	return joinedStr.erase(joinedStr.length() - 1, 1);
-}
-
-std::vector<std::string> vsid::utils::splitRoute(std::string& string)
+std::vector<std::string> vsid::utils::split(std::string_view sv, const char del, const bool keepEmpty)
 {
 	std::vector<std::string> elems;
-	std::string elem;
-	size_t pos = 0;
 
-	string = vsid::utils::trim(string);
+	size_t start = 0;
+	size_t end = sv.find(del);
 
-	while ((pos = string.find(' ')) != std::string::npos)
+	while (end != std::string_view::npos)
 	{
-		elem = string.substr(0, pos);
-		if (elem.find('/') != std::string::npos)
-		{
-			elem = vsid::utils::split(elem, '/').at(0);
-		}
-		elems.push_back(elem);
-		string.erase(0, pos + 1);
-		vsid::utils::ltrim(string);
+		auto next = vsid::utils::trim(sv.substr(start, end - start));
+
+		if (keepEmpty || !next.empty())
+			elems.emplace_back(std::move(next));
+
+		start = end + 1;
+		end = sv.find(del, start);
 	}
 
-	elems.push_back(string);
+	auto last = vsid::utils::trim(sv.substr(start));
+
+	if (keepEmpty || !last.empty())
+		elems.emplace_back(std::move(last));
 
 	return elems;
 }
 
-bool vsid::utils::isIcaoInVector(const std::vector<vsid::Airport>& airportVector, const std::string& toSearch)
+std::vector<std::string_view> vsid::utils::splitSV(std::string_view sv, const char del, const bool keepEmpty)
 {
-	for (const vsid::Airport &elem : airportVector)
+	std::vector<std::string_view> elems;
+
+	size_t start = 0;
+	size_t end = sv.find(del);
+
+	while (end != std::string_view::npos)
 	{
-		if (elem.icao == toSearch)
-		{
-			return true;
-		}
+		auto next = vsid::utils::trimSV(sv.substr(start, end - start));
+
+		if (keepEmpty || !next.empty())
+			elems.emplace_back(next);
+
+		start = end + 1;
+		end = sv.find(del, start);
 	}
-	return false;
+
+	auto last = vsid::utils::trimSV(sv.substr(start));
+
+	if (keepEmpty || !last.empty())
+		elems.emplace_back(last);
+
+	return elems;
 }
 
 bool vsid::utils::containsDigit(int number, int digit)
@@ -144,25 +104,40 @@ EuroScopePlugIn::CPosition vsid::utils::toPoint(const std::pair<std::string, std
 
 double vsid::utils::toDeg(const std::string& coord)
 {
+	if (coord.empty())
+	{
+		vsid::Logger::log(vsid::LogLevel::Warning, "Empty coordinate string found! Skipping coordinate.");
+		return 0.0;
+	}
+
 	std::vector<std::string> dms = vsid::utils::split(coord, '.');
 	int multi = 0; // default state in exception case
 
 	try
 	{
+		if (dms.size() < 4)
+			throw std::out_of_range(std::format("Coordinate string [{}] does not contain enough parts for DMS conversion!", coord));
+
 		multi = (dms.at(0).find('S') != std::string::npos || dms.at(0).find('W') != std::string::npos) ? -1 : 1;
+
+		double deg = std::stod(dms[0].substr(1, dms[0].length()));
+		double min = std::stod(dms[1]) / 60;
+		double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
+
+		return (deg + min + sec) * multi;
 	}
-	catch (std::out_of_range)
+	catch (std::out_of_range& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to get multiplier while calculating coordinate: " + coord);
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Out of bounds while calculating coordinate [{}]. {}", coord, e.what()));
+		return 0.0;
+	}
+	catch (const std::invalid_argument& e)
+	{
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Invalid number format in coord [{}]. {}", coord, e.what()));
+		return 0.0;
 	}
 
-	double deg = std::stod(dms[0].substr(1, dms[0].length()));
-	double min = std::stod(dms[1]) / 60;
-	double sec = (std::stod(dms[2]) + std::stod("0." + dms[3])) / 3600;
+	vsid::Logger::log(vsid::LogLevel::Warning, std::format("Fallback state for [{}]! Failed to calculate. DMS will be set to 0.0", coord));
 
-	if (multi == 0)
-	{
-		messageHandler->writeMessage("WARNING", "Coordinate \"" + coord + "\" will be multiplied with 0 which will render false results!");
-	}
-	return (deg + min + sec) * multi;
+	return 0.0;
 }

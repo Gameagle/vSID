@@ -26,11 +26,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <algorithm>
-#include <sstream>
-#include <deque>
 #include <list>
+#include <optional>
+#include <thread>
+
+#include <format>
 
 #include <curl/curl.h> // only to call the update check
 
@@ -42,14 +45,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "eseparser.h"
 #include "versionchecker.h"
+#include "syncManager.h"
+
+#include "logger.h"
 
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.14.4";
+	const std::string pluginVersion = "0.15.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
+
+	struct Command {
+		std::string_view command;
+		std::vector<std::string_view> params;
+	};
 
 	class Display; // forward declaration
 
@@ -74,10 +85,10 @@ namespace vsid
 		// Method:    getActiveApts
 		// FullName:  vsid::VSIDPlugin::getActiveApts
 		// Access:    public 
-		// Returns:   const std::map<std::string, vsid::Airport>&
+		// Returns:   const std::map<std::string, vsid::Airport, vsid::utils::CICompare>&
 		// Qualifier: const
 		//************************************
-		inline const std::map<std::string, vsid::Airport>& getActiveApts() const { return this->activeAirports; };
+		inline const std::map<std::string, vsid::Airport, vsid::utils::CICompare>& getActiveApts() const { return this->activeAirports; };
 
 		//************************************
 		// Description: Returns the SID waypoint found in the route or empty if none was found. Checks ES determined SID first.
@@ -391,18 +402,25 @@ namespace vsid
 			int FunctionId, POINT Pt, RECT Area);
 		
 	private:
-		std::map<std::string, vsid::Airport> activeAirports;
+		// buffer to tmp store extracted values after ese parsing until update
+		std::optional<vsid::EseBuffer> eseBuffer_; 
+		std::atomic<bool> eseDataRdy_{ false }; // flag to update if parsed data is rdy
+		std::mutex bufferMtx_;
+		std::jthread parserThread_;
+		std::atomic<bool> parsingActive_{ false }; // block multiple parsing
+
+		std::map<std::string, vsid::Airport, vsid::utils::CICompare> activeAirports;
 		std::map<std::string, vsid::Fpln> processed;
 		/**
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
 		 */
-		std::map<std::string, std::pair< std::chrono::utc_clock::time_point, bool>> removeProcessed;
+		std::map<std::string, std::pair< std::chrono::system_clock::time_point, bool>> removeProcessed;
 		vsid::ConfigParser configParser;
 		std::string configPath;
 		std::map<std::string, std::map<std::string, bool>> savedSettings;
-		std::map<std::string, std::map<std::string, bool>> savedRules;
-		std::map<std::string, std::map<std::string, vsid::Area>> savedAreas;
+		std::map<std::string, vsid::Airport::CustomRulesMap> savedRules;
+		std::map<std::string, vsid::Airport::CustomAreaMap> savedAreas;
 		std::map<std::string, vsid::Fpln> savedFplnInfo = {};
 		//************************************
 		// Description: Stores requests during airport updates
@@ -411,7 +429,7 @@ namespace vsid
 		// Param 3 (pair): std::string - callsign
 		// Param 4 (pair): long long - time
 		//************************************
-		std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>> savedRequests = {};
+		std::map<std::string, vsid::Airport::CustomRequestMap> savedRequests = {};
 		//************************************
 		// Description: Stores runway requests during airport updates
 		// Param 1: std::string - airport icao
@@ -420,11 +438,11 @@ namespace vsid
 		// Param 4 (pair): std::string - callsign
 		// Param 5 (pair): long long - time
 		//************************************
-		std::map<std::string, std::map<std::string, std::map<std::string, std::set<std::pair<std::string, long long>, vsid::Airport::compreq>>>> savedRwyRequests = {};
+		std::map<std::string, vsid::Airport::CustomRwyRequestMap> savedRwyRequests = {};
 		// list of ground states set by controllers
 		std::string gsList;
-		std::map<std::string, std::string> actAtc;
-		std::set<std::string> ignoreAtc;
+		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> activeAtc;
+		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> ignoredAtc;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
 		//************************************
@@ -440,36 +458,25 @@ namespace vsid
 		std::set<vsid::SectionAtc> sectionAtc;
 		// internal storage of parsed sids
 		std::set<vsid::SectionSID> sectionSids;
-		//************************************
-		// Description: Tracks if multiple scratch pad entries for the same callsign are save to be sent
-		// Param 1: std::string - callsign
-		// Param 2: std::string - last entry processed
-		//************************************
-		std::unordered_map<std::string, bool> spReleased;
 
-		//************************************
-		// Description: List of messages to be send for syncing infos for different callsigns
-		// Param 1: std::string - callsign
-		// Param 2: std::deque - messages list
-		// Param 2a: std::string - new scratch pad msg
-		// Param 2b: std::string - old scratch pad msg (to be restored)
-		//************************************
-		std::unordered_map<std::string, std::deque<std::pair<std::string, std::string>>> syncQueue;
+		vsid::sync::SyncManager syncManager;
 
 		// internal squawn assignment queue
 		std::list<std::string> squawkQueue;
 		// time of last squawk assignment
-		std::chrono::utc_clock::time_point lastSquawkTP;
-		// scratch pad sync queue is active - try to suppress recieved scratch pad entries
-		bool spWorkerActive = false;
+		std::chrono::steady_clock::time_point lastSquawkTP;
 		// if scratch pad sync queue is being worked on
 		std::atomic_bool queueInProcess = false;
-		// counter how often a false SI was reported by ES
-		std::map<std::string, int> atcSiFailCounter;
+		// counter how often atc is considered invalid (not a controller / number SI)
+		std::unordered_map<std::string, int> atcFailCounter;
 		// was the update check already issued
 		bool updateInformed = false;
 		// if curl init was successfull
 		bool curlInit = false;
+
+		// #dev scratchpad storage
+		std::string lastScratchCS;
+		std::string lastScratchMsg;
 
 		//************************************
 		// Description: Loads and updates the active airports with available configs
@@ -479,55 +486,7 @@ namespace vsid
 		// Returns:   void
 		// Qualifier:
 		//************************************
-		void UpdateActiveAirports();
-		
-		//************************************
-		// Description: Processes all sync messages for held callsigns - each run works on all callsigns that are released
-		// for new msgs
-		// Method:    processSPQueue
-		// FullName:  vsid::VSIDPlugin::processSPQueue
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		//************************************
-		void processSPQueue();
-
-		//************************************
-		// Description: Adds a new msg pair to the sync queue
-		// Method:    addSyncQueue
-		// FullName:  vsid::VSIDPlugin::addSyncQueue
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: const std::string & callsign
-		// Parameter: const std::string & newScratch
-		// Parameter: const std::string & oldScratch
-		//************************************
-		inline void addSyncQueue(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch)
-		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] adding scratch to queue. New: \"" +
-				newScratch + "\" | Old: \"" + oldScratch + "\"", vsid::MessageHandler::DebugArea::Dev);
-
-			if (!this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			this->syncQueue[callsign].push_back({newScratch, oldScratch});
-		}		
-		
-		//************************************
-		// Description: Updates a callsign to be released for new scratch pad messages to be sent
-		// Method:    updateSPSyncRelease
-		// FullName:  vsid::VSIDPlugin::updateSPSyncRelease
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: std::string callsign
-		//************************************
-		inline void updateSPSyncRelease(std::string callsign)
-		{
-			messageHandler->writeMessage("DEBUG", "[" + callsign + "] updating sync release", vsid::MessageHandler::DebugArea::Dev);
-
-			if(this->spReleased.contains(callsign)) this->spReleased[callsign] = true;
-			else messageHandler->writeMessage("DEBUG", "[" + callsign + "] failed to update sync release. Not held in release list.", vsid::MessageHandler::DebugArea::Dev);
-		}
+		void UpdateActiveAirports();	
 
 		//************************************
 		// Description: Load ese file and parse it if found
@@ -562,5 +521,7 @@ namespace vsid
 		// Parameter: const vsid::SectionAtc & local
 		//************************************
 		bool atcFreqMatch(const EuroScopePlugIn::CController& other, const vsid::SectionAtc& local);
+
+		std::optional<vsid::Command> parseCommand(const std::string_view commandLine);
 	};
 }

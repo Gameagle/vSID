@@ -22,79 +22,164 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "airport.h"
 #include "include/es/EuroScopePlugIn.h"
 
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <ranges>
+#include <cctype>
+#include <windows.h>
 
 namespace vsid
 {
 	namespace utils
 	{
-		/**
-		 * @brief trim spaces on the left side of a string
-		 *
-		 * @param string
-		 * @return std::string
-		 */
-		std::string ltrim(const std::string& string);
-		/**
-		 * @brief trim spaces on the right side of a string
-		 *
-		 * @param string
-		 * @return std::string
-		 */
-		std::string rtrim(const std::string& string);
-		/**
-		 * @brief trims spaces on both sides of a string
-		 *
-		 * @param string
-		 * @return std::string
-		 */
-		std::string trim(const std::string& string);
-		/**
-		 * @brief Splits a string based on a given delimiter
-		 *
-		 * @param string
-		 * @param del - delimiter
-		 * @return std::vector<std::string>
-		 */
-		std::vector<std::string> split(const std::string& string, const char& del, const bool keepWhitespace = false);
-		/**
-		 * @brief Joins a vector of strings into one string
-		 * 
-		 * @param toJoin - Vector to join 
-		 * @param del - delimiter
-		 * @return std::string 
-		 */
-		std::string join(const std::vector<std::string>& toJoin, const char del = ' ');
-		/**
-		 * @brief Joins a set of strings into one string
-		 *
-		 * @param toJoin - Vector to join
-		 * @param del - delimiter
-		 * @return std::string
-		 */
-		std::string join(const std::set<std::string>& toJoin, const char del = ' ');
-		/**
-		 * @brief Splits a string based on spaces - splits again for '/' delimiter. Used to vectorize the filed route - WILL BE DELETED
-		 *
-		 * @param string
-		 * @return std::vector<std::string>
-		 */
-		std::vector<std::string> splitRoute(std::string& string);
-		/**
-		 * @brief Fixed for airport icao checks - possible change to template
-		 *
-		 * @param airportVector - vector containing all active airports
-		 * @param toSearch - string to search for, should be icao of an airport to check
-		 * @return true - if the icao was found in active airports
-		 * @return false - if the icao was NOT found in active airports
-		 */
-		bool isIcaoInVector(const std::vector<vsid::Airport>& airportVector, const std::string& toSearch);
+		struct CICompare {
+			using is_transparent = void; // Enable heterogeneous lookup
+
+			bool operator()(std::string_view a, std::string_view b) const noexcept
+			{
+				return std::ranges::lexicographical_compare(a, b, [](unsigned char ac, unsigned char bc)
+					{
+						return std::tolower(ac) < std::tolower(bc);
+					});
+			}
+		};
+
+		// hash to enable unordered_map/_set to use string_view for search ops
+		struct StringHash {
+			using is_transparent = void; // Enable heterogeneous lookup
+
+			[[nodiscard]] size_t operator()(std::string_view txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const std::string& txt) const
+			{
+				return std::hash<std::string>{}(txt);
+			}
+			[[nodiscard]] size_t operator()(const char* txt) const
+			{
+				return std::hash<std::string_view>{}(txt);
+			}
+		};
+
+		//************************************
+		// Description: Trims spaces on the left side of a string_view
+		// Method:    ltrim
+		// FullName:  vsid::utils::ltrim
+		// Access:    public 
+		// Returns:   constexpr std::string_view
+		// Qualifier:
+		// Parameter: std::string_view sv
+		//************************************
+		constexpr std::string_view ltrim(std::string_view sv)
+		{
+			constexpr std::string_view ws = " \t\r\n\v\f";
+			size_t start = sv.find_first_not_of(ws);
+			return (start == std::string_view::npos) ? "" : sv.substr(start);
+		}
+		
+		//************************************
+		// Description: Trims spaces on the right side of a string_view
+		// Method:    rtrim
+		// FullName:  vsid::utils::rtrim
+		// Access:    public 
+		// Returns:   constexpr std::string_view
+		// Qualifier:
+		// Parameter: std::string_view sv
+		//************************************
+		constexpr std::string_view rtrim(std::string_view sv)
+		{
+			constexpr std::string_view ws = " \t\r\n\v\f";
+			size_t end = sv.find_last_not_of(ws);
+			return (end == std::string_view::npos) ? "" : sv.substr(0, end + 1);
+		}
+		
+		//************************************
+		// Description: Trims spaces on both sides of a string_view and returns string
+		// Method:    trim
+		// FullName:  vsid::utils::trim
+		// Access:    public 
+		// Returns:   std::string
+		// Qualifier:
+		// Parameter: const std::string_view sv
+		//************************************
+		inline std::string trim(std::string_view sv)
+		{
+			return std::string(ltrim(rtrim(sv)));
+		}
+
+		//************************************
+		// Description: Trims spaces on both sides of a string_view and returns string_view
+		// Method:    trimSV
+		// FullName:  vsid::utils::trimSV
+		// Access:    public 
+		// Returns:   std::string_view
+		// Qualifier:
+		// Parameter: const std::string_view sv
+		//************************************
+		inline constexpr std::string_view trimSV(std::string_view sv)
+		{
+			// return std::string(ltrim(rtrim(sv)));
+			return ltrim(rtrim(sv));
+		}
+		
+		//************************************
+		// Description: Splits a string_view into a vector of strings based on a given delimiter, optionally keeping empty elements
+		// Method:    split
+		// FullName:  vsid::utils::split
+		// Access:    public 
+		// Returns:   std::vector<std::string> #refactor - possible improvement to string_view later on
+		// Qualifier:
+		// Parameter: std::string_view sv
+		// Parameter: const char del
+		// Parameter: const bool keepEmpty
+		//************************************
+		std::vector<std::string> split(std::string_view sv, const char del, const bool keepEmpty = false);
+
+
+		//************************************
+		// Description: Splits a string_view into a vector of string views based on a given delimiter, optionally keeping empty elements
+		// Method:    splitSV
+		// FullName:  vsid::utils::splitSV
+		// Access:    public 
+		// Returns:   std::vector<std::string_view>
+		// Qualifier:
+		// Parameter: std::string_view sv
+		// Parameter: const char del
+		// Parameter: const bool keepEmpty
+		//************************************
+		std::vector<std::string_view> splitSV(std::string_view sv, const char del, const bool keepEmpty = false);
+		std::vector<std::string_view> splitSV(std::string&&, const char del, const bool keepEmpty = false) = delete;
+
+		//************************************
+		// Description: Joins a container of strings / string_views into one string with a given delimiter
+		// Method:    join
+		// FullName:  vsid::utils::join
+		// Access:    public 
+		// Returns:   std::string
+		// Qualifier:
+		// Parameter: const C & toJoin
+		// Parameter: const char del
+		//************************************
+		template<typename C>
+		inline std::string join(const C& toJoin, const char del = ' ')
+		{
+			if (toJoin.empty()) return "";
+
+			std::string result;
+			for (const auto& elem : toJoin)
+			{
+				result += elem;
+				result += del;
+			}
+
+			result.pop_back(); // remove the last delimiter
+			return result;
+		}
+
 		/**
 		 * @brief Checks if a number is contained in another number, e.g. if 2 is in 123
 		 * 
@@ -156,7 +241,8 @@ namespace vsid
 		//************************************
 		inline bool lastIsDigit(std::string_view s)
 		{
-			return std::isdigit(s.back());
+			if (s.empty()) return false;
+			return std::isdigit(static_cast<unsigned char>(s.back()));
 		}
 
 		//************************************
@@ -217,5 +303,71 @@ namespace vsid
 		// Parameter: const std::string & coord
 		//************************************
 		double toDeg(const std::string& coord);
+
+		//************************************
+		// Description: Checks if a string starts with another string, ignoring case
+		// Method:    startsWithCi
+		// FullName:  vsid::utils::startsWithCi
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view txt - string to check
+		// Parameter: std::string_view start - string to check if txt starts with
+		//************************************
+		inline bool startsWithCi(std::string_view txt, std::string_view start)
+		{
+			if (txt.length() < start.length()) return false;
+
+			auto txtStart = txt.substr(0, start.length());
+			return std::ranges::equal(txtStart, start, [](unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); });
+		}
+
+		//************************************
+		// Description: Checks if two strings are equal, ignoring case
+		// Method:    svEqualCi
+		// FullName:  vsid::utils::svEqualCi
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view a
+		// Parameter: std::string_view b
+		//************************************
+		inline constexpr bool svEqualCi(std::string_view a, std::string_view b)
+		{
+			if (a.length() != b.length()) return false;
+
+			// non-constexpr return std::ranges::equal(a, b, [](unsigned char a, unsigned char b) { return std::tolower(a) == std::tolower(b); });
+
+			return std::ranges::equal(a, b, [](unsigned char c1, unsigned char c2)
+				{
+					auto toLower = [](unsigned char c) constexpr -> unsigned char
+						{
+							return (c >= 'A' && c <= 'Z') ? (unsigned char)(c + 32) : c;
+						};
+
+					return toLower(c1) == toLower(c2);
+				});
+		}
+
+		//************************************
+		// Description: Checks if Wine is being used - used for some Wine workarounds
+		// Method:    usingWine
+		// FullName:  vsid::utils::usingWine
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier: noexcept
+		//************************************
+		inline bool usingWine() noexcept
+		{
+			static const bool wine = []()
+				{
+					if (HMODULE hntdll = GetModuleHandleA("ntdll.dll"))
+						return GetProcAddress(hntdll, "wine_get_version") != nullptr;
+
+					return false;
+				}();
+
+			return wine;
+		}
 	}
 }

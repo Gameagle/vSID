@@ -1,37 +1,28 @@
 #include "pch.h"
 #include "timeHandler.h"
-#include "messageHandler.h"
 
 bool vsid::time::isActive(const std::string& timezone, const int start, const int end)
 {
 	try
 	{
-		std::chrono::zoned_time zt{ timezone, std::chrono::system_clock::now() };
-		std::chrono::zoned_time ztStart = zt;
-		std::chrono::zoned_time ztEnd = zt;
+		const std::chrono::time_zone* tz = vsid::time::getCachedTimeZone(timezone);
 
-		auto day = std::chrono::floor<std::chrono::days>(zt.get_local_time());
-		ztStart = day + std::chrono::hours{ start };
-		ztEnd = day + std::chrono::hours{ end };
+		auto localNow = tz->to_local(std::chrono::system_clock::now());
+		auto day = std::chrono::floor<std::chrono::days>(localNow);		
 
-		if ((ztEnd.get_local_time() < ztStart.get_local_time() &&
-			(zt.get_local_time() > ztStart.get_local_time() || zt.get_local_time() < ztEnd.get_local_time())) ||
-			(ztEnd.get_local_time() > ztStart.get_local_time() &&
-			zt.get_local_time() > ztStart.get_local_time() &&
-			zt.get_local_time() < ztEnd.get_local_time())
-			)
+		auto ztStart = day + std::chrono::hours{ start };
+		auto ztEnd = day + std::chrono::hours{ end };
+
+		if (ztStart <= ztEnd)
 		{
-			return true;
+			return localNow >= ztStart && localNow < ztEnd;
 		}
+
+		return localNow >= ztStart || localNow < ztEnd;
 	}
-	catch (std::runtime_error& e)
+	catch (const std::runtime_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Timezone failed - " + std::string(e.what()) + ": " + timezone);
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Time calculation failed [{}] - {}", timezone, e.what()));
 	}
 	return false;
-}
-
-std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> vsid::time::getUtcNow()
-{
-	return std::chrono::ceil<std::chrono::seconds>(std::chrono::utc_clock::now());
 }

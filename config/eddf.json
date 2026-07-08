@@ -4,6 +4,7 @@
         "runways": "25C,25L,07C,07R,18",
         "transAlt": 5000,
         "maxInitialClimb": 7000,
+		"autoHandoff": false,
         "customRules" : {"allnorth":false, "sulus18": false},
         "timeMode": true,
         "timezone": "Europe/Berlin",

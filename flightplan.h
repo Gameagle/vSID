@@ -42,7 +42,7 @@ namespace vsid
 		std::string sidWpt = "";
 		std::string transition = "";
 		std::pair<std::string, bool> intsec = {};
-		std::chrono::time_point<std::chrono::utc_clock, std::chrono::seconds> lastUpdate;
+		std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> lastUpdate;
 		int updateCounter = 0;
 		/*bool request = false;*/
 		std::string request = "";
@@ -54,6 +54,7 @@ namespace vsid
 		bool mapp = false;
 		// altitude tracking during acft landing phase
 		int ldgAlt = 0;
+		bool hov = false;
 	};
 
 	namespace fplnhelper
@@ -95,6 +96,17 @@ namespace vsid
 		// Parameter: std::string atcSid
 		//************************************
 		std::pair<std::string, std::string> splitTransition(std::string atcSid); // #refactor - std::optional as return, string_view as param
+
+		//************************************
+		// Description: Splits the SID at 'X' for use with SIDxTRANS as string_view
+		// Method:    splitTransitionSV
+		// FullName:  vsid::fplnhelper::splitTransitionSV
+		// Access:    public 
+		// Returns:   std::pair<std::string_view, std::string_view>
+		// Qualifier:
+		// Parameter: std::string_view atcSid
+		//************************************
+		std::pair<std::string_view, std::string_view> splitTransitionSV(std::string_view atcSid);
 
 		//************************************
 		// Description: Retrieves the "atc block" from a route (SID/RWY or ICAO/RWY)

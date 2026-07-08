@@ -6,6 +6,7 @@
 
 #include "versionchecker.h"
 #include "messageHandler.h"
+#include "logger.h"
 #include "include/nlohmann/json.hpp"
 
 using json = nlohmann::ordered_json;
@@ -41,34 +42,26 @@ std::string vsid::version::semverToString(const vsid::version::semver& v)
 
 int vsid::version::compSemVer(const vsid::version::semver& local, const vsid::version::semver& remote)
 {
-	if (!std::get<3>(remote))
+	// get base version (major, minor, patch)
+	auto baseLocal = std::tie(std::get<0>(local), std::get<1>(local), std::get<2>(local));
+	auto baseRemote = std::tie(std::get<0>(remote), std::get<1>(remote), std::get<2>(remote));
+
+	bool remoteIsStable = !std::get<3>(remote);
+	bool localIsStable = !std::get<3>(local);
+
+	if (baseRemote > baseLocal) return remoteIsStable ? 1 : 2; // remote is newer, 1 = stable, 2 = pre-release
+
+	if (baseRemote == baseLocal)
 	{
-		if (std::get<0>(remote) > std::get<0>(local) ||
-			std::get<1>(remote) > std::get<1>(local) ||
-			std::get<2>(remote) > std::get<2>(local))
+		if (!remoteIsStable && !localIsStable)
 		{
+			if (std::get<3>(remote) != std::get<3>(local)) return 2; // assumed new pre-release
+		}
+		else if (remoteIsStable && !localIsStable)
 			return 1; // new stable release
-		}
-	}
-	else
-	{
-		if ((std::get<0>(remote) > std::get<0>(local) ||
-			std::get<1>(remote) > std::get<1>(local) ||
-			std::get<2>(remote) > std::get<2>(local)) &&
-			std::get<3>(remote) != std::get<3>(local))
-		{
-			return 2; // assumed new pre-release
-		}
-		else if (std::get<0>(remote) == std::get<0>(local) &&
-			std::get<1>(remote) == std::get<1>(local) &&
-			std::get<2>(remote) == std::get<2>(local) &&
-			std::get<3>(remote) != std::get<3>(local))
-		{
-			return 2; // assumed new pre-release, only hash differs
-		}
 	}
 
-	return 0;
+	return 0; // default state - no update
 }
 
 std::optional<std::string> vsid::version::getHttp(bool prerelease)
@@ -98,8 +91,7 @@ std::optional<std::string> vsid::version::getHttp(bool prerelease)
 
 	if (res != CURLE_OK || httpCode < 200 || httpCode >= 300)
 	{
-		messageHandler->writeMessage("ERROR", "Curl error: " + std::string(curl_easy_strerror(res)) + " - Curl Code: " + std::to_string(res) +
-			" - Http Code: " + std::to_string(httpCode));
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Curl error [{}] - Curl Code [{}] - Http Code [{}]", curl_easy_strerror(res), std::to_string(res), httpCode));
 		return std::nullopt;
 	}
 	return response;
@@ -126,7 +118,7 @@ std::optional<std::string> vsid::version::getRelease(bool prerelease)
 	}
 	catch (json::parse_error& e)
 	{
-		messageHandler->writeMessage("ERROR", "Failed to parse github version: " + std::string(e.what()));
+		vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to parse github version: {}", e.what()));
 		return std::nullopt;
 	}
 
@@ -139,25 +131,25 @@ void vsid::version::checkForUpdates(int notify, const std::optional<vsid::versio
 
 	if (!localVersion)
 	{
-		messageHandler->writeMessage("DEBUG", "Failed to get local version. Value was empty", vsid::MessageHandler::DebugArea::Dev);
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get local version. Value was empty");
 		return;
 	}
 	if (!ghv)
 	{
-		messageHandler->writeMessage("DEBUG", "Failed to get github version. Value was empty", vsid::MessageHandler::DebugArea::Dev);
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to get github version. Value was empty");
 		return;
 	}
 	else
 	{
-		messageHandler->writeMessage("DEBUG", "Github version: " + ((ghv.has_value()) ? semverToString(ghv.value()) : " Failed to parse version."),
-			vsid::MessageHandler::DebugArea::Dev);
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Github version [{}]",
+			(ghv.has_value() ? vsid::version::semverToString(ghv.value()) : " Failed to parse version.")), vsid::DebugLevel::Dev);
 	}
 
 	int comp = vsid::version::compSemVer(localVersion.value(), ghv.value());
 
 	if (comp == 0)
 	{
-		messageHandler->writeMessage("DEBUG", "No new version found on github", vsid::MessageHandler::DebugArea::Dev);
+		vsid::Logger::log(vsid::LogLevel::Debug, "No new version found on github", vsid::DebugLevel::Dev);
 		return;
 	}
 
@@ -168,26 +160,24 @@ void vsid::version::checkForUpdates(int notify, const std::optional<vsid::versio
 	case 1:
 		if (comp == 2)
 		{
-			messageHandler->writeMessage("DEBUG", "New pre-release version found but notifying only for stable releases.",
-				vsid::MessageHandler::DebugArea::Dev);
+			vsid::Logger::log(vsid::LogLevel::Debug, "New pre-release version found but notifying only for stable releases.", vsid::DebugLevel::Dev);
 			break;
 		}
 
-		messageHandler->writeMessage("INFO", "New Update available. Local version: " + vsid::version::semverToString(localVersion.value()) +
-			" | Github version: " + vsid::version::semverToString(ghv.value()));
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("New Update available. Local version [{}] | Github version [{}]",
+			vsid::version::semverToString(localVersion.value()), vsid::version::semverToString(ghv.value())));
 
 		break;
 	case 2:
 		if (comp == 2)
 		{
-			messageHandler->writeMessage("DEBUG", "New pre-release version found but notifying only for stable releases.",
-				vsid::MessageHandler::DebugArea::Dev);
+			vsid::Logger::log(vsid::LogLevel::Debug, "New pre-release version found but notifying only for stable releases.", vsid::DebugLevel::Dev);
 			break;
 		}
 		goto showmsg;
 	case 3:
-		messageHandler->writeMessage("INFO", "New Update (pre-release) available. Local version: " + vsid::version::semverToString(localVersion.value()) +
-			" | Github version: " + vsid::version::semverToString(ghv.value()));
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("New Update (pre-release) available. Local version: {} | Github version: {}", 
+			vsid::version::semverToString(localVersion.value()), vsid::version::semverToString(ghv.value())));
 
 		break;
 	case 4:
@@ -195,14 +185,13 @@ void vsid::version::checkForUpdates(int notify, const std::optional<vsid::versio
 	showmsg:
 		MessageBoxA(
 			nullptr,
-			std::string("New version: " + vsid::version::semverToString(ghv.value()) + "\nInstalled: " + vsid::version::semverToString(localVersion.value())).c_str(),
+			std::string(std::format("New version: {}\nInstalled: {}", vsid::version::semverToString(ghv.value()), vsid::version::semverToString(localVersion.value()))).c_str(),
 			"vSID Update available!",
 			MB_OK | MB_ICONINFORMATION
 		);
 
 		break;
 	default:
-		messageHandler->writeMessage("WARNING", "Didn't check for updates. Improper notification value in main config (" +
-			std::to_string(notify) + "). Should be 0 - 4.");
+		vsid::Logger::log(vsid::LogLevel::Warning, std::format("Didn't check for updates. Improper notification value in main config ({}). Should be 0 - 4.", notify));
 	}
 }

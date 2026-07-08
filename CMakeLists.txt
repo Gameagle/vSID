@@ -85,13 +85,16 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES 
     area.cpp
     configparser.cpp
+    crashhandler.cpp
     eseparser.cpp
     display.cpp
     flightplan.cpp
     menu.cpp
     messageHandler.cpp
+    logger.cpp
     pch.cpp
     sid.cpp
+    syncManager.cpp
     timeHandler.cpp
     utils.cpp
     versionchecker.cpp
@@ -101,7 +104,20 @@ set(SOURCES
 
 # DLL target
 add_library(vSID SHARED ${SOURCES})
-target_compile_options(vSID PRIVATE -O2)
+
+# target_compile_options(vSID PRIVATE -O2) old
+
+if(MSVC)
+    # create debug info - /Oy prevents frame pointer omission (for debugging)
+    target_compile_options(vSID PRIVATE /Zi "$<$<CONFIG:Release>:/Oy->")
+
+    # created PDB - /MAP maps function offsets
+    target_link_options(vSID PRIVATE /DEBUG:FULL /OPT:REF /OPT:ICF "$<$<CONFIG:Release>:/MAP>")
+endif()
+
+# set to use MSVC - maybe old
+# set_property(TARGET vSID PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 
 # link curl statically
 target_compile_definitions(vSID PRIVATE CURL_STATICLIB)
@@ -120,4 +136,5 @@ target_link_libraries(vSID
     PRIVATE
         ${_curl_target}
         EuroScopePlugInDLL.lib
+        dbghelp
 )
