@@ -28,7 +28,6 @@ vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPA
 	this->configParser.loadMainConfig();
 	this->configParser.loadGrpConfig();
 	this->configParser.loadRnavList();
-	this->gsList = "STUP,PUSH,TAXI,DEPA";
 
 	/* takes over pointer control of vsidPlugin - no deletion needed for unloading*/
 	this->shared = std::shared_ptr<vsid::VSIDPlugin>(this);

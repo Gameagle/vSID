@@ -1,3 +1,8 @@
+[Changelog v0.15.0.1]
+:lady_beetle: **Fixes**
+*	SYNC - fixed watch dog triggering for STUP (one of the missing default ground states). Ground states are now added for proper checks.
+*	SYNC - fixed watch dog timer casting to full seconds instead of possible fractions
+
 [Changelog v0.15.0]
 >[!WARNING]
 >SID evaluation slightly changed due to the bug fixing of restrictions overruling pilot filed SIDs. If you encounter odd or unexpected evaluation results please feel free to report back.

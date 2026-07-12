@@ -73,7 +73,7 @@ void vsid::sync::SyncManager::processQueue(EuroScopePlugIn::CPlugIn* plugin)
 		}
 		else if (data.state != SyncState::Free)
 		{
-			auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - data.lastTriggerTime).count();
+			auto elapsed = std::chrono::duration<double>(now - data.lastTriggerTime).count();
 			if (elapsed >= SYNC_TIMEOUT_SECONDS)
 			{
 				data.state = SyncState::Free;
@@ -88,8 +88,8 @@ void vsid::sync::SyncManager::processQueue(EuroScopePlugIn::CPlugIn* plugin)
 				FlightPlan.GetControllerAssignedData().SetScratchPadString(front.oldScratch.c_str()); // set scratch pad after state update
 
 				vsid::Logger::log(LogLevel::Warning, std::format("[{}] exceeded watch dog time [{} seconds]. "
-					"Removing [{}/{}]. Restoring [{}] to scratch pad",
-					callsign, elapsed, front.newScratch, front.oldScratch, front.oldScratch), DebugLevel::Sync);
+					"Removing [{}]. Restoring [{}] to scratch pad",
+					callsign, elapsed, front.newScratch, front.oldScratch), DebugLevel::Sync);
 			}
 		}
 
@@ -121,7 +121,7 @@ void vsid::sync::SyncManager::update(EuroScopePlugIn::CFlightPlan& FlightPlan, c
 	{
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] WaitOnSync. Current [{}] | Expected [{}]{}",
 			callsign, currScratch, msg.newScratch,
-			(scratchOverwrite.empty()) ? "" : std::format(" | Overwrite[{}]", scratchOverwrite)),
+			(scratchOverwrite.empty()) ? "" : std::format(" | Overwrite [{}]", scratchOverwrite)),
 			DebugLevel::Sync);
 
 		if (scratchOverwrite == "GND" && this->gndStates.contains(msg.newScratch))

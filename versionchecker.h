@@ -31,7 +31,7 @@ namespace vsid
 {
 	namespace version
 	{
-		using semver = std::tuple<int, int, int, std::optional<std::string>>;
+		using semver = std::tuple<int, int, int, std::optional<int>, std::optional<std::string>>;
 
 		//************************************
 		// Description: Transform version string to tuple

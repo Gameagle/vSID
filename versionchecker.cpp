@@ -18,24 +18,42 @@ std::optional<vsid::version::semver> vsid::version::parseSemVer(std::string s)
 	if (s[0] == 'v' || s[0] == 'V') s.erase(0, 1);
 
 	std::smatch m;
-	if (std::regex_search(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+)\-(\S+))")))
+
+	// Format: Major.Minor.Patch.Hotfix-Hash
+	if (std::regex_match(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+)\.(\d+)\-(\S+)$)")))
 	{
-		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), m[4]);
+		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), std::stoi(m[4]), m[5]);
 	}
-	else if (std::regex_search(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+))")))
+
+	// Format: Major.Minor.Patch.Hotfix
+	if (std::regex_match(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+)\.(\d+)$)")))
 	{
-		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), std::nullopt);
+		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), std::stoi(m[4]), std::nullopt);
 	}
+
+	// Format: Major.Minor.Patch-Hash
+	if (std::regex_match(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+)\-(\S+)$)")))
+	{
+		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), std::nullopt, m[4]);
+	}
+
+	// Format: Major.Minor.Patch
+	if (std::regex_match(s, m, std::regex(R"(^\s*(\d+)\.(\d+)\.(\d+)$)")))
+	{
+		return std::make_tuple(std::stoi(m[1]), std::stoi(m[2]), std::stoi(m[3]), std::nullopt, std::nullopt);
+	}
+
 	return std::nullopt;
 }
 
 std::string vsid::version::semverToString(const vsid::version::semver& v)
 {
-	auto& [major, minor, patch, hash] = v;
+	auto& [major, minor, patch, hotfix, hash] = v;
 
 	std::string stringVer = std::format("{}.{}.{}", major, minor, patch);
 
-	if (hash) stringVer.append("-" + hash.value());
+	if (hotfix) stringVer += std::format(".{}", hotfix.value());
+	if (hash) stringVer += std::format("-{}", hash.value());
 
 	return stringVer;
 }
@@ -43,11 +61,11 @@ std::string vsid::version::semverToString(const vsid::version::semver& v)
 int vsid::version::compSemVer(const vsid::version::semver& local, const vsid::version::semver& remote)
 {
 	// get base version (major, minor, patch)
-	auto baseLocal = std::tie(std::get<0>(local), std::get<1>(local), std::get<2>(local));
-	auto baseRemote = std::tie(std::get<0>(remote), std::get<1>(remote), std::get<2>(remote));
+	auto baseLocal = std::tie(std::get<0>(local), std::get<1>(local), std::get<2>(local), std::get<3>(local));
+	auto baseRemote = std::tie(std::get<0>(remote), std::get<1>(remote), std::get<2>(remote), std::get<3>(remote));
 
-	bool remoteIsStable = !std::get<3>(remote);
-	bool localIsStable = !std::get<3>(local);
+	bool remoteIsStable = !std::get<4>(remote);
+	bool localIsStable = !std::get<4>(local);
 
 	if (baseRemote > baseLocal) return remoteIsStable ? 1 : 2; // remote is newer, 1 = stable, 2 = pre-release
 
@@ -55,7 +73,7 @@ int vsid::version::compSemVer(const vsid::version::semver& local, const vsid::ve
 	{
 		if (!remoteIsStable && !localIsStable)
 		{
-			if (std::get<3>(remote) != std::get<3>(local)) return 2; // assumed new pre-release
+			if (std::get<4>(remote) != std::get<4>(local)) return 2; // assumed new pre-release
 		}
 		else if (remoteIsStable && !localIsStable)
 			return 1; // new stable release
@@ -168,21 +186,19 @@ void vsid::version::checkForUpdates(int notify, const std::optional<vsid::versio
 			vsid::version::semverToString(localVersion.value()), vsid::version::semverToString(ghv.value())));
 
 		break;
+	case 3:
+		vsid::Logger::log(vsid::LogLevel::Info, std::format("New Update (pre-release) available. Local version: {} | Github version: {}", 
+			vsid::version::semverToString(localVersion.value()), vsid::version::semverToString(ghv.value())));
+
+		break;
 	case 2:
 		if (comp == 2)
 		{
 			vsid::Logger::log(vsid::LogLevel::Debug, "New pre-release version found but notifying only for stable releases.", vsid::DebugLevel::Dev);
 			break;
 		}
-		goto showmsg;
-	case 3:
-		vsid::Logger::log(vsid::LogLevel::Info, std::format("New Update (pre-release) available. Local version: {} | Github version: {}", 
-			vsid::version::semverToString(localVersion.value()), vsid::version::semverToString(ghv.value())));
-
-		break;
+		[[fallthrough]];
 	case 4:
-		goto showmsg;
-	showmsg:
 		MessageBoxA(
 			nullptr,
 			std::string(std::format("New version: {}\nInstalled: {}", vsid::version::semverToString(ghv.value()), vsid::version::semverToString(localVersion.value()))).c_str(),

@@ -85,6 +85,6 @@ namespace vsid::sync {
 	private:
 		std::unordered_map<std::string, std::deque<SyncMsg>> queue; // queu with callsign and sync msgs
 		std::unordered_map<std::string, SyncData> states; // sync states for callsigns
-		std::unordered_set<std::string> gndStates = {"PUSH", "TAXI", "DEPA"}; // default ES gnd states to overwrite
+		std::unordered_set<std::string> gndStates = {"NSTS", "STUP", "PUSH", "TAXI", "DEPA"}; // default ES gnd states to overwrite
 	};
 }
