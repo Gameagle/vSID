@@ -4444,6 +4444,11 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				else				
 					vsid::Logger::disableConsole();
 			}
+			else if (cmd.params[0] == "devonly")
+			{
+				vsid::Logger::setLogDevOnly(!vsid::Logger::getLogDevOnly());
+				vsid::Logger::log(LogLevel::Info, std::format("Development messages logging: [{}]", (vsid::Logger::getLogDevOnly()) ? "ON" : "OFF"));
+			}
 			else if (cmd.params[0] != "status")
 			{
 				vsid::Logger::toggleDebugLevel(cmd.params);
