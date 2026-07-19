@@ -4448,6 +4448,8 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 			{
 				vsid::Logger::setLogDevOnly(!vsid::Logger::getLogDevOnly());
 				vsid::Logger::log(LogLevel::Info, std::format("Development messages logging: [{}]", (vsid::Logger::getLogDevOnly()) ? "ON" : "OFF"));
+
+				return true;
 			}
 			else if (cmd.params[0] != "status")
 			{
@@ -5245,6 +5247,28 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			this->ignoredAtc.insert({ atcCallsign, data });
 			return;
 		}
+
+		// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
+		if (failit->second > 2 && failit->second < MAX_ATC_FAIL_COUNT)
+		{
+			for (const vsid::SectionAtc& sAtc : this->sectionAtc)
+			{
+				if (vsid::utils::svEqualCi(atcCallsign, sAtc.callsign) || atcFreqMatch(Controller, sAtc))
+				{
+					data.si = sAtc.si;
+					data.freq = sAtc.freq;
+					data.facility = sAtc.facility;
+
+					vsid::Logger::log(LogLevel::Debug, std::format("[{}] match found in parsed stations. Setting SI [{}] | FREQ [{}] | FAC [{}]",
+						atcCallsign, data.si, data.freq, data.facility), vsid::DebugLevel::Atc);
+
+					this->atcFailCounter.erase(failit);
+					inFailCounter = false;
+
+					break;
+				}
+			}
+		}
 	}
 
 	try
@@ -5287,6 +5311,15 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 		return;
 	}
 
+	if (data.facility < 2)
+	{
+		vsid::Logger::log(LogLevel::Debug, std::format("[{}] has facility below 2 (usually FIS). Adding to ignore list.",
+			atcCallsign), vsid::DebugLevel::Atc);
+
+		this->ignoredAtc.insert({ atcCallsign, data });
+		return;
+	}
+
 	if (!Controller.IsController())
 	{
 		if (inFailCounter)
@@ -5295,7 +5328,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] is not a controller. Increasing fail count [{}/{}]",
 				atcCallsign, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
-			
+
 			return;
 		}
 
@@ -5303,10 +5336,8 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			atcCallsign), vsid::DebugLevel::Atc);
 
 		this->atcFailCounter.insert({ atcCallsign, 1 });
-
-		return;
 	}
-
+	
 	if (invalidFreq)
 	{
 		if (inFailCounter)
@@ -5315,7 +5346,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] has invalid frequency [{}]. Increasing fail count [{}/{}]",
 				atcCallsign, data.freq, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
-			
+
 			return;
 		}
 
@@ -5323,19 +5354,8 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			atcCallsign, data.freq), vsid::DebugLevel::Atc);
 
 		this->atcFailCounter.insert({ atcCallsign, 1 });
-
-		return;
 	}
 
-	if (data.facility < 2)
-	{		
-		vsid::Logger::log(LogLevel::Debug, std::format("[{}] has facility below 2 (usually FIS). Adding to ignore list.",
-			atcCallsign), vsid::DebugLevel::Atc);
-
-		this->ignoredAtc.insert({ atcCallsign, data });
-		return;
-	}
-	
 	if (data.si.empty())
 	{
 		if (inFailCounter)
@@ -5343,7 +5363,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			++failit->second;
 
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] is skipped because the SI is empty. Increasing fail count [{}/{}]",
-				atcCallsign, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);		
+				atcCallsign, failit->second, MAX_ATC_FAIL_COUNT), vsid::DebugLevel::Atc);
 
 			return;
 		}
@@ -5379,32 +5399,6 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			"SI [{}] is valid.", atcCallsign, data.si), vsid::DebugLevel::Atc);
 
 		this->atcFailCounter.erase(failit);
-		inFailCounter = false;
-	}
-
-	// maximum 3 attempts to try and match the callsign or frequency against ese stored atc stations
-	if (inFailCounter)
-	{
-		if (failit->second > 2 && failit->second < MAX_ATC_FAIL_COUNT)
-		{
-			for (const vsid::SectionAtc& sAtc : this->sectionAtc)
-			{
-				if (vsid::utils::svEqualCi(atcCallsign, sAtc.callsign) || atcFreqMatch(Controller, sAtc))
-				{
-					data.si = sAtc.si;
-					data.freq = sAtc.freq;
-					data.facility = sAtc.facility;
-
-					vsid::Logger::log(LogLevel::Debug, std::format("[{}] match found in parsed stations. Setting SI [{}] | FREQ [{}] | FAC [{}]",
-						atcCallsign, data.si, data.freq, data.facility), vsid::DebugLevel::Atc);
-
-					this->atcFailCounter.erase(failit);
-					inFailCounter = false;
-
-					break;
-				}
-			}
-		}
 	}
 
 	EuroScopePlugIn::CController atcMyself = ControllerMyself();
@@ -5458,7 +5452,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 			{
 				vsid::Logger::log(LogLevel::Info, std::format("[{}] Disabling auto mode. [{}] now online.", atcIcao, atcCallsign), vsid::DebugLevel::Atc);
 
-				airport.settings["auto"] = false;				
+				airport.settings["auto"] = false;
 			}
 		}
 	}
