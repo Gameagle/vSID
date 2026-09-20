@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <chrono>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -38,21 +39,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <curl/curl.h> // only to call the update check
 
 #include "include/es/EuroScopePlugIn.h"
-#include "airport.h"
+#include "airportManager.h"
 #include "constants.h"
-#include "flightplan.h"
 #include "configparser.h"
 #include "utils.h"
 #include "eseparser.h"
 #include "versionchecker.h"
-#include "syncManager.h"
 
 #include "logger.h"
 
 namespace vsid
 {
 	const std::string pluginName = "vSID";
-	const std::string pluginVersion = "0.15.1";
+	const std::string pluginVersion = "0.16.0";
 	const std::string pluginAuthor = "Gameagle";
 	const std::string pluginCopyright = "GPL v3";
 	const std::string pluginViewAviso = "";
@@ -70,37 +69,34 @@ namespace vsid
 		VSIDPlugin();
 		virtual ~VSIDPlugin();
 
-		inline std::map<std::string, vsid::Fpln>& getProcessed() { return this->processed; };
-		inline std::set<std::string> getDepRwy(std::string icao)
+		//************************************
+		// Description: Returns the singleton instance of the plugin. Throws an exception if the instance is not yet initialized.
+		// Method:    instance
+		// FullName:  vsid::VSIDPlugin::instance
+		// Access:    public static 
+		// Returns:   vsid::VSIDPlugin&
+		// Qualifier:
+		//************************************
+		inline static VSIDPlugin& instance()
 		{
-			if (this->activeAirports.contains(icao))
+			if (!instance_)
 			{
-				return this->activeAirports[icao].depRwys;
+				vsid::Logger::log(LogLevel::Error, "vSIDPlugin instance not yet initialized. This is a FATAL error!");
+				throw std::runtime_error("vSIDPlugin not yet initialized");
 			}
-			else return {};
+
+			return *instance_;
 		}
 
-		//************************************
-		// Description: Returns all stored active airports
-		// Method:    getActiveApts
-		// FullName:  vsid::VSIDPlugin::getActiveApts
-		// Access:    public 
-		// Returns:   const std::map<std::string, vsid::Airport, vsid::utils::CICompare>&
-		// Qualifier: const
-		//************************************
-		inline const std::map<std::string, vsid::Airport, vsid::utils::CICompare>& getActiveApts() const { return this->activeAirports; };
-
-		//************************************
-		// Description: Returns the SID waypoint found in the route or empty if none was found. Checks ES determined SID first.
-		// Considers transition waypoints
-		// Method:    findSidWpt
-		// FullName:  vsid::VSIDPlugin::findSidWpt
-		// Access:    public 
-		// Returns:   std::string
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan FlightPlan
-		//************************************
-		std::string findSidWpt(EuroScopePlugIn::CFlightPlan FlightPlan);
+		inline std::set<std::string> getDepRwy(std::string icao)
+		{
+			if (const auto* aptData = vsid::apt::AirportManager::getAirport(icao); aptData)
+			{
+				return aptData->depRwys;
+			}
+			
+			return {};
+		}
 
 		//************************************
 		// Description: Iterates over all loaded plugins in search for TopSky and CCAMS
@@ -124,22 +120,6 @@ namespace vsid
 		// Parameter: std::string atcRwy
 		//************************************
 		vsid::Sid processSid(EuroScopePlugIn::CFlightPlan& FlightPlan, std::string atcRwy = "");
-
-
-		//************************************
-		// Description Tries to set a clean route without SID. SID will then be placed as first item
-		// Processed flight plans are stored.
-		// Method:    processFlightplan
-		// FullName:  vsid::VSIDPlugin::processFlightplan
-		// Access:    public 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
-		// Parameter: bool checkOnly
-		// Parameter: std::string atcRwy
-		// Parameter: vsid::Sid manualSid
-		//************************************
-		void processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
 
 		//************************************
 		// Description: Removes given callsign from any requests for the specified airport
@@ -293,28 +273,6 @@ namespace vsid
 		// Parameter: int Counter
 		//************************************
 		void OnTimer(int Counter);
-		
-		//************************************
-		// Description: Syncs present requests for the given flight plan
-		// Method:    syncReq
-		// FullName:  vsid::VSIDPlugin::syncReq
-		// Access:    public 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
-		//************************************
-		void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
-		
-		//************************************
-		// Description: Syncs saved gnd states and clearance flag
-		// Method:    syncStates
-		// FullName:  vsid::VSIDPlugin::syncStates
-		// Access:    public 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
-		//************************************
-		void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
 
 		//************************************
 		// Description: Checks if a flight plan (or radar target) is inside the vis range of the controller
@@ -400,17 +358,28 @@ namespace vsid
 		//************************************
 		void callExtFunc(const char* sCallsign, const char* sItemPlugInName, int ItemCode, const char* sItemString, const char* sFunctionPlugInName,
 			int FunctionId, POINT Pt, RECT Area);
+
+		//************************************
+		// Description: Assigns a squawk or add to queue if time passed is too small
+		// Method:    addOrSetSquawk
+		// FullName:  vsid::VSIDPlugin::addOrSetSquawk
+		// Access:    private 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & callsign
+		// Parameter: bool forceTS - if TopSky should be forced for squawk assignment
+		//************************************
+		void addOrSetSquawk(const std::string& callsign, bool forceTS = false);
 		
 	private:
+		inline static VSIDPlugin* instance_ = nullptr;
+
 		// buffer to tmp store extracted values after ese parsing until update
 		std::optional<vsid::EseBuffer> eseBuffer_; 
 		std::atomic<bool> eseDataRdy_{ false }; // flag to update if parsed data is rdy
 		std::mutex bufferMtx_;
 		std::jthread parserThread_;
 		std::atomic<bool> parsingActive_{ false }; // block multiple parsing
-
-		std::map<std::string, vsid::Airport, vsid::utils::CICompare> activeAirports;
-		std::map<std::string, vsid::Fpln> processed;
 		/**
 		 * @param std::map<std::string,> callsign
 		 * @param std::pair<,bool> fpln is disconnected
@@ -418,31 +387,11 @@ namespace vsid
 		std::map<std::string, std::pair< std::chrono::system_clock::time_point, bool>> removeProcessed;
 		vsid::ConfigParser configParser;
 		std::string configPath;
-		std::map<std::string, std::map<std::string, bool>> savedSettings;
-		std::map<std::string, vsid::Airport::CustomRulesMap> savedRules;
-		std::map<std::string, vsid::Airport::CustomAreaMap> savedAreas;
-		std::map<std::string, vsid::Fpln> savedFplnInfo = {};
-		//************************************
-		// Description: Stores requests during airport updates
-		// Param 1: std::string - airport icao
-		// Param 2: std::string - request type
-		// Param 3 (pair): std::string - callsign
-		// Param 4 (pair): long long - time
-		//************************************
-		std::map<std::string, vsid::Airport::CustomRequestMap> savedRequests = {};
-		//************************************
-		// Description: Stores runway requests during airport updates
-		// Param 1: std::string - airport icao
-		// Param 2: std::string - request type
-		// Param 3: std::string - runway
-		// Param 4 (pair): std::string - callsign
-		// Param 5 (pair): long long - time
-		//************************************
-		std::map<std::string, vsid::Airport::CustomRwyRequestMap> savedRwyRequests = {};
+
 		// list of ground states set by controllers
 		std::string gsList;
-		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> activeAtc;
-		std::unordered_map<std::string, AtcData, vsid::utils::StringHash, std::equal_to<>> ignoredAtc;
+		std::unordered_map<std::string, vsid::apt::AtcData, vsid::utils::StringHash, std::equal_to<>> activeAtc;
+		std::unordered_map<std::string, vsid::apt::AtcData, vsid::utils::StringHash, std::equal_to<>> ignoredAtc;
 		bool topskyLoaded = false;
 		bool ccamsLoaded = false;
 		//************************************
@@ -459,9 +408,7 @@ namespace vsid
 		// internal storage of parsed sids
 		std::set<vsid::SectionSID> sectionSids;
 
-		vsid::sync::SyncManager syncManager;
-
-		// internal squawn assignment queue
+		// internal squawk assignment queue
 		std::list<std::string> squawkQueue;
 		// time of last squawk assignment
 		std::chrono::steady_clock::time_point lastSquawkTP;
@@ -471,7 +418,7 @@ namespace vsid
 		std::unordered_map<std::string, int> atcFailCounter;
 		// was the update check already issued
 		bool updateInformed = false;
-		// if curl init was successfull
+		// if curl init was successful
 		bool curlInit = false;
 
 		// #dev scratchpad storage
@@ -497,18 +444,6 @@ namespace vsid
 		// Qualifier:
 		//************************************
 		void loadEse();
-
-		//************************************
-		// Description: Assigns a squawk or add to queue if time passed is too small
-		// Method:    addOrSetSquawk
-		// FullName:  vsid::VSIDPlugin::addOrSetSquawk
-		// Access:    private 
-		// Returns:   void
-		// Qualifier:
-		// Parameter: const std::string & callsign
-		// Parameter: bool forceTS - if TopSky should be forced for squawk assignment
-		//************************************
-		void addOrSetSquawk(const std::string& callsign, bool forceTS = false);
 
 		//************************************
 		// Description: Checks for frequency match and considers ICAO and facility parts matching
