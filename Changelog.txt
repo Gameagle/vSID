@@ -1,3 +1,12 @@
+[Changelog v0.15.1]
+:new: **New Features**
+*	FPLN - added flight plan manager, which handels creation, updates and deletion of flight plans
+*	APT - added airport manager, which handels creation, updates and deletion of airports
+*	GEN - several major changes to adapt to the new managers
+
+:gear: **Changed Features / Behaviour**
+*	SYNC - sync manager is now static and handles the queue
+
 [Changelog v0.15.0.1]
 :lady_beetle: **Fixes**
 *	SYNC - fixed watch dog triggering for STUP (one of the missing default ground states). Ground states are now added for proper checks.
