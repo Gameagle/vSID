@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flight plans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -146,6 +146,10 @@ namespace vsid
 		
 
 	private:
+
+		// #dev - modern menu
+		CMainMenuDlg* m_pMainMenuDlg = nullptr;
+		// end dev
 
 		const static COLORREF defaultBorder = RGB(50, 50, 40);
 		const static COLORREF defaultBg = RGB(130, 150, 140);

@@ -6,9 +6,18 @@
 #include "messageHandler.h"
 #include "utils.h"
 #include "logger.h"
+#include "fplnManager.h"
+#include "airportManager.h"
 
 #include <utility>
 #include <format>
+
+// #dev - modern display
+#include "afxstat_.h"
+// end dev
+
+using FplnManager = vsid::fpln::FplnManager;
+using AirportManager = vsid::apt::AirportManager;
 
 vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const std::string name) : EuroScopePlugIn::CRadarScreen()
 { 
@@ -18,6 +27,20 @@ vsid::Display::Display(int id, std::shared_ptr<vsid::VSIDPlugin> plugin, const s
 }
 vsid::Display::~Display() { 
 	vsid::Logger::log(vsid::LogLevel::Debug, std::format("Removed display with id: {}", this->id), vsid::DebugLevel::Menu);
+
+	// #dev - modern menu
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	if (m_pMainMenuDlg != nullptr)
+	{
+		if (::IsWindow(m_pMainMenuDlg->GetSafeHwnd()))
+		{
+			m_pMainMenuDlg->DestroyWindow();
+		}
+
+		m_pMainMenuDlg = nullptr;
+	}
+	// end dev
 }
 
 void vsid::Display::OnAsrContentLoaded(bool loaded)
@@ -113,7 +136,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 		font.CreateFontIndirectA(&lgfont);
 		CFont* oldFont = dc.SelectObject(&font);
 
-		for (auto& [callsign, fplnInfo] : sharedPlugin->getProcessed())
+		for (auto& [callsign, fplnInfo] : FplnManager::getProcessed())
 		{
 			EuroScopePlugIn::CRadarTarget target = sharedPlugin->RadarTargetSelect(callsign.c_str());
 			EuroScopePlugIn::CPosition targetPos = target.GetPosition().GetPosition();
@@ -156,7 +179,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				this->getZoomLevel() <= sharedPlugin->getConfigParser().getIndicatorDefaultValues().showBelowZoom)
 			{
 				std::string adep = target.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
-				std::string fplnRwy = vsid::fplnhelper::getAtcBlock(target.GetCorrelatedFlightPlan()).second;
+				std::string fplnRwy = vsid::fpln::getAtcBlock(target.GetCorrelatedFlightPlan()).second;
 				std::string reqType = fplnInfo.request;
 				bool isRwyReq = fplnInfo.request.find("rwy") != std::string::npos;
 
@@ -169,57 +192,27 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 					catch (std::out_of_range&) {}
 				}
 				
-				if (!reqType.empty() && !adep.empty() && sharedPlugin->getActiveApts().contains(adep))
+				if (!reqType.empty() && !adep.empty())
 				{
-					EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
-
-					POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
-
-					if (!isRwyReq)
+					if (const auto aptData = AirportManager::getAirport(adep); aptData != nullptr)
 					{
-						for (auto& [type, req] : sharedPlugin->getActiveApts().at(adep).requests)
+						EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
+
+						POINT offsetPx = this->ConvertCoordFromPositionToPixel(offsetPos);
+
+						if (!isRwyReq)
 						{
-							if (type != reqType) continue;
-
-							for (std::set<std::pair<std::string, long long>>::iterator it = req.begin(); it != req.end(); ++it)
+							for (auto& [type, req] : aptData->requests)
 							{
-								if (it->first != callsign) continue;
+								if (type != reqType) continue;
 
-								size_t pos = std::distance(it, req.end());
-
-								std::string reqPos = vsid::utils::toupper(type).at(0) + std::to_string(pos);
-
-								CRect area;
-
-								area.top = offsetPx.y; // 10; 10px fixed before
-								area.bottom = area.top + 15;
-								area.left = offsetPx.x;
-								area.right = area.left + 30;
-
-								dc.SelectObject(&font);
-
-								dc.SetTextColor(sharedPlugin->getConfigParser().getColor("reqIndicator"));
-
-								dc.DrawText(reqPos.c_str(), &area, DT_BOTTOM);
-							}
-						}
-					}			
-					else
-					{
-						for (auto& [type, rwys] : sharedPlugin->getActiveApts().at(adep).rwyrequests)
-						{
-							if (type != reqType) continue;
-
-							for (auto& [rwy, rwyReq] : rwys)
-							{
-								if (fplnRwy.empty() || fplnRwy != rwy) continue;
-
-								for (std::set<std::pair<std::string, long long>>::iterator it = rwyReq.begin(); it != rwyReq.end(); ++it)
+								for (auto it = req.begin(); it != req.end(); ++it)
 								{
 									if (it->first != callsign) continue;
 
-									size_t pos = std::distance(it, rwyReq.end());
-									std::string reqPos = "R" + std::to_string(pos);
+									size_t pos = std::distance(it, req.end());
+
+									std::string reqPos = vsid::utils::toupper(type).at(0) + std::to_string(pos);
 
 									CRect area;
 
@@ -236,7 +229,41 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 								}
 							}
 						}
-					}				
+						else
+						{
+							for (auto& [type, rwys] : aptData->rwyrequests)
+							{
+								if (type != reqType) continue;
+
+								for (auto& [rwy, rwyReq] : rwys)
+								{
+									if (fplnRwy.empty() || fplnRwy != rwy) continue;
+
+									for (std::set<std::pair<std::string, long long>>::iterator it = rwyReq.begin(); it != rwyReq.end(); ++it)
+									{
+										if (it->first != callsign) continue;
+
+										size_t pos = std::distance(it, rwyReq.end());
+										std::string reqPos = "R" + std::to_string(pos);
+
+										CRect area;
+
+										area.top = offsetPx.y; // 10; 10px fixed before
+										area.bottom = area.top + 15;
+										area.left = offsetPx.x;
+										area.right = area.left + 30;
+
+										dc.SelectObject(&font);
+
+										dc.SetTextColor(sharedPlugin->getConfigParser().getColor("reqIndicator"));
+
+										dc.DrawText(reqPos.c_str(), &area, DT_BOTTOM);
+									}
+								}
+							}
+						}
+					}
+									
 				}
 			}
 
@@ -338,7 +365,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 
 						if (std::shared_ptr sharedPlugin = this->plugin.lock())
 						{
-							for (auto &[callsign, info] : sharedPlugin->getProcessed())
+							for (auto &[callsign, info] : FplnManager::getProcessed())
 							{
 								EuroScopePlugIn::CFlightPlan fpln = sharedPlugin->FlightPlanSelect(callsign.c_str());
 
@@ -567,11 +594,12 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 			return true;
 		}
-		else if (params.size() == 3)
+
+		if (params.size() == 3)
 		{
 			if (std::shared_ptr sharedPlugin = this->plugin.lock())
 			{
-				if (!sharedPlugin->getActiveApts().contains(params[2]))
+				if (AirportManager::getAirport(params[2]) == nullptr)
 				{
 					vsid::Logger::log(vsid::LogLevel::Info, std::format("[{}] is not an active airport. Cannot open menu.", params[2]));
 					return true;
@@ -639,7 +667,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] reopening startup menu", title), vsid::DebugLevel::Menu);
 					std::string apt = vsid::utils::split(title, '_').at(1);
 
-					if (!sharedPlugin->getActiveApts().contains(apt)) continue;
+					if (AirportManager::getAirport(apt) == nullptr) continue;
 
 					this->openStartupMenu(apt, config.parent, config.render, config.topLeft.y, config.topLeft.x);
 				}
@@ -656,13 +684,77 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 	else vsid::Logger::log(vsid::LogLevel::Error, "Couldn't update active airports for screen as plugin couldn't be accessed. Code: {}" + ERROR_DSP_PLUGACCESS, vsid::DebugLevel::Menu);
 }
 
+// #dev - modern menu
+//void vsid::Display::openMainMenu(int top, int left, bool render) disabled for new function
+//{
+//	if (this->menues.contains("mainmenu"))
+//	{
+//		this->menues["mainmenu"].toggleRender();
+//		return;
+//	}
+//
+//	int initTop = 0;
+//	int initLeft = 0;
+//
+//	if (top == -1 || left == -1)
+//	{
+//		CRect rArea = this->GetRadarArea();
+//
+//		initTop = rArea.bottom - 100;
+//		initLeft = rArea.right - 200;
+//	}
+//	else
+//	{
+//		initTop = top;
+//		initLeft = left;
+//	}
+//	
+//
+//	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
+//
+//	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
+//
+//	for (auto& [title, apt] : this->plugin.lock()->getActiveApts())
+//	{
+//		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Add airport button for [{}]", title), vsid::DebugLevel::Menu, true);
+//		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
+//	}
+//
+//	newMenu.update();
+//
+//	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
+//}
+
 void vsid::Display::openMainMenu(int top, int left, bool render)
 {
-	if (this->menues.contains("mainmenu"))
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	if (m_pMainMenuDlg != nullptr)
 	{
-		this->menues["mainmenu"].toggleRender();
+		if (m_pMainMenuDlg->IsWindowVisible())
+		{
+			m_pMainMenuDlg->ShowWindow(SW_HIDE);
+		}
+		else
+		{
+			m_pMainMenuDlg->ShowWindow(SW_SHOW);
+			m_pMainMenuDlg->BringWindowToTop();
+		}
+
 		return;
 	}
+
+	HWND hEuroscopeWnd = ::GetActiveWindow();
+	CWnd* pEuroscopeWnd = CWnd::FromHandle(hEuroscopeWnd);
+
+	m_pMainMenuDlg = new CMainMenuDlg(pEuroscopeWnd);
+
+	if (auto sharedPlugin = this->plugin.lock())
+	{
+		m_pMainMenuDlg->SetAirports(AirportManager::getAirports());
+	}
+
+	m_pMainMenuDlg->Create(CMainMenuDlg::IDD, pEuroscopeWnd);
 
 	int initTop = 0;
 	int initLeft = 0;
@@ -670,7 +762,6 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 	if (top == -1 || left == -1)
 	{
 		CRect rArea = this->GetRadarArea();
-
 		initTop = rArea.bottom - 100;
 		initLeft = rArea.right - 200;
 	}
@@ -679,22 +770,12 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 		initTop = top;
 		initLeft = left;
 	}
-	
 
-	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
-
-	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
-
-	for (auto& [title, apt] : this->plugin.lock()->getActiveApts())
-	{
-		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Add airport button for [{}]", title), vsid::DebugLevel::Menu, true);
-		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
-	}
-
-	newMenu.update();
-
-	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
+	m_pMainMenuDlg->SetWindowPos(NULL, initLeft, initTop, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+	m_pMainMenuDlg->ShowWindow(SW_SHOW);
 }
+
+// end dev
 
 void vsid::Display::openStartupMenu(const std::string apt, const std::string parent, bool render, int top, int left)
 {
