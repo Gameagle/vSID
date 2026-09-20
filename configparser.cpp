@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "configparser.h"
+#include "airportManager.h"
 #include "utils.h"
 #include "messageHandler.h"
 #include "sid.h"
@@ -10,6 +11,8 @@
 #include <vector>
 #include <fstream>
 #include <format>
+
+using AirportManager = vsid::apt::AirportManager;
 
 vsid::ConfigParser::ConfigParser()
 {
@@ -432,13 +435,7 @@ void vsid::ConfigParser::loadMainConfig()
 	}
 }
 
-void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport, vsid::utils::CICompare>& activeAirports,
-										std::map<std::string, vsid::Airport::CustomRulesMap>& savedCustomRules,
-										std::map<std::string, std::map<std::string, bool>>& savedSettings,
-										std::map<std::string, vsid::Airport::CustomAreaMap>& savedAreas,
-										std::map<std::string, vsid::Airport::CustomRequestMap>& savedRequests,
-										std::map<std::string, vsid::Airport::CustomRwyRequestMap>& savedRwyRequests
-										)
+void vsid::ConfigParser::loadAirportConfig()
 {
 	// get the current path where plugins .dll is stored
 	char path[MAX_PATH + 1] = { 0 };
@@ -473,7 +470,7 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport, 
 		}
 	}*/
 
-	for (auto &[icao, aptInfo] : activeAirports)
+	for (auto &[icao, aptInfo] : AirportManager::getAirports())
 	{
 		for (const std::filesystem::path& entry : std::filesystem::directory_iterator(basePath))
 		//for (const std::filesystem::path& entry : this->configPaths)
@@ -487,783 +484,814 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport, 
 					this->parsedConfig = json::parse(configFile);
 
 					if (!this->parsedConfig.contains(icao)) continue;
-					else
-					{
-						aptConfig.insert(icao);
 
-						// general settings
+					aptConfig.insert(icao);
 
-						aptInfo.icao = icao;
-						aptInfo.elevation = this->parsedConfig.at(icao).value("elevation", 0);
-						aptInfo.equipCheck = this->parsedConfig.at(icao).value("equipCheck", true);
-						aptInfo.enableRVSids = this->parsedConfig.at(icao).value("enableRVSids", true);
-						aptInfo.allRwys = vsid::utils::split(this->parsedConfig.at(icao).value("runways", ""), ',');
-						aptInfo.transAlt = this->parsedConfig.at(icao).value("transAlt", 0);
-						aptInfo.maxInitialClimb = this->parsedConfig.at(icao).value("maxInitialClimb", 0);
-						aptInfo.timezone = this->parsedConfig.at(icao).value("timezone", "Etc/UTC");
-						aptInfo.requests["clearance"] = {};
-						aptInfo.requests["startup"] = {};
-						aptInfo.requests["pushback"] = {};
-						aptInfo.requests["taxi"] = {};
-						aptInfo.requests["departure"] = {};
-						aptInfo.requests["vfr"] = {};
-						aptInfo.rwyrequests["startup"] = {};
-						aptInfo.autoHandoff = this->parsedConfig.at(icao).value("autoHandoff", true);
+					const auto& config = this->parsedConfig.at(icao);
 
-						// customRules
-
-						vsid::Airport::CustomRulesMap customRules;
-						for (auto &el : this->parsedConfig.at(icao).value("customRules", std::map<std::string, bool>{}))
+					const bool updated = AirportManager::update(icao, [&](vsid::apt::AirportData& data)
 						{
-							std::pair<std::string, bool> rule = { vsid::utils::toupper(el.first), el.second };
-							customRules.insert(rule);
-						}
+							// general settings
 
-						// overwrite loaded rule settings from config with current values at the apt
+							data.icao = icao;
+							data.elevation = config.value("elevation", 0);
+							data.equipCheck = config.value("equipCheck", true);
+							data.enableRVSids = config.value("enableRVSids", true);
+							data.allRwys = vsid::utils::split(config.value("runways", ""), ',');
+							data.transAlt = config.value("transAlt", 0);
+							data.maxInitialClimb = config.value("maxInitialClimb", 0);
+							data.timezone = config.value("timezone", "Etc/UTC");
+							data.autoHandoff = config.value("autoHandoff", true);
 
-						if (savedCustomRules.contains(icao))
-						{
-							for (std::pair<const std::string, bool>& rule : savedCustomRules[icao])
+							for (const char* reqType : {
+								"clearance",
+								"startup",
+								"pushback",
+								"taxi",
+								"departure",
+								"vfr"
+								})
 							{
-								if (customRules.contains(rule.first))
-								{
-									customRules[rule.first] = rule.second;
-								}
+								data.requests.try_emplace(reqType);
 							}
-						}
-						aptInfo.customRules = customRules;                        
 
-						std::set<std::string> appSI;
-						int appSIPrio = 0;
-						for (std::string& si : vsid::utils::split(this->parsedConfig.at(icao).value("appSI", ""), ','))
-						{
-							aptInfo.appSI[si] = appSIPrio;
-							appSIPrio++;
-						}
-						
-						// areas
+							data.rwyrequests.try_emplace("startup");
 
-						if (this->parsedConfig.at(icao).contains("areas"))
-						{
-							for (auto& area : this->parsedConfig.at(icao).at("areas").items())
+							data.settings.try_emplace("auto", false);
+							data.settings.try_emplace("lvp", false);
+							data.settings.try_emplace("time", false);
+
+							// customRules
+
+							const auto& customRules = config.value("customRules", std::map<std::string, bool>{});
+
+							for (auto it = data.customRules.begin(); it != data.customRules.end();)
 							{
-								std::vector<std::pair<std::string, std::string>> coords;
-								bool isActive = false;
-								bool arrAsDep = false;
-								for (auto& coord : this->parsedConfig.at(icao).at("areas").at(area.key()).items())
+								if (!customRules.contains(it->first)) it = data.customRules.erase(it);
+								else ++it;
+							}
+
+							for (auto& [rule, enabled] : customRules)
+							{
+								data.customRules.try_emplace(vsid::utils::toupper(rule), enabled);
+							}
+
+							int appSIPrio = 0;
+							for (std::string& si : vsid::utils::split(config.value("appSI", ""), ','))
+							{
+								data.appSI[si] = appSIPrio;
+								appSIPrio++;
+							}
+
+							// areas
+
+							if (config.contains("areas"))
+							{
+								const auto& areas = config.at("areas");
+
+								for (auto it = data.areas.begin(); it != data.areas.end();)
 								{
-									if (coord.key() == "active")
+									if (!areas.contains(it->first)) it = data.areas.erase(it);
+									else ++it;
+								}
+
+								for (auto& [areaKey, areaValue] : areas.items())
+								{
+									auto existingArea = data.areas.find(areaKey);
+									const bool areaExists = existingArea != data.areas.end();
+
+									std::vector<std::pair<std::string, std::string>> coords;
+									bool isActive = areaExists ? existingArea->second.isActive : false;
+									bool arrAsDep = false;
+
+									for (auto& [coordKey, coordValue] : areaValue.items())
 									{
-										isActive = this->parsedConfig.at(icao).at("areas").at(area.key()).value("active", false);
+										if (coordKey == "active")
+										{
+											if (!areaExists) coordValue.get_to<bool>(isActive);
+
+											continue;
+										}
+
+										if (coordKey == "arrAsDep")
+										{
+											coordValue.get_to(arrAsDep);
+
+											continue;
+										}
+
+										std::string lat = coordValue.value("lat", std::string{});
+										std::string lon = coordValue.value("lon", std::string{});
+
+										if (lat.empty() || lon.empty())
+										{
+											vsid::Logger::log(
+												vsid::LogLevel::Error,
+												std::format(
+													"Couldn't read LAT or LON value for [{}] in area [{}] at [{}]",
+													coordKey,
+													areaKey,
+													icao
+												)
+											);
+
+											break;
+										}
+
+										coords.push_back({ lat, lon });
+									}
+
+									if (coords.size() < 3)
+									{
+										vsid::Logger::log(
+											vsid::LogLevel::Error,
+											std::format(
+												"Area [{}] in [{}] has not enough points configured (less than 3).",
+												areaKey,
+												icao
+											)
+										);
+
 										continue;
 									}
-									else if (coord.key() == "arrAsDep")
-									{
-										arrAsDep = this->parsedConfig.at(icao).at("areas").at(area.key()).value("arrAsDep", false);
-										continue;
-									}
-									std::string lat = this->parsedConfig.at(icao).at("areas").at(area.key()).at(coord.key()).value("lat", "");
-									std::string lon = this->parsedConfig.at(icao).at("areas").at(area.key()).at(coord.key()).value("lon", "");
 
-									if (lat == "" || lon == "")
-									{
-										vsid::Logger::log(vsid::LogLevel::Error,
-											std::format("Couldn't read LAT or LON value for [{}] in area [{}] at [{}]",
-												coord.key(), area.key(), icao));
-										break;
-									}
-									coords.push_back({ lat, lon });
-								}
-								if (coords.size() < 3)
-								{
-									vsid::Logger::log(vsid::LogLevel::Error,
-										std::format("Area [{}] in [{}] has not enough points configured (less than 3).",
-											area.key(), icao));
-									continue;
-								}
-								if (savedAreas.contains(icao))
-								{
-									if (savedAreas[icao].contains(vsid::utils::toupper(area.key())))
-									{
-										isActive = savedAreas[icao][vsid::utils::toupper(area.key())].isActive;
-									}
-								}
-								aptInfo.areas.insert({ vsid::utils::toupper(area.key()), vsid::Area{coords, isActive, arrAsDep} });
-							}
-						}
+									vsid::Area parsedArea{ coords, isActive, arrAsDep };
 
-						// intersections
-
-						if (this->parsedConfig.at(icao).contains("intersections"))
-						{
-							for (auto& intsecList : this->parsedConfig.at(icao).at("intersections").items())
-							{
-								std::string rwy = intsecList.key();
-								std::vector<std::string> intsec = vsid::utils::split(intsecList.value(), ',');
-
-								aptInfo.intsec.insert({ rwy, intsec });
-							}
-						}
-
-						// airport settings
-
-						if (savedSettings.contains(icao))
-						{
-							aptInfo.settings = savedSettings[icao];
-						}
-						else
-						{
-							aptInfo.settings = { {"lvp", false},
-													{"time", this->parsedConfig.at(icao).value("timeMode", false)},
-													{"auto", false}
-							};
-						}
-
-						// saved requests - if not found base settings already in general settings
-
-						if (savedRequests.contains(icao)) aptInfo.requests = savedRequests[icao];
-
-						// saved rwy requests - if not found base settings already in general settings
-
-						if (savedRwyRequests.contains(icao)) aptInfo.rwyrequests = savedRwyRequests[icao];
-
-						// sids
-						// initialize default values
-
-						vsid::tmpSidSettings fieldSetting;
-						vsid::tmpSidSettings wptSetting;
-						vsid::tmpSidSettings desSetting;
-						vsid::tmpSidSettings idSetting;
-
-						// "field level" - iterates over restrictions and sid way points / bases
-
-						for (auto &sidField : this->parsedConfig.at(icao).at("sids").items())
-						{
-							std::string fixedNumber = "";
-
-							if (sidField.key() == "allowDiffNumbers") fieldSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "wingType") fieldSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "acftType") fieldSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "dest") fieldSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "route")
-							{
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
-								{
-									for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").items())
-									{
-										std::string routeId = id.key();
-										std::vector<std::string> configRoute =
-											vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value(routeId, ""), ',');
-
-										if (!configRoute.empty()) fieldSetting.route["allow"].insert({ routeId, configRoute });
-									}
-								}
-
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
-								{
-									for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").items())
-									{
-										std::string routeId = id.key();
-										std::vector<std::string> configRoute =
-											vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value(routeId, ""), ',');
-
-										if (!configRoute.empty()) fieldSetting.route["deny"].insert({ routeId, configRoute });
-									}
+									if (areaExists) existingArea->second = std::move(parsedArea);
+									else data.areas.emplace(areaKey, std::move(parsedArea));
 								}
 							}
-							else if (sidField.key() == "wtc") fieldSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "engineType") fieldSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "engineCount") fieldSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "mtow") fieldSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "customRule") fieldSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
-							else if (sidField.key() == "area") fieldSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
-							else if (sidField.key() == "equip")
+
+							// intersections
+
+							const auto intsecIt = config.find("intersections");
+
+							if (intsecIt == config.end()) data.intsec.clear();
+							else
 							{
-								fieldSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								const auto& intsec = *intsecIt;
 
-								// updating equipment codes to upper case if in lower case
-
-								for (std::map<std::string, bool>::iterator it = fieldSetting.equip.begin(); it != fieldSetting.equip.end();)
+								for (auto it = data.intsec.begin(); it != data.intsec.end();)
 								{
-									if (it->first != vsid::utils::toupper(it->first))
+									if (!intsec.contains(it->first)) it = data.intsec.erase(it);
+									else ++it;
+								}
+
+								for (const auto& [rwy, intsecList] : intsec.items())
+								{
+									auto intsecVec = vsid::utils::split(intsecList.get_ref<const std::string&>(), ',');
+
+									data.intsec.insert_or_assign(rwy, intsecVec);
+								}
+							}
+
+							// sids
+							// initialize default values
+
+							vsid::tmpSidSettings fieldSetting;
+							vsid::tmpSidSettings wptSetting;
+							vsid::tmpSidSettings desSetting;
+							vsid::tmpSidSettings idSetting;
+
+							// "field level" - iterates over restrictions and sid way points / bases
+
+							// clear existing sids and timeSids to avoid duplicates
+
+							data.sids.clear();
+							data.timeSids.clear();
+
+							for (auto& sidField : this->parsedConfig.at(icao).at("sids").items())
+							{
+								std::string fixedNumber = "";
+
+								if (sidField.key() == "allowDiffNumbers") fieldSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "initial") fieldSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "climbvia") fieldSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "wpt") fieldSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "pilotfiled") fieldSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "wingType") fieldSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "acftType") fieldSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "dest") fieldSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "route")
+								{
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
 									{
-										std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
-										it = fieldSetting.equip.erase(it);
-										fieldSetting.equip.insert(it, cap);
-										continue;
-									}
-									++it;
-								}
-							}
-							else if (sidField.key() == "lvp") fieldSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "actArrRwy")
-							{
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
-								{
-									fieldSetting.actArrRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("all", "");
-									fieldSetting.actArrRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("any", "");
-								}
-
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
-								{
-									fieldSetting.actArrRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("all", "");
-									fieldSetting.actArrRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("any", "");
-								}
-							}
-							else if (sidField.key() == "actDepRwy")
-							{
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
-								{
-									fieldSetting.actDepRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("all", "");
-									fieldSetting.actDepRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("any", "");
-								}
-
-								if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
-								{
-									fieldSetting.actDepRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("all", "");
-									fieldSetting.actDepRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("any", "");
-								}
-							}
-							else if (sidField.key() == "timeFrom") fieldSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "timeTo") fieldSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "sidHighlight") fieldSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (sidField.key() == "clmbHighlight") fieldSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
-							else if (!this->isConfigValue(sidField.key()))
-							{
-								// special check for possible military SIDs / OIDs (format: XY12)
-
-								if (vsid::utils::lastIsDigit(sidField.key()) && vsid::utils::countDigits(sidField.key()) > 1 && sidField.key().length() > 2)
-								{
-									fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);
-									fixedNumber = sidField.key().back();
-
-									vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] contained a number - setting as fixed SID number [{}]",
-										sidField.key(), fixedNumber), vsid::DebugLevel::Conf);
-								}
-								else
-								{
-									fieldSetting.base = sidField.key();
-									fieldSetting.wpt = fieldSetting.base; // #evaluate - remove from field settings and always overwrite in wptSettings?
-								}
-
-								// "waypoint / base level" - iterates over restrictions and sid designators
-
-								wptSetting = fieldSetting;
-
-								for (auto& sidWpt : this->parsedConfig.at(icao).at("sids").at(sidField.key()).items())
-								{
-									if (sidWpt.key() == "allowDiffNumbers") wptSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if(sidWpt.key() == "climbvia") wptSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "wpt") wptSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "trans")
-									{
-										wptSetting.transition.clear();
-
-										for (auto& base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).items())
+										for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").items())
 										{
-											vsid::Transition trans;
+											std::string routeId = id.key();
+											std::vector<std::string> configRoute =
+												vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value(routeId, ""), ',');
 
-											trans.base = base.key();
-
-											if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key()); desig != "XXX")
-												trans.designator = desig;             
-
-											wptSetting.transition.insert({ base.key(), trans });
+											if (!configRoute.empty()) fieldSetting.route["allow"].insert({ routeId, configRoute });
 										}
 									}
-									else if(sidWpt.key() == "pilotfiled") wptSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "wingType") wptSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "acftType") wptSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "dest") wptSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "route")
+
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
 									{
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
+										for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").items())
 										{
-											wptSetting.route["allow"].clear();
+											std::string routeId = id.key();
+											std::vector<std::string> configRoute =
+												vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value(routeId, ""), ',');
 
-											for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").items())
+											if (!configRoute.empty()) fieldSetting.route["deny"].insert({ routeId, configRoute });
+										}
+									}
+								}
+								else if (sidField.key() == "wtc") fieldSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "engineType") fieldSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "engineCount") fieldSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "mtow") fieldSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "customRule") fieldSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
+								else if (sidField.key() == "area") fieldSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()));
+								else if (sidField.key() == "equip")
+								{
+									fieldSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+
+									// updating equipment codes to upper case if in lower case
+
+									for (std::map<std::string, bool>::iterator it = fieldSetting.equip.begin(); it != fieldSetting.equip.end();)
+									{
+										if (it->first != vsid::utils::toupper(it->first))
+										{
+											std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+											it = fieldSetting.equip.erase(it);
+											fieldSetting.equip.insert(it, cap);
+											continue;
+										}
+										++it;
+									}
+								}
+								else if (sidField.key() == "lvp") fieldSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "actArrRwy")
+								{
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
+									{
+										fieldSetting.actArrRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("all", "");
+										fieldSetting.actArrRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("any", "");
+									}
+
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
+									{
+										fieldSetting.actArrRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("all", "");
+										fieldSetting.actArrRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("any", "");
+									}
+								}
+								else if (sidField.key() == "actDepRwy")
+								{
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("allow"))
+									{
+										fieldSetting.actDepRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("all", "");
+										fieldSetting.actDepRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("allow").value("any", "");
+									}
+
+									if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).contains("deny"))
+									{
+										fieldSetting.actDepRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("all", "");
+										fieldSetting.actDepRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at("deny").value("any", "");
+									}
+								}
+								else if (sidField.key() == "timeFrom") fieldSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "timeTo") fieldSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "sidHighlight") fieldSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (sidField.key() == "clmbHighlight") fieldSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key());
+								else if (!this->isConfigValue(sidField.key()))
+								{
+									// special check for possible military SIDs / OIDs (format: XY12)
+
+									if (vsid::utils::lastIsDigit(sidField.key()) && vsid::utils::countDigits(sidField.key()) > 1 && sidField.key().length() > 2)
+									{
+										fieldSetting.base = sidField.key().substr(0, sidField.key().length() - 1);
+										fixedNumber = sidField.key().back();
+
+										vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] contained a number - setting as fixed SID number [{}]",
+											sidField.key(), fixedNumber), vsid::DebugLevel::Conf);
+									}
+									else
+									{
+										fieldSetting.base = sidField.key();
+										fieldSetting.wpt = fieldSetting.base; // #evaluate - remove from field settings and always overwrite in wptSettings?
+									}
+
+									// "waypoint / base level" - iterates over restrictions and sid designators
+
+									wptSetting = fieldSetting;
+
+									for (auto& sidWpt : this->parsedConfig.at(icao).at("sids").at(sidField.key()).items())
+									{
+										if (sidWpt.key() == "allowDiffNumbers") wptSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "initial") wptSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "climbvia") wptSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "wpt") wptSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "trans")
+										{
+											wptSetting.transition.clear();
+
+											for (auto& base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).items())
 											{
-												std::string routeId = id.key();
-												std::vector<std::string> configRoute =
-													vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value(routeId, ""), ',');
+												vsid::Transition trans;
 
-												if (!configRoute.empty()) wptSetting.route["allow"].insert({ routeId, configRoute });
+												trans.base = base.key();
+
+												if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(base.key()); desig != "XXX")
+													trans.designator = desig;
+
+												wptSetting.transition.insert({ base.key(), trans });
 											}
 										}
-
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
+										else if (sidWpt.key() == "pilotfiled") wptSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "wingType") wptSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "acftType") wptSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "dest") wptSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "route")
 										{
-											wptSetting.route["deny"].clear();
-
-											for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").items())
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
 											{
-												std::string routeId = id.key();
-												std::vector<std::string> configRoute =
-													vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value(routeId, ""), ',');
+												wptSetting.route["allow"].clear();
 
-												if (!configRoute.empty()) wptSetting.route["deny"].insert({ routeId, configRoute });
-											}
-										}
-									}
-									else if (sidWpt.key() == "wtc") wptSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "engineType") wptSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "engineCount") wptSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "mtow") wptSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "customRule") wptSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
-									else if (sidWpt.key() == "area") wptSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
-									else if (sidWpt.key() == "equip")
-									{
-										wptSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-
-										// updating equipment codes to upper case if in lower case
-
-										for (std::map<std::string, bool>::iterator it = wptSetting.equip.begin(); it != wptSetting.equip.end();)
-										{
-											if (it->first != vsid::utils::toupper(it->first))
-											{
-												std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
-												it = wptSetting.equip.erase(it);
-												wptSetting.equip.insert(it, cap);
-												continue;
-											}
-											++it;
-										}
-									}
-									else if (sidWpt.key() == "lvp") wptSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "actArrRwy")
-									{
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
-										{
-											wptSetting.actArrRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("all", "");
-											wptSetting.actArrRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("any", "");
-										}
-
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
-										{
-											wptSetting.actArrRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("all", "");
-											wptSetting.actArrRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("any", "");
-										}
-									}
-									else if (sidWpt.key() == "actDepRwy")
-									{
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
-										{
-											wptSetting.actDepRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("all", "");
-											wptSetting.actDepRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("any", "");
-										}
-
-										if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
-										{
-											wptSetting.actDepRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("all", "");
-											wptSetting.actDepRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("any", "");
-										}
-									}
-									else if (sidWpt.key() == "timeFrom") wptSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "timeTo") wptSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "sidHighlight") wptSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (sidWpt.key() == "clmbHighlight") wptSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
-									else if (!this->isConfigValue(sidWpt.key()))
-									{
-										if(!vsid::utils::containsDigit(sidWpt.key()) && sidWpt.key() != "XXX") wptSetting.desig = sidWpt.key();
-
-										// "designator level" - iterates over restrictions and sid ids
-
-										desSetting = wptSetting;
-
-										for (auto& sidDes : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).items())
-										{
-											if (sidDes.key() == "rwy")
-												desSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()), ',');
-											else if (sidDes.key() == "allowDiffNumbers")
-												desSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "initial")
-												desSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "climbvia")
-												desSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "wpt")
-												desSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "trans")
-											{
-												desSetting.transition.clear();
-
-												for (auto& base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).items())
+												for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").items())
 												{
-													vsid::Transition trans;
+													std::string routeId = id.key();
+													std::vector<std::string> configRoute =
+														vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value(routeId, ""), ',');
 
-													trans.base = base.key();
-													if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).
-														at(sidDes.key()).at(base.key()); desig != "XXX")
-														trans.designator = desig;
-
-													desSetting.transition.insert({ base.key(), trans });
+													if (!configRoute.empty()) wptSetting.route["allow"].insert({ routeId, configRoute });
 												}
-
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
-													.at(sidDes.key()).size() == 0) desSetting.transition.clear();
 											}
-											else if (sidDes.key() == "pilotfiled")
-												desSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "wingType")
-												desSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "acftType")
-												desSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "dest")
-												desSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "route")
+
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
 											{
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
+												wptSetting.route["deny"].clear();
+
+												for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").items())
 												{
-													desSetting.route["allow"].clear();
+													std::string routeId = id.key();
+													std::vector<std::string> configRoute =
+														vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value(routeId, ""), ',');
 
-													for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").items())
+													if (!configRoute.empty()) wptSetting.route["deny"].insert({ routeId, configRoute });
+												}
+											}
+										}
+										else if (sidWpt.key() == "wtc") wptSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "engineType") wptSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "engineCount") wptSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "mtow") wptSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "customRule") wptSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
+										else if (sidWpt.key() == "area") wptSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()));
+										else if (sidWpt.key() == "equip")
+										{
+											wptSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+
+											// updating equipment codes to upper case if in lower case
+
+											for (std::map<std::string, bool>::iterator it = wptSetting.equip.begin(); it != wptSetting.equip.end();)
+											{
+												if (it->first != vsid::utils::toupper(it->first))
+												{
+													std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+													it = wptSetting.equip.erase(it);
+													wptSetting.equip.insert(it, cap);
+													continue;
+												}
+												++it;
+											}
+										}
+										else if (sidWpt.key() == "lvp") wptSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "actArrRwy")
+										{
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
+											{
+												wptSetting.actArrRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("all", "");
+												wptSetting.actArrRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("any", "");
+											}
+
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
+											{
+												wptSetting.actArrRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("all", "");
+												wptSetting.actArrRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("any", "");
+											}
+										}
+										else if (sidWpt.key() == "actDepRwy")
+										{
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("allow"))
+											{
+												wptSetting.actDepRwy["allow"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("all", "");
+												wptSetting.actDepRwy["allow"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("allow").value("any", "");
+											}
+
+											if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).contains("deny"))
+											{
+												wptSetting.actDepRwy["deny"]["all"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("all", "");
+												wptSetting.actDepRwy["deny"]["any"] = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at("deny").value("any", "");
+											}
+										}
+										else if (sidWpt.key() == "timeFrom") wptSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "timeTo") wptSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "sidHighlight") wptSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (sidWpt.key() == "clmbHighlight") wptSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key());
+										else if (!this->isConfigValue(sidWpt.key()))
+										{
+											if (!vsid::utils::containsDigit(sidWpt.key()) && sidWpt.key() != "XXX") wptSetting.desig = sidWpt.key();
+
+											// "designator level" - iterates over restrictions and sid ids
+
+											desSetting = wptSetting;
+
+											for (auto& sidDes : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).items())
+											{
+												if (sidDes.key() == "rwy")
+													desSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()), ',');
+												else if (sidDes.key() == "allowDiffNumbers")
+													desSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "initial")
+													desSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "climbvia")
+													desSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "wpt")
+													desSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "trans")
+												{
+													desSetting.transition.clear();
+
+													for (auto& base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).items())
 													{
-														std::string routeId = id.key();
-														std::vector<std::string> configRoute =
-															vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value(routeId, ""), ',');
+														vsid::Transition trans;
 
-														if (!configRoute.empty()) desSetting.route["allow"].insert({ routeId, configRoute });
+														trans.base = base.key();
+														if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).
+															at(sidDes.key()).at(base.key()); desig != "XXX")
+															trans.designator = desig;
+
+														desSetting.transition.insert({ base.key(), trans });
 													}
+
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
+														.at(sidDes.key()).size() == 0) desSetting.transition.clear();
 												}
-
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
+												else if (sidDes.key() == "pilotfiled")
+													desSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "wingType")
+													desSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "acftType")
+													desSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "dest")
+													desSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "route")
 												{
-													desSetting.route["deny"].clear();
-
-													for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").items())
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
 													{
-														std::string routeId = id.key();
-														std::vector<std::string> configRoute =
-															vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value(routeId, ""), ',');
+														desSetting.route["allow"].clear();
 
-														if (!configRoute.empty()) desSetting.route["deny"].insert({ routeId, configRoute });
-													}
-												}
-											}
-											else if (sidDes.key() == "wtc")
-												desSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "engineType")
-												desSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "engineCount")
-												desSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "mtow")
-												desSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "customRule")
-												desSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
-											else if (sidDes.key() == "area")
-												desSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
-											else if (sidDes.key() == "equip")
-											{
-												desSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-
-												// updating equipment codes to upper case if in lower case
-
-												for (std::map<std::string, bool>::iterator it = desSetting.equip.begin(); it != desSetting.equip.end();)
-												{
-													if (it->first != vsid::utils::toupper(it->first))
-													{
-														std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
-														it = desSetting.equip.erase(it);
-														desSetting.equip.insert(it, cap);
-														continue;
-													}
-													++it;
-												}
-											}
-											else if (sidDes.key() == "lvp")
-												desSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "actArrRwy")
-											{
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
-												{
-													desSetting.actArrRwy["allow"]["all"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("all", "");
-													desSetting.actArrRwy["allow"]["any"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("any", "");
-												}
-
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
-												{
-													desSetting.actArrRwy["deny"]["all"] = 
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("all", "");
-													desSetting.actArrRwy["deny"]["any"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("any", "");
-												}
-											}
-											else if (sidDes.key() == "actDepRwy")
-											{
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
-												{
-													desSetting.actDepRwy["allow"]["all"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("all", "");
-													desSetting.actDepRwy["allow"]["any"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("any", "");
-												}
-
-												if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
-												{
-													desSetting.actDepRwy["deny"]["all"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("all", "");
-													desSetting.actDepRwy["deny"]["any"] =
-														this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("any", "");
-												}
-											}
-											else if (sidDes.key() == "timeFrom")
-												desSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "timeTo")
-												desSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "sidHighlight")
-												desSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (sidDes.key() == "clmbHighlight")
-												desSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
-											else if (!this->isConfigValue(sidDes.key()))
-											{
-												desSetting.id = sidDes.key();
-
-												// "id level" - iterates over restrictions on id level (highest priority)
-
-												idSetting = desSetting;
-
-												for (auto& sidId : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).items())
-												{
-													if (sidId.key() == "rwy")
-														idSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()), ',');
-													else if (sidId.key() == "prio")
-														idSetting.prio = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "allowDiffNumbers")
-														idSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "initial")
-														idSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "climbvia")
-														idSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "wpt")
-														idSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "trans")
-													{
-														idSetting.transition.clear();
-
-														for (auto &base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).items())
+														for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").items())
 														{
-															vsid::Transition trans;
+															std::string routeId = id.key();
+															std::vector<std::string> configRoute =
+																vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value(routeId, ""), ',');
 
-															trans.base = base.key();
-															if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
-																.at(sidDes.key()).at(sidId.key()).at(base.key()); desig != "XXX")
-																trans.designator = desig;
-
-															idSetting.transition.insert({ base.key(), trans});
+															if (!configRoute.empty()) desSetting.route["allow"].insert({ routeId, configRoute });
 														}
-
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
-															.at(sidDes.key()).at(sidId.key()).size() == 0) idSetting.transition.clear();
 													}
-													else if (sidId.key() == "pilotfiled")
-														idSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "wingType")
-														idSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "acftType")
-														idSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "dest")
-														idSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "route")
+
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
 													{
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
+														desSetting.route["deny"].clear();
+
+														for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").items())
 														{
-															idSetting.route["allow"].clear();
+															std::string routeId = id.key();
+															std::vector<std::string> configRoute =
+																vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value(routeId, ""), ',');
 
-															for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("allow").items())
+															if (!configRoute.empty()) desSetting.route["deny"].insert({ routeId, configRoute });
+														}
+													}
+												}
+												else if (sidDes.key() == "wtc")
+													desSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "engineType")
+													desSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "engineCount")
+													desSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "mtow")
+													desSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "customRule")
+													desSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
+												else if (sidDes.key() == "area")
+													desSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()));
+												else if (sidDes.key() == "equip")
+												{
+													desSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+
+													// updating equipment codes to upper case if in lower case
+
+													for (std::map<std::string, bool>::iterator it = desSetting.equip.begin(); it != desSetting.equip.end();)
+													{
+														if (it->first != vsid::utils::toupper(it->first))
+														{
+															std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+															it = desSetting.equip.erase(it);
+															desSetting.equip.insert(it, cap);
+															continue;
+														}
+														++it;
+													}
+												}
+												else if (sidDes.key() == "lvp")
+													desSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "actArrRwy")
+												{
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
+													{
+														desSetting.actArrRwy["allow"]["all"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("all", "");
+														desSetting.actArrRwy["allow"]["any"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("any", "");
+													}
+
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
+													{
+														desSetting.actArrRwy["deny"]["all"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("all", "");
+														desSetting.actArrRwy["deny"]["any"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("any", "");
+													}
+												}
+												else if (sidDes.key() == "actDepRwy")
+												{
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("allow"))
+													{
+														desSetting.actDepRwy["allow"]["all"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("all", "");
+														desSetting.actDepRwy["allow"]["any"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("allow").value("any", "");
+													}
+
+													if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).contains("deny"))
+													{
+														desSetting.actDepRwy["deny"]["all"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("all", "");
+														desSetting.actDepRwy["deny"]["any"] =
+															this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at("deny").value("any", "");
+													}
+												}
+												else if (sidDes.key() == "timeFrom")
+													desSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "timeTo")
+													desSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "sidHighlight")
+													desSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (sidDes.key() == "clmbHighlight")
+													desSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key());
+												else if (!this->isConfigValue(sidDes.key()))
+												{
+													desSetting.id = sidDes.key();
+
+													// "id level" - iterates over restrictions on id level (highest priority)
+
+													idSetting = desSetting;
+
+													for (auto& sidId : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).items())
+													{
+														if (sidId.key() == "rwy")
+															idSetting.rwys = vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()), ',');
+														else if (sidId.key() == "prio")
+															idSetting.prio = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "allowDiffNumbers")
+															idSetting.allowDiffNumbers = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "initial")
+															idSetting.initial = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "climbvia")
+															idSetting.via = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "wpt")
+															idSetting.wpt = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "trans")
+														{
+															idSetting.transition.clear();
+
+															for (auto& base : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).items())
 															{
-																std::string routeId = id.key();
-																std::vector<std::string> configRoute =
-																	vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("allow").value(routeId, ""), ',');
+																vsid::Transition trans;
 
-																if (!configRoute.empty()) idSetting.route["allow"].insert({ routeId, configRoute });
+																trans.base = base.key();
+																if (std::string desig = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
+																	.at(sidDes.key()).at(sidId.key()).at(base.key()); desig != "XXX")
+																	trans.designator = desig;
+
+																idSetting.transition.insert({ base.key(), trans });
+															}
+
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key())
+																.at(sidDes.key()).at(sidId.key()).size() == 0) idSetting.transition.clear();
+														}
+														else if (sidId.key() == "pilotfiled")
+															idSetting.pilotfiled = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "wingType")
+															idSetting.wingType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "acftType")
+															idSetting.acftType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "dest")
+															idSetting.dest = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "route")
+														{
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
+															{
+																idSetting.route["allow"].clear();
+
+																for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("allow").items())
+																{
+																	std::string routeId = id.key();
+																	std::vector<std::string> configRoute =
+																		vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("allow").value(routeId, ""), ',');
+
+																	if (!configRoute.empty()) idSetting.route["allow"].insert({ routeId, configRoute });
+																}
+															}
+
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
+															{
+																idSetting.route["deny"].clear();
+
+																for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("deny").items())
+																{
+																	std::string routeId = id.key();
+																	std::vector<std::string> configRoute =
+																		vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("deny").value(routeId, ""), ',');
+
+																	if (!configRoute.empty()) idSetting.route["deny"].insert({ routeId, configRoute });
+																}
 															}
 														}
-
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
+														else if (sidId.key() == "wtc")
+															idSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "engineType")
+															idSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "engineCount")
+															idSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "mtow")
+															idSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "customRule")
+															idSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
+														else if (sidId.key() == "area")
+															idSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
+														else if (sidId.key() == "equip")
 														{
-															idSetting.route["deny"].clear();
+															idSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
 
-															for (const auto& id : this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("deny").items())
+															// updating equipment codes to upper case if in lower case
+
+															for (std::map<std::string, bool>::iterator it = idSetting.equip.begin(); it != idSetting.equip.end();)
 															{
-																std::string routeId = id.key();
-																std::vector<std::string> configRoute =
-																	vsid::utils::split(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).at("deny").value(routeId, ""), ',');
-
-																if (!configRoute.empty()) idSetting.route["deny"].insert({ routeId, configRoute });
+																if (it->first != vsid::utils::toupper(it->first))
+																{
+																	std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
+																	it = idSetting.equip.erase(it);
+																	idSetting.equip.insert(it, cap);
+																	continue;
+																}
+																++it;
 															}
 														}
-													}
-													else if (sidId.key() == "wtc")
-														idSetting.wtc = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "engineType")
-														idSetting.engineType = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "engineCount")
-														idSetting.engineCount = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "mtow")
-														idSetting.mtow = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "customRule")
-														idSetting.customRule = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
-													else if (sidId.key() == "area")
-														idSetting.area = vsid::utils::toupper(this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()));
-													else if (sidId.key() == "equip")
-													{
-														idSetting.equip = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-
-														// updating equipment codes to upper case if in lower case
-
-														for (std::map<std::string, bool>::iterator it = idSetting.equip.begin(); it != idSetting.equip.end();)
+														else if (sidId.key() == "lvp")
+															idSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "actArrRwy")
 														{
-															if (it->first != vsid::utils::toupper(it->first))
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
 															{
-																std::pair<std::string, bool> cap = { vsid::utils::toupper(it->first), it->second };
-																it = idSetting.equip.erase(it);
-																idSetting.equip.insert(it, cap);
-																continue;
+																idSetting.actArrRwy["allow"]["all"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("allow").value("all", "");
+																idSetting.actArrRwy["allow"]["any"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("allow").value("any", "");
 															}
-															++it;
+
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
+															{
+																idSetting.actArrRwy["deny"]["all"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("deny").value("all", "");
+																idSetting.actArrRwy["deny"]["any"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("deny").value("any", "");
+															}
 														}
-													}
-													else if (sidId.key() == "lvp")
-														idSetting.lvp = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "actArrRwy")
-													{
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
+														else if (sidId.key() == "actDepRwy")
 														{
-															idSetting.actArrRwy["allow"]["all"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("allow").value("all", "");
-															idSetting.actArrRwy["allow"]["any"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("allow").value("any", "");
-														}
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
+															{
+																idSetting.actDepRwy["allow"]["all"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("allow").value("all", "");
+																idSetting.actDepRwy["allow"]["any"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("allow").value("any", "");
+															}
 
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
-														{
-															idSetting.actArrRwy["deny"]["all"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("deny").value("all", "");
-															idSetting.actArrRwy["deny"]["any"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("deny").value("any", "");
+															if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
+															{
+																idSetting.actDepRwy["deny"]["all"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("deny").value("all", "");
+																idSetting.actDepRwy["deny"]["any"] =
+																	this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
+																	.at("deny").value("any", "");
+															}
 														}
+														else if (sidId.key() == "timeFrom")
+															idSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "timeTo")
+															idSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "sidHighlight")
+															idSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+														else if (sidId.key() == "clmbHighlight")
+															idSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+
+														if (idSetting.equip.empty()) idSetting.equip["RNAV"] = true;
 													}
-													else if (sidId.key() == "actDepRwy")
-													{
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("allow"))
-														{
-															idSetting.actDepRwy["allow"]["all"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("allow").value("all", "");
-															idSetting.actDepRwy["allow"]["any"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("allow").value("any", "");
-														}
 
-														if (this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key()).contains("deny"))
-														{
-															idSetting.actDepRwy["deny"]["all"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("deny").value("all", "");
-															idSetting.actDepRwy["deny"]["any"] =
-																this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key())
-																.at("deny").value("any", "");
-														}
-													}
-													else if (sidId.key() == "timeFrom")
-														idSetting.timeFrom = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "timeTo")
-														idSetting.timeTo = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "sidHighlight")
-														idSetting.sidHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
-													else if (sidId.key() == "clmbHighlight")
-														idSetting.clmbHighlight = this->parsedConfig.at(icao).at("sids").at(sidField.key()).at(sidWpt.key()).at(sidDes.key()).at(sidId.key());
+													// save new sid
 
-													if (idSetting.equip.empty()) idSetting.equip["RNAV"] = true;
-												}
-
-												// save new sid
-
-												vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, fixedNumber, idSetting.desig, idSetting.rwys, idSetting.transition,
-																	idSetting.allowDiffNumbers, idSetting.equip, idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled,
-																	idSetting.actArrRwy, idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType,
-																	idSetting.acftType, idSetting.engineCount, idSetting.mtow, idSetting.dest, idSetting.route,
-																	idSetting.customRule, idSetting.area, idSetting.lvp, idSetting.timeFrom, idSetting.timeTo,
-																	idSetting.sidHighlight, idSetting.clmbHighlight };
-												aptInfo.sids.push_back(newSid);
-												if (newSid.timeFrom != -1 && newSid.timeTo != -1) aptInfo.timeSids.push_back(newSid);
-
-												// #dev - debugging msgs for evaluation of sid restriction levels
-												std::string sidName = std::format("{}{}{} (ID: {})", newSid.base, (newSid.number.empty()) ? "_" : newSid.number, newSid.designator, newSid.id);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wpt: {}", sidName, newSid.waypoint), vsid::DebugLevel::Conf);
-												for (auto& [_, trans] : newSid.transition)
-												{
-													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] trans: {}", sidName, trans.base + "_" + trans.designator), vsid::DebugLevel::Conf);
-												}
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rwys: {}", sidName, vsid::utils::join(newSid.rwys, ',')), vsid::DebugLevel::Conf);
-												for (auto& [sEquip, allow] : newSid.equip)
-												{
-													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] equip: {} allowed {}", sidName, sEquip, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
-												}
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] initialClimb: {}", sidName, newSid.initialClimb), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] climb via: {}", sidName, (newSid.climbvia) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] prio: {}", sidName, newSid.prio), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] pilotfiled: {}", sidName, (newSid.pilotfiled) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
-												for (auto& [actArrList, arrType] : newSid.actArrRwy)
-												{
-													for(auto& [arrWhich, actArr] : arrType)
-													{
-														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actArrRwy: {} - {} - {}", sidName, actArrList, arrWhich, actArr), vsid::DebugLevel::Conf);
-													}
+													vsid::Sid newSid = { idSetting.base, idSetting.wpt, idSetting.id, fixedNumber, idSetting.desig, idSetting.rwys, idSetting.transition,
+																		idSetting.allowDiffNumbers, idSetting.equip, idSetting.initial, idSetting.via, idSetting.prio, idSetting.pilotfiled,
+																		idSetting.actArrRwy, idSetting.actDepRwy, idSetting.wtc, idSetting.engineType, idSetting.wingType,
+																		idSetting.acftType, idSetting.engineCount, idSetting.mtow, idSetting.dest, idSetting.route,
+																		idSetting.customRule, idSetting.area, idSetting.lvp, idSetting.timeFrom, idSetting.timeTo,
+																		idSetting.sidHighlight, idSetting.clmbHighlight };
 													
-												}
-												for (auto& [actDepList, depType] : newSid.actDepRwy)
-												{
-													for (auto& [depWhich, actDep] : depType)
-													{
-														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actDepRwy: {} - {} - {}", sidName, actDepList, depWhich, actDep), vsid::DebugLevel::Conf);
-													}
+													data.sids.push_back(newSid);
 													
-												}
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wtc: {}", sidName, newSid.wtc), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engType: {}", sidName, newSid.engineType), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wingType: {}", sidName, newSid.wingType), vsid::DebugLevel::Conf);
-												for (auto& [sAcftType, allow] : newSid.acftType)
-												{
-													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] acftType: {} allowed {}", sidName, sAcftType, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
-												}
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engCount: {}", sidName, newSid.engineCount), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] mtow: {}", sidName, newSid.mtow), vsid::DebugLevel::Conf);
-												for (auto& [sDest, allow] : newSid.dest)
-												{
-													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] dest: {} allow {}", sidName, sDest, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
-												}
-												for (auto& [allow, routeList] : newSid.route)
-												{
-													for (auto& [sId, sRoute] : routeList)
+													if (newSid.timeFrom != -1 && newSid.timeTo != -1) data.timeSids.push_back(newSid);
+
+													// #dev - debugging msgs for evaluation of sid restriction levels
+
+													std::string sidName = std::format("{}{}{} (ID: {})", newSid.base, (newSid.number.empty()) ? "_" : newSid.number, newSid.designator, newSid.id);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wpt: {}", sidName, newSid.waypoint), vsid::DebugLevel::Conf);
+													for (auto& [_, trans] : newSid.transition)
 													{
-														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] route [{}] id [{}] routing [{}]",
-															sidName, allow, sId, vsid::utils::join(sRoute, ',')), vsid::DebugLevel::Conf);
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] trans: {}", sidName, trans.base + "_" + trans.designator), vsid::DebugLevel::Conf);
 													}
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rwys: {}", sidName, vsid::utils::join(newSid.rwys, ",")), vsid::DebugLevel::Conf);
+													for (auto& [sEquip, allow] : newSid.equip)
+													{
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] equip: {} allowed {}", sidName, sEquip, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+													}
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] initialClimb: {}", sidName, newSid.initialClimb), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] climb via: {}", sidName, (newSid.climbvia) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] prio: {}", sidName, newSid.prio), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] pilotfiled: {}", sidName, (newSid.pilotfiled) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+													for (auto& [actArrList, arrType] : newSid.actArrRwy)
+													{
+														for (auto& [arrWhich, actArr] : arrType)
+														{
+															vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actArrRwy: {} - {} - {}", sidName, actArrList, arrWhich, actArr), vsid::DebugLevel::Conf);
+														}
+
+													}
+													for (auto& [actDepList, depType] : newSid.actDepRwy)
+													{
+														for (auto& [depWhich, actDep] : depType)
+														{
+															vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] actDepRwy: {} - {} - {}", sidName, actDepList, depWhich, actDep), vsid::DebugLevel::Conf);
+														}
+
+													}
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wtc: {}", sidName, newSid.wtc), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engType: {}", sidName, newSid.engineType), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] wingType: {}", sidName, newSid.wingType), vsid::DebugLevel::Conf);
+													for (auto& [sAcftType, allow] : newSid.acftType)
+													{
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] acftType: {} allowed {}", sidName, sAcftType, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+													}
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] engCount: {}", sidName, newSid.engineCount), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] mtow: {}", sidName, newSid.mtow), vsid::DebugLevel::Conf);
+													for (auto& [sDest, allow] : newSid.dest)
+													{
+														vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] dest: {} allow {}", sidName, sDest, (allow) ? "TRUE" : "FALSE"), vsid::DebugLevel::Conf);
+													}
+													for (auto& [allow, routeList] : newSid.route)
+													{
+														for (auto& [sId, sRoute] : routeList)
+														{
+															vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] route [{}] id [{}] routing [{}]",
+																sidName, allow, sId, vsid::utils::join(sRoute, ",")), vsid::DebugLevel::Conf);
+														}
+													}
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rule: {}", sidName, newSid.customRule), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] area: {}", sidName, newSid.area), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] lvp: {}", sidName, newSid.lvp), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeFrom: {}", sidName, newSid.timeFrom), vsid::DebugLevel::Conf);
+													vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeTo: {}", sidName, newSid.timeTo), vsid::DebugLevel::Conf);
+													// end dev - debugging msgs for sid restriction levels
 												}
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] rule: {}", sidName, newSid.customRule), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] area: {}", sidName, newSid.area), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] lvp: {}", sidName, newSid.lvp), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeFrom: {}", sidName, newSid.timeFrom), vsid::DebugLevel::Conf);
-												vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] timeTo: {}", sidName, newSid.timeTo), vsid::DebugLevel::Conf);
-												// end dev - debugging msgs for sid restriction levels
 											}
 										}
 									}
 								}
 							}
-						}
-					}
+						});
+
+					
 				}
 				catch (const json::parse_error& e)
 				{
@@ -1298,14 +1326,22 @@ void vsid::ConfigParser::loadAirportConfig(std::map<std::string, vsid::Airport, 
 
 	// airport health check - remove apt without config
 
-	for (std::map<std::string, vsid::Airport>::iterator it = activeAirports.begin(); it != activeAirports.end();)
+	const auto& airports = AirportManager::getAirports();
+
+	for (auto it = airports.begin(); it != airports.end();)
 	{
-		if (aptConfig.contains(it->first)) ++it;
-		else
+		if (aptConfig.contains(it->first))
 		{
-			vsid::Logger::log(vsid::LogLevel::Info, "No config found for: " + it->first);
-			it = activeAirports.erase(it);
+			++it;
+			continue;
 		}
+
+		std::string icao = it->first;
+		++it; // increase iterator before removing from map
+
+		vsid::Logger::log(vsid::LogLevel::Info, "No config found for: " + icao);
+
+		AirportManager::remove(icao);
 	}
 }
 
@@ -1411,13 +1447,13 @@ void vsid::ConfigParser::loadRnavList()
 	vsid::Logger::log(vsid::LogLevel::Error, "No RNAV capable list found at: " + basePath.string());
 }
 
-const COLORREF vsid::ConfigParser::getColor(std::string color)
+const COLORREF vsid::ConfigParser::getColor(const std::string& color)
 {
-	if (this->colors.contains(color))
+	if (auto it = this->colors.find(color); it != this->colors.end())
 	{
-		messageHandler->removeGenError(ERROR_CONF_COLOR + "_" + color);
+		if (!messageHandler->genErrorsEmpty()) messageHandler->removeGenError(ERROR_CONF_COLOR + "_" + color);
 
-		return this->colors[color];
+		return it->second;
 	}
 	else
 	{
@@ -1432,15 +1468,13 @@ const COLORREF vsid::ConfigParser::getColor(std::string color)
 	}
 }
 
-int vsid::ConfigParser::getReqTime(std::string time)
+int vsid::ConfigParser::getReqTime(const std::string& time)
 {
-	if (this->reqTimes.contains(time))
+	if (auto it = this->reqTimes.find(time); it != this->reqTimes.end())
 	{
-		return this->reqTimes[time];
+		return it->second;
 	}
-	else
-	{
-		vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to retrieve request time setting for key [{}]", time));
-		return 0;
-	}
+
+	vsid::Logger::log(vsid::LogLevel::Error, std::format("Failed to retrieve request time setting for key [{}]", time));
+	return 0;
 }
