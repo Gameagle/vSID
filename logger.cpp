@@ -148,6 +148,7 @@ void vsid::Logger::log(LogLevel level, const std::string_view& msg, std::optiona
 {
 	if (!running) return;
 	if (devOnly && !logDevOnly) return;
+	if (debugLevel.has_value() && !isDebugLevelActive(*debugLevel)) return;
 
 	{
 		std::lock_guard lock(bgMutex);
