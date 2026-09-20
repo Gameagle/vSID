@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -92,6 +92,7 @@ const std::string ERROR_FPLN_REQSET = "E023";
 const std::string ERROR_FPLN_CLNFIRST = "E024-1";
 const std::string ERROR_FPLN_CLNSPDLVL = "E024-2";
 const std::string ERROR_FPLN_INTSET = "E025";
+const std::string ERROR_FPLN_ITEM_APT = "E026";
 
 const std::string ERROR_DSP_SCREENCREATE = "E030-1";
 const std::string ERROR_DSP_MENUSUCREATE = "E030-2";
@@ -131,3 +132,4 @@ const std::string ERROR_TIME_ZONE = "E090";
 
 const double SYNC_TIMEOUT_SECONDS = 0.5;
 const int MAX_ATC_FAIL_COUNT = 5;
+const int SYNC_SLEEP_MS = 150;
