@@ -1,7 +1,7 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
-SIDs to flightplans.
+The aim of vSID is to ease the work of any controller that edits and assigns
+SIDs to flight plans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
 Repo @ https://github.com/Gameagle/vSID
@@ -22,6 +22,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+#include <commctrl.h>
+
+#include "airportManager.h"
 #include "messageHandler.h"
 #include "logger.h"
 
@@ -33,6 +40,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include <set>
 #include <format>
+
+// #dev - modern menu
+#include "afxdialogex.h"
+#include "afxbutton.h"
+#include "utils.h"
+#include "resource.h"
+// end dev
 
 
 namespace vsid {
@@ -188,6 +202,11 @@ namespace vsid {
 		Menu() : type(0), title(""), parent(""), area(), topBar(), bottomBar(), render(false), maxCol(1), border(defaultBorder), bg(defaultBg)
 		{
 			vsid::Logger::log(vsid::LogLevel::Debug, "Creating menu (default Constructor)", vsid::DebugLevel::Menu);
+
+			INITCOMMONCONTROLSEX icex;
+			icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+			icex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
+			InitCommonControlsEx(&icex);
 		};
 		// standard
 		Menu(int type, std::string title, std::string parent, int top, int left, int minWidth, int minHeight, bool render = false, int maxCol = 1,
@@ -336,4 +355,30 @@ namespace vsid {
 		 */
 		std::set<std::string> submenues;
 	};
+
+	// #dev - modern menu
+	class CMainMenuDlg : public CDialogEx {
+	public:
+		CMainMenuDlg(CWnd* pParent = nullptr);
+		virtual ~CMainMenuDlg();
+
+		enum { IDD = IDD_MAIN_MENU };
+
+		void SetAirports(const std::map<std::string, vsid::apt::AirportData, vsid::utils::CICompare>& apts);
+
+	protected:
+		virtual BOOL OnInitDialog() override;
+		virtual void PostNcDestroy() override;
+
+		afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+
+		DECLARE_MESSAGE_MAP()
+
+	private:
+		std::vector<std::unique_ptr<CButton>> m_dynamicButtons;
+		std::map < std::string, vsid::apt::AirportData, vsid::utils::CICompare> m_airports;
+
+		CBrush m_darkBackgroundBrush;
+	};
+	// end dev
 }
