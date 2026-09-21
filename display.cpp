@@ -194,7 +194,7 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 				
 				if (!reqType.empty() && !adep.empty())
 				{
-					if (const auto aptData = AirportManager::getAirport(adep); aptData != nullptr)
+					if (const auto aptData = AirportManager::getData(adep); aptData != nullptr)
 					{
 						EuroScopePlugIn::CPosition offsetPos = this->getIndicatorOffset(targetPos, offset, zoomScale, 180.0);
 
@@ -599,7 +599,7 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 		{
 			if (std::shared_ptr sharedPlugin = this->plugin.lock())
 			{
-				if (AirportManager::getAirport(params[2]) == nullptr)
+				if (AirportManager::getData(params[2]) == nullptr)
 				{
 					vsid::Logger::log(vsid::LogLevel::Info, std::format("[{}] is not an active airport. Cannot open menu.", params[2]));
 					return true;
@@ -667,7 +667,7 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] reopening startup menu", title), vsid::DebugLevel::Menu);
 					std::string apt = vsid::utils::split(title, '_').at(1);
 
-					if (AirportManager::getAirport(apt) == nullptr) continue;
+					if (AirportManager::getData(apt) == nullptr) continue;
 
 					this->openStartupMenu(apt, config.parent, config.render, config.topLeft.y, config.topLeft.x);
 				}

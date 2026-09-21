@@ -225,7 +225,7 @@ namespace vsid::apt
 		[[nodiscard]]
 		static const std::map<std::string, AirportData, vsid::utils::CICompare>& getAirports() { return activeAirports_; };
 
-		static const AirportData* getAirport(std::string_view icao) 
+		static const AirportData* getData(std::string_view icao) 
 		{
 			const auto it = activeAirports_.find(icao);
 			if (it == activeAirports_.end()) return nullptr;

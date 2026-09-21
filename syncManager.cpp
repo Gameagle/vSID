@@ -201,7 +201,7 @@ void vsid::sync::SyncManager::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 
 	vsid::Logger::log(LogLevel::Debug, std::format("[{}] calling request sync.", callsign), DebugLevel::Req);
 
-	const auto activeApt = AirportManager::getAirport(adep);
+	const auto activeApt = AirportManager::getData(adep);
 
 	if (activeApt == nullptr) return;
 

@@ -25,7 +25,8 @@ vsid::VSIDPlugin* vsidPlugin; // pointer needed for ES
 vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, pluginName.c_str(), pluginVersion.c_str(), pluginAuthor.c_str(), pluginCopyright.c_str()) {
 	vsid::Logger::initialize(); // initialize logger
 	vsid::Logger::setLogDevOnly(this->configParser.logDevOnly);
-	
+	vsid::time::logTzdbVersion();
+
 	this->detectPlugins();
 	this->configParser.loadMainConfig();
 	this->configParser.loadGrpConfig();
@@ -154,7 +155,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		return vsid::Sid();
 	}
 
-	const auto aptData = AirportManager::getAirport(adep);
+	const auto aptData = AirportManager::getData(adep);
 
 	if (aptData == nullptr)
 	{
@@ -1075,7 +1076,7 @@ void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std
 {
 	if (AirportManager::isActive(icao))
 	{
-		const auto aptData = AirportManager::getAirport(icao);
+		const auto aptData = AirportManager::getData(icao);
 
 		if (aptData == nullptr)
 		{
@@ -1540,7 +1541,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 			if (!AirportManager::isActive(adep)) return;
 
-			const auto aptData = AirportManager::getAirport(adep);
+			const auto aptData = AirportManager::getData(adep);
 
 			if (aptData == nullptr)
 			{
@@ -1731,7 +1732,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 			if (!AirportManager::isActive(adep)) return;
 
-			const auto aptData = AirportManager::getAirport(adep);
+			const auto aptData = AirportManager::getData(adep);
 
 			if (aptData == nullptr)
 			{
@@ -1838,7 +1839,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		{
 			if (!AirportManager::isActive(adep)) return;
 
-			const auto aptData = AirportManager::getAirport(adep);
+			const auto aptData = AirportManager::getData(adep);
 
 			if (aptData == nullptr)
 			{
@@ -1886,7 +1887,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		{
 			if (!AirportManager::isActive(adep)) return;
 
-			const auto aptData = AirportManager::getAirport(adep);
+			const auto aptData = AirportManager::getData(adep);
 
 			if (aptData == nullptr)
 			{
@@ -1977,7 +1978,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				return;
 			}
 
-			const auto aptData = AirportManager::getAirport(adep);
+			const auto aptData = AirportManager::getData(adep);
 
 			if (aptData == nullptr)
 			{
@@ -2164,7 +2165,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				this->OpenPopupList(Area, "Set Int", 1);
 
 				std::string depRwy = vsid::fpln::getAtcBlock(fpln).second;
-				const auto aptData = AirportManager::getAirport(adep);
+				const auto aptData = AirportManager::getData(adep);
 
 				if (aptData == nullptr)
 				{
@@ -2209,7 +2210,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				this->OpenPopupList(Area, "Able Int", 1);
 
 				std::string depRwy = vsid::fpln::getAtcBlock(fpln).second;
-				const auto aptData = AirportManager::getAirport(adep);
+				const auto aptData = AirportManager::getData(adep);
 
 				if (aptData == nullptr)
 				{
@@ -2330,7 +2331,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 	if (AirportManager::isActive(adep))
 	{
-		const auto aptData = AirportManager::getAirport(adep);
+		const auto aptData = AirportManager::getData(adep);
 
 		if (aptData == nullptr)
 		{
@@ -3098,7 +3099,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		{
 			if (std::string(fplnData.GetPlanType()) == "V" || !AirportManager::isActive(ades)) return;
 
-			const auto aptData = AirportManager::getAirport(ades);
+			const auto aptData = AirportManager::getData(ades);
 
 			if (aptData == nullptr)
 			{
@@ -3140,7 +3141,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 		else
 		{
 			auto& processedFpln = processedIt->second;
-			const auto aptData = AirportManager::getAirport(ades);
+			const auto aptData = AirportManager::getData(ades);
 
 			if (processedFpln.ctl) // ctl flag set - independent from active airports
 			{
@@ -3251,7 +3252,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 
 				if (!AirportManager::isActive(ades)) return;
 
-				const auto aptData = AirportManager::getAirport(ades);
+				const auto aptData = AirportManager::getData(ades);
 
 				if (aptData == nullptr)
 				{
@@ -3441,7 +3442,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				// check if param is an ICAO and in the active airport list
 				if (AirportManager::isActive(param))
 				{
-					const auto aptData = AirportManager::getAirport(param);
+					const auto aptData = AirportManager::getData(param);
 
 					if (aptData == nullptr)
 					{
@@ -3520,7 +3521,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				if (AirportManager::isActive(icao))
 				{
-					const auto aptData = AirportManager::getAirport(icao);
+					const auto aptData = AirportManager::getData(icao);
 
 					if (aptData == nullptr)
 					{
@@ -3628,7 +3629,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 					if (AirportManager::isActive(param))
 					{
-						const auto aptData = AirportManager::getAirport(param);
+						const auto aptData = AirportManager::getData(param);
 
 						if (aptData == nullptr)
 						{
@@ -3863,7 +3864,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				{
 					if (AirportManager::isActive(param))
 					{
-						const auto aptData = AirportManager::getAirport(param);
+						const auto aptData = AirportManager::getData(param);
 
 						if (aptData == nullptr)
 						{
@@ -4002,7 +4003,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 				// check if param is an ICAO and in the active airport list
 				if (AirportManager::isActive(param))
 				{
-					const auto aptData = AirportManager::getAirport(param);
+					const auto aptData = AirportManager::getData(param);
 
 					if (aptData == nullptr)
 					{
@@ -4091,7 +4092,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				if (AirportManager::isActive(icao))
 				{
-					const auto aptData = AirportManager::getAirport(icao);
+					const auto aptData = AirportManager::getData(icao);
 
 					if (aptData == nullptr)
 					{
@@ -4276,7 +4277,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				if (AirportManager::isActive(icao))
 				{
-					const auto aptData = AirportManager::getAirport(icao);
+					const auto aptData = AirportManager::getData(icao);
 
 					if (aptData == nullptr)
 					{
@@ -4387,7 +4388,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 				if (AirportManager::isActive(icao))
 				{
-					const auto aptData = AirportManager::getAirport(icao);
+					const auto aptData = AirportManager::getData(icao);
 
 					if (aptData == nullptr)
 					{
@@ -4605,9 +4606,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 		return false;
 	}
 
-	vsid::Logger::log(LogLevel::Warning, std::format("Failed to parse command [{}]. It is probably invalid.", sCommandLine));
-
-	return false;
+	return true;
 }
 
 void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlightPlan FlightPlan)
@@ -4691,7 +4690,7 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 		else messageHandler->removeFplnError(callsign, ERROR_FPLN_AMEND);
 	}
 
-	if (const auto aptData = AirportManager::getAirport(adep); aptData != nullptr) // #monitor - major changes
+	if (const auto aptData = AirportManager::getData(adep); aptData != nullptr) // #monitor - major changes
 	{
 		if (blockSid == adep && !blockRwy.empty())
 		{
@@ -4899,7 +4898,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			{
 				// set intersection
 
-				if (const auto* aptData = AirportManager::getAirport(adep); aptData && scratchpad.size() <= 4)
+				if (const auto* aptData = AirportManager::getData(adep); aptData && scratchpad.size() <= 4)
 				{
 					if (size_t pos = scratchpad.find("+"); pos != std::string::npos)
 					{
@@ -4937,7 +4936,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 				{
 					std::string toFind = ".VSID_AUTO_";
 
-					if (const auto* aptData = AirportManager::getAirport(adep); aptData && aptData->settings.at("auto"))
+					if (const auto* aptData = AirportManager::getData(adep); aptData && aptData->settings.at("auto"))
 					{
 						std::string atc = scratchpad.substr(pos + toFind.size(), scratchpad.size());
 						if (ControllerMyself().GetCallsign() != atc)
@@ -5017,7 +5016,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						// clear all possible requests before setting a new one
 
-						if (const auto* aptData = AirportManager::getAirport(adep); aptData)
+						if (const auto* aptData = AirportManager::getData(adep); aptData)
 						{
 							bool reqActive = false; // preserves active req state which would be overwritten if a req list resulting in false comes after
 							std::string fplnRequest = "";
@@ -5222,7 +5221,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 		SyncManager::update(FlightPlan, "CLEA");
 	}
 
-	if (const auto* aptData = AirportManager::getAirport(adep); aptData)
+	if (const auto* aptData = AirportManager::getData(adep); aptData)
 	{
 		if (const auto* processedFpln = FplnManager::getData(callsign); processedFpln)
 		{

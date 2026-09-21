@@ -90,7 +90,7 @@ namespace vsid
 
 		inline std::set<std::string> getDepRwy(std::string icao)
 		{
-			if (const auto* aptData = vsid::apt::AirportManager::getAirport(icao); aptData)
+			if (const auto* aptData = vsid::apt::AirportManager::getData(icao); aptData)
 			{
 				return aptData->depRwys;
 			}
