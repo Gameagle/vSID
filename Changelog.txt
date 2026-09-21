@@ -7,6 +7,9 @@
 :gear: **Changed Features / Behaviour**
 *	SYNC - sync manager is now static and handles the queue
 
+:lady_beetle: **Fixes**
+*	TIME - additional fallback / checks for timezone databse (only affected users with issues should be on Linux - Windows works fine)
+
 [Changelog v0.15.0.1]
 :lady_beetle: **Fixes**
 *	SYNC - fixed watch dog triggering for STUP (one of the missing default ground states). Ground states are now added for proper checks.
