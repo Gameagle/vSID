@@ -253,6 +253,8 @@ bool vsid::fpln::addRemark(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::
 
 bool vsid::fpln::FplnManager::restoreIC(const std::string& callsign) // #refacotr - change to std::string_view
 {
+	checkThread(__func__);
+
 	EuroScopePlugIn::CFlightPlan FlightPlan = VSIDPlugin::instance().FlightPlanSelect(std::string(callsign).c_str());
 
 	if (!FlightPlan.IsValid()) return false;
@@ -330,6 +332,8 @@ bool vsid::fpln::FplnManager::restoreIC(const std::string& callsign) // #refacot
 
 void vsid::fpln::FplnManager::clearSidData(const std::string_view callsign) // #refactor rename to resetSidData
 {
+	checkThread(__func__);
+
 	if (auto it = processed_.find(callsign); it != processed_.end())
 	{
 		vsid::Logger::log(
@@ -457,7 +461,7 @@ std::string vsid::fpln::findSidWpt(EuroScopePlugIn::CFlightPlan& FlightPlan)
 	if (filedRoute.empty()) return "";
 	if (!AirportManager::isActive(adep)) return "";
 
-	const auto aptData = AirportManager::getAirport(adep);
+	const auto aptData = AirportManager::getData(adep);
 
 	if(aptData == nullptr) return "";
 
@@ -564,7 +568,7 @@ void vsid::fpln::FplnManager::processFlightplan(EuroScopePlugIn::CFlightPlan& Fl
 	vsid::fpln::FplnData fpln = {};
 	bool resetIC = false;
 
-	const auto adepData = AirportManager::getAirport(adep);
+	const auto adepData = AirportManager::getData(adep);
 
 	if (adepData == nullptr)
 	{
@@ -924,6 +928,8 @@ void vsid::fpln::FplnManager::processFlightplan(EuroScopePlugIn::CFlightPlan& Fl
 
 void vsid::fpln::FplnManager::reprocessImpl(std::string_view callsign, const FplnData& fplnData)
 {
+	checkThread(__func__);
+
 	auto& instance = VSIDPlugin::instance();
 
 	EuroScopePlugIn::CFlightPlan FlightPlan = instance.FlightPlanSelect(std::string(callsign).c_str());
@@ -942,7 +948,7 @@ void vsid::fpln::FplnManager::reprocessImpl(std::string_view callsign, const Fpl
 	}
 
 	std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
-	auto adepData = AirportManager::getAirport(adep);
+	auto adepData = AirportManager::getData(adep);
 
 	if (adepData == nullptr) return;
 

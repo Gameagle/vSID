@@ -12,6 +12,9 @@
 #include <concepts>
 #include <utility>
 #include <functional>
+#include <atomic>
+#include <thread>
+#include <sstream>
 
 #include <source_location>
 
@@ -224,11 +227,7 @@ namespace vsid {
 				const std::source_location& loc = std::source_location::current()
 			) // #refactor to string_view - check why hashmap is not working
 			{
-				/*std::string state = processed_.contains(callsign) ? "overwriting" : "adding";
-
-				vsid::Logger::log(LogLevel::Debug, std::format("[{}] {} flight plan info to processed.", callsign, state), vsid::DebugLevel::Fpln);
-
-				processed_[callsign] = std::move(fplnInfo);*/
+				checkThread(__func__);
 
 				vsid::Logger::log(
 					LogLevel::Debug,
@@ -247,7 +246,7 @@ namespace vsid {
 			// Returns:   void
 			// Qualifier:
 			//************************************
-			inline static void clear() { processed_.clear(); }
+			inline static void clear() { checkThread(__func__); processed_.clear(); }
 
 			//************************************
 			// Description: Removes flight plan info from processed
@@ -259,7 +258,9 @@ namespace vsid {
 			// Parameter: const std::string_view callsign
 			//************************************
 			inline static void remove(const std::string_view callsign)
-			{ 
+			{
+				checkThread(__func__);
+
 				vsid::Logger::log(LogLevel::Debug, std::format("[{}] removing flight plan info from processed.", callsign), vsid::DebugLevel::Fpln);
 
 				processed_.erase(std::string(callsign)); 
@@ -276,13 +277,19 @@ namespace vsid {
 			//************************************
 			inline static void removeInvalid(const std::string_view callsign)
 			{
-				if (!processed_.contains(callsign)) return;
+				checkThread(__func__);
+
+				auto it = processed_.find(callsign);
+
+				if (it == processed_.end()) return;
 
 				vsid::Logger::log(
 					LogLevel::Debug,
 					std::format("[{}] was reported (technically) invalid. Removed from processed.", callsign),
 					vsid::DebugLevel::Fpln
 				);
+
+				processed_.erase(it);
 			};
 
 			//************************************
@@ -311,12 +318,17 @@ namespace vsid {
 			[[nodiscard]]
 			static bool update(std::string_view callsign, Func&& func)
 			{
+				checkThread(__func__);
+
 				auto it = processed_.find(callsign);
 
 				if (it == processed_.end())
 				{
-					vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] could not update flight plan. Info not found in processed.", callsign),
-						vsid::DebugLevel::Fpln);
+					vsid::Logger::log(
+						vsid::LogLevel::Debug,
+						std::format("[{}] could not update flight plan. Info not found in processed.", callsign),
+						vsid::DebugLevel::Fpln
+					);
 
 					return false;
 				}
@@ -377,6 +389,8 @@ namespace vsid {
 			[[nodiscard]]
 			inline static const FplnData* getData(std::string_view callsign)
 			{
+				checkThread(__func__);
+
 				if (auto it = processed_.find(callsign); it != processed_.end())
 					return &it->second;
 
@@ -391,6 +405,8 @@ namespace vsid {
 
 			inline static bool contains(std::string_view callsign)
 			{
+				checkThread(__func__);
+
 				return processed_.contains(callsign);
 			}
 
@@ -402,7 +418,17 @@ namespace vsid {
 			// Returns:   std::unordered_map<std::string, vsid::fpln::FplnData, vsid::utils::StringHash, std::equal_to<>>&
 			// Qualifier:
 			//************************************
-			inline static const std::unordered_map<std::string, FplnData, vsid::utils::StringHash, std::equal_to<>>& getProcessed() { return processed_; };
+			inline static const std::unordered_map<
+				std::string,
+				FplnData,
+				vsid::utils::StringHash,
+				std::equal_to<>
+			>& getProcessed()
+			{
+				checkThread(__func__);
+
+				return processed_;
+			};
 
 			//************************************
 			// Description Tries to set a clean route without SID. SID will then be placed as first item
@@ -417,7 +443,11 @@ namespace vsid {
 			// Parameter: std::string atcRwy
 			// Parameter: vsid::Sid manualSid
 			//************************************
-			void static processFlightplan(EuroScopePlugIn::CFlightPlan& FlightPlan, bool checkOnly, std::string atcRwy = "", vsid::Sid manualSid = {});
+			void static processFlightplan(
+				EuroScopePlugIn::CFlightPlan& FlightPlan,
+				bool checkOnly,
+				std::string atcRwy = "", vsid::Sid manualSid = {}
+			);
 
 			//************************************
 			// Description: Reprocesses a flight plan for a given callsign if present
@@ -453,6 +483,43 @@ namespace vsid {
 			// Parameter: const FplnData & fplnData
 			//************************************
 			void static reprocessImpl(std::string_view callsign, const FplnData& fplnData);
+
+			//************************************
+			// Description: Debug check that processed_ is only accessed from one thread (access is not synchronized).
+			// The first caller claims ownership. A call from any other thread is logged (first offender only).
+			// Method:    checkThread
+			// FullName:  vsid::fpln::FplnManager::checkThread
+			// Access:    private static
+			// Returns:   void
+			// Qualifier:
+			// Parameter: const char * fn - name of the calling function
+			//************************************
+			static void checkThread(const char* fn)
+			{
+				const std::thread::id self = std::this_thread::get_id();
+				std::thread::id expected{}; // default constructed id = not claimed yet
+
+				if (ownerThread_.compare_exchange_strong(expected, self) || expected == self) return;
+
+				if (reported_.test_and_set()) return;
+
+				std::ostringstream ownerId, callerId;
+				ownerId << expected;
+				callerId << self;
+
+				vsid::Logger::log(
+					LogLevel::Error,
+					std::format(
+						"FplnManager::{} called from thread [{}] but processed is owned by thread [{}]",
+						fn,
+						callerId.str(),
+						ownerId.str()
+					)
+				);
+			}
+
+			inline static std::atomic<std::thread::id> ownerThread_{};
+			inline static std::atomic_flag reported_{};
 
 			inline static std::unordered_map<std::string, FplnData, vsid::utils::StringHash, std::equal_to<>> processed_;
 		};
