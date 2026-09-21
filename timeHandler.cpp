@@ -7,7 +7,12 @@ bool vsid::time::isActive(const std::string& timezone, const int start, const in
 	{
 		const std::chrono::time_zone* tz = vsid::time::getCachedTimeZone(timezone);
 
-		auto localNow = tz->to_local(std::chrono::system_clock::now());
+		using LocalTime = std::chrono::local_time<std::common_type_t<std::chrono::system_clock::duration, std::chrono::seconds>>;
+
+		const auto now = std::chrono::system_clock::now();
+
+		// no tz database available -> use system clock (UTC) as local time
+		LocalTime localNow = tz ? tz->to_local(now) : LocalTime{ now.time_since_epoch() };
 		auto day = std::chrono::floor<std::chrono::days>(localNow);		
 
 		auto ztStart = day + std::chrono::hours{ start };
@@ -22,7 +27,28 @@ bool vsid::time::isActive(const std::string& timezone, const int start, const in
 	}
 	catch (const std::runtime_error& e)
 	{
-		vsid::Logger::log(vsid::LogLevel::Error, std::format("Time calculation failed [{}] - {}", timezone, e.what()));
+		vsid::Logger::log(
+			vsid::LogLevel::Error,
+			std::format("Time calculation failed [{}] - {}", timezone, e.what())
+		);
 	}
 	return false;
+}
+
+void vsid::time::logTzdbVersion()
+{
+	try
+	{
+		vsid::Logger::log(
+			vsid::LogLevel::Debug,
+			std::format("Timezone database version [{}]", std::chrono::get_tzdb().version)
+		);
+	}
+	catch (const std::exception& e)
+	{
+		vsid::Logger::log(
+			vsid::LogLevel::Debug,
+			std::format("Timezone database not available - {}", e.what())
+		);
+	}
 }

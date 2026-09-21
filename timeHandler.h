@@ -36,15 +36,29 @@ namespace vsid
 {
 	namespace time
 	{
-		/**
-		 * @brief Checks if a given SID time restriction is between start and end time
-		 * 
-		 * @param timezone - which timezone should be checked
-		 * @param start - start time
-		 * @param end - end time
-		 * @return if the restricted SID is active
-		 */
+		//************************************
+		// Description: Checks if a given SID time restriction is between start and end time
+		// Method:    isActive
+		// FullName:  vsid::time::isActive
+		// Access:    public 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: const std::string & timezone
+		// Parameter: const int start
+		// Parameter: const int end
+		//************************************
 		bool isActive(const std::string& timezone, const int start, const int end);
+
+		
+		//************************************
+		// Description: Logs current tzdb version or prints an error if tzdb is not available
+		// Method:    logTzdbVersion
+		// FullName:  vsid::time::logTzdbVersion
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		//************************************
+		void logTzdbVersion();
 
 		//************************************
 		// Description: Get the current date as string in format YYYY-MM-DD
@@ -91,7 +105,9 @@ namespace vsid
 		// Method:    getCachedTimeZone
 		// FullName:  vsid::time::getCachedTimeZone
 		// Access:    public 
-		// Returns:   const std::chrono::time_zone* - using "UTC" if using Wine or on timezone error
+		// Returns:   const std::chrono::time_zone* - using "UTC" if using Wine or on timezone error,
+		//            nullptr if not even "UTC" can be located (tz database unavailable) - callers must
+		//            then fall back to system_clock (UTC)
 		// Qualifier:
 		// Parameter: const std::string & tzName
 		//************************************
@@ -103,36 +119,61 @@ namespace vsid
 
 			const std::chrono::time_zone* tz = nullptr;
 
+			// locating "UTC" needs the tz database as well, so it can throw too (e.g. database can't be loaded)
+			auto fallbackToUtc = [&](vsid::LogLevel level, std::string_view reason, const char* what)
+				{
+					try
+					{
+						tz = std::chrono::locate_zone("UTC");
+					}
+					catch (const std::exception& eUtc)
+					{
+						tz = nullptr;
+
+						if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
+						{
+							vsid::Logger::log(
+								vsid::LogLevel::Error,
+								std::format(
+									"Timezone database unavailable [{}] - [{}]. Fallback to system clock (UTC) - [{}]",
+									tzName,
+									what,
+									eUtc.what()
+								)
+							);
+
+							messageHandler->addGenError(ERROR_TIME_ZONE);
+						}
+						return;
+					}
+
+					if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
+					{
+						vsid::Logger::log(
+							level,
+							std::format("{} [{}]. Fallback to UTC - [{}]", reason, tzName, what)
+						);
+
+						messageHandler->addGenError(ERROR_TIME_ZONE);
+					}
+				};
+
 			try
 			{
 				tz = std::chrono::locate_zone(vsid::utils::usingWine() ? "UTC" : tzName);
 
 				messageHandler->removeGenError(ERROR_TIME_ZONE);
 			}
-			catch (const std::runtime_error&e )
+			catch (const std::runtime_error& e)
 			{
-				tz = std::chrono::locate_zone("UTC");
-
-				if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
-				{
-					vsid::Logger::log(vsid::LogLevel::Warning, std::format("Invalid timezone [{}]. Fallback to UTC - [{}]", tzName, e.what()));
-
-					messageHandler->addGenError(ERROR_TIME_ZONE);
-				}
+				fallbackToUtc(vsid::LogLevel::Warning, "Invalid timezone", e.what());
 			}
 			catch (const std::exception& e)
 			{
-				tz = std::chrono::locate_zone("UTC");
-
-				if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
-				{
-					vsid::Logger::log(vsid::LogLevel::Error, std::format("Unexpected exception on timezone [{}]. Fallback to UTC - [{}]", tzName, e.what()));
-
-					messageHandler->addGenError(ERROR_TIME_ZONE);
-				}
+				fallbackToUtc(vsid::LogLevel::Error, "Unexpected exception on timezone", e.what());
 			}
 
-			tzCache[tzName] = tz;
+			tzCache[tzName] = tz; // also caches nullptr to avoid retrying (and throwing) on every call
 
 			return tz;
 		}
