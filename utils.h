@@ -157,18 +157,6 @@ namespace vsid
 		std::vector<std::string_view> splitSV(std::string&&, const char del, const bool keepEmpty = false) = delete;
 
 		//************************************
-		// Description: Joins a container of strings / string_views into one string with a given delimiter
-		// Method:    join
-		// FullName:  vsid::utils::join
-		// Access:    public 
-		// Returns:   std::string
-		// Qualifier:
-		// Parameter: const C & toJoin
-		// Parameter: const char del
-		//************************************
-
-
-		//************************************
 		// Method:    join
 		// FullName:  vsid::utils::join
 		// Access:    public 
