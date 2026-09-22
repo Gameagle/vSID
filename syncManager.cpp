@@ -7,10 +7,15 @@
 #include "logger.h"
 #include "utils.h"
 #include "constants.h"
+#include "fplnManager.h"
+#include "airportManager.h"
+
+using FplnManager = vsid::fpln::FplnManager;
+using AirportManager = vsid::apt::AirportManager;
 
 void vsid::sync::SyncManager::add(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch)
 {
-	auto& qcs = this->queue[callsign];
+	auto& qcs = queue_[callsign];
 
 	std::string trimmedNew = vsid::utils::trim(newScratch);
 	std::string trimmedOld = vsid::utils::trim(oldScratch);
@@ -22,31 +27,35 @@ void vsid::sync::SyncManager::add(const std::string& callsign, const std::string
 
 	qcs.push_back({ std::move(trimmedNew), std::move(trimmedOld)});
 
-	if (!this->states.contains(callsign))
-		this->states[callsign] = SyncData();
+	if (!states_.contains(callsign))
+		states_[callsign] = SyncData();
 }
 
 void vsid::sync::SyncManager::processQueue(EuroScopePlugIn::CPlugIn* plugin)
 {
-	if (this->queue.empty()) return;
-
+	static auto lastSyncRun = std::chrono::steady_clock::time_point{};
 	auto now = std::chrono::steady_clock::now();
 
-	vsid::Logger::log(LogLevel::Debug, std::format("Started sync processing queue... Size [{}]", this->queue.size()), DebugLevel::Dev);
+	if (now - lastSyncRun < std::chrono::milliseconds(SYNC_SLEEP_MS)) return;
+	lastSyncRun = now;
 
-	for (auto it = this->queue.begin(); it != this->queue.end();)
+	if (queue_.empty()) return;
+
+	vsid::Logger::log(LogLevel::Debug, std::format("Started sync processing queue... Size [{}]", queue_.size()), DebugLevel::Dev);
+
+	for (auto it = queue_.begin(); it != queue_.end();)
 	{
 		const std::string& callsign = it->first;
 		auto& csQueue = it->second;
-		auto& data = this->states[callsign];
+		auto& data = states_[callsign];
 
 		if (csQueue.empty() && data.state == SyncState::Free)
 		{
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Removing from sync queue. "
 				"No more msgs and state is ::Free", callsign), DebugLevel::Sync);
 
-			this->states.erase(callsign);
-			it = this->queue.erase(it);
+			states_.erase(callsign);
+			it = queue_.erase(it);
 			continue;
 		}
 
@@ -56,8 +65,8 @@ void vsid::sync::SyncManager::processQueue(EuroScopePlugIn::CPlugIn* plugin)
 		{
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] Flightplan not valid. Removing from sync queue.", callsign), DebugLevel::Sync);
 
-			this->states.erase(callsign);
-			it = this->queue.erase(it);
+			states_.erase(callsign);
+			it = queue_.erase(it);
 			continue;
 		}
 
@@ -103,14 +112,15 @@ void vsid::sync::SyncManager::update(EuroScopePlugIn::CFlightPlan& FlightPlan, c
 {
 	std::string callsign = FlightPlan.GetCallsign();
 
-	auto qIt = this->queue.find(callsign);
+	auto qIt = queue_.find(callsign);
+	auto stateIt = states_.find(callsign);
 
-	if (!this->states.contains(callsign) || qIt == this->queue.end() || qIt->second.empty())
+	if (stateIt == states_.end() || qIt == queue_.end() || qIt->second.empty())
 		return;
 
 	vsid::Logger::log(LogLevel::Debug, std::format("[{}] Updating sync queue.", callsign), DebugLevel::Sync);
 
-	auto& data = this->states[callsign];
+	auto& data = stateIt->second;
 	auto& msg = qIt->second.front();
 
 	EuroScopePlugIn::CFlightPlanControllerAssignedData fplnData = FlightPlan.GetControllerAssignedData();
@@ -124,7 +134,7 @@ void vsid::sync::SyncManager::update(EuroScopePlugIn::CFlightPlan& FlightPlan, c
 			(scratchOverwrite.empty()) ? "" : std::format(" | Overwrite [{}]", scratchOverwrite)),
 			DebugLevel::Sync);
 
-		if (scratchOverwrite == "GND" && this->gndStates.contains(msg.newScratch))
+		if (scratchOverwrite == "GND" && gndStates_.contains(msg.newScratch))
 		{
 			synced = true;
 
@@ -177,6 +187,90 @@ void vsid::sync::SyncManager::update(EuroScopePlugIn::CFlightPlan& FlightPlan, c
 			qIt->second.pop_front();
 
 			data.state = SyncState::Free;			
+		}
+	}
+}
+
+void vsid::sync::SyncManager::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
+{
+	if (!FlightPlan.IsValid()) return;
+
+	std::string callsign = FlightPlan.GetCallsign();
+	std::string adep = FlightPlan.GetFlightPlanData().GetOrigin();
+	auto& processed = FplnManager::getProcessed();
+
+	vsid::Logger::log(LogLevel::Debug, std::format("[{}] calling request sync.", callsign), DebugLevel::Req);
+
+	const auto activeApt = AirportManager::getData(adep);
+
+	if (activeApt == nullptr) return;
+
+	if (auto it = processed.find(callsign); it != processed.end())
+	{
+		auto& fpln = it->second;
+
+		if (!fpln.request.empty())
+		{
+			// sync rwy requests - parallel req lists are already managed on scratchpad updates
+
+			if (activeApt->rwyrequests.contains(fpln.request))
+			{
+				bool stop = false;
+
+				for (auto& [rwy, reqRwy] : activeApt->rwyrequests.at(fpln.request))
+				{
+					for (auto& [reqCallsign, reqTime] : reqRwy)
+					{
+						if (reqCallsign != callsign) continue;
+
+						std::string newScratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
+
+						SyncManager::add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+
+						stop = true;
+						break;
+					}
+					if (stop) break;
+				}
+			}
+			// sync normal requests
+
+			else if (activeApt->requests.contains(fpln.request))
+			{
+				for (auto& [reqCallsign, reqTime] : activeApt->requests.at(fpln.request))
+				{
+					if (reqCallsign != callsign) continue;
+
+					std::string newScratch = ".VSID_REQ_" + fpln.request + "/" + std::to_string(reqTime);
+
+					SyncManager::add(callsign, newScratch, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+
+					break;
+				}
+			}
+		}
+	}
+
+	
+}
+
+void vsid::sync::SyncManager::syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan)
+{
+	if (!FlightPlan.IsValid()) return;
+
+	std::string callsign = FlightPlan.GetCallsign();
+	auto& processed = FplnManager::getProcessed();
+
+	if (auto it = processed.find(callsign); it != processed.end())
+	{
+		if (FlightPlan.GetClearenceFlag())
+		{
+			SyncManager::add(callsign, "CLEA", FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		}
+
+		if (!it->second.gndState.empty())
+		{
+			SyncManager::add(callsign, it->second.gndState, FlightPlan.GetControllerAssignedData().GetScratchPadString());
 		}
 	}
 }

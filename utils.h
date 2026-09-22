@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -26,7 +26,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <string>
+#include <string_view>
 #include <algorithm>
+#include <concepts>
 #include <ranges>
 #include <cctype>
 #include <windows.h>
@@ -155,28 +157,34 @@ namespace vsid
 		std::vector<std::string_view> splitSV(std::string&&, const char del, const bool keepEmpty = false) = delete;
 
 		//************************************
-		// Description: Joins a container of strings / string_views into one string with a given delimiter
 		// Method:    join
 		// FullName:  vsid::utils::join
 		// Access:    public 
 		// Returns:   std::string
 		// Qualifier:
-		// Parameter: const C & toJoin
-		// Parameter: const char del
+		// Parameter: R & & toJoin
+		// Parameter: std::string_view del
+		// Possible usage: auto result = join(parts | std::views::drop(0));
+		//	-view::drop creates a view and specifies the elemnts to drop
 		//************************************
-		template<typename C>
-		inline std::string join(const C& toJoin, const char del = ' ')
+		template<std::ranges::input_range R>
+		requires std::convertible_to<
+			std::ranges::range_reference_t<R>,
+			std::string_view>
+		[[nodiscard]]
+		std::string join(R&& toJoin, std::string_view del = " ")
 		{
-			if (toJoin.empty()) return "";
-
 			std::string result;
-			for (const auto& elem : toJoin)
+			bool first = true;
+
+			for (std::string_view elem : toJoin)
 			{
-				result += elem;
-				result += del;
+				if (!first) result.append(del);
+
+				result.append(elem);
+				first = false;
 			}
 
-			result.pop_back(); // remove the last delimiter
 			return result;
 		}
 

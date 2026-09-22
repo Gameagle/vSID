@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <array>
 #include <vector>
+#include <format>
 
 #include "utils.h"
 
@@ -29,6 +30,7 @@ namespace vsid
 		Dev,
 		Menu,
 		Atc,
+		Apt,
 		Sid,
 		Fpln,
 		Req,
@@ -84,6 +86,53 @@ namespace vsid
 		// Parameter: bool devOnly - if true, msg will only be logged if logDevOnly is true (devmode)
 		//************************************
 		static void log(LogLevel level, const std::string_view& msg, std::optional<DebugLevel> debugLevel = std::nullopt, bool devOnly = false);
+
+		//************************************
+		// Description: Formats and logs a message. The debug level does not prevent logging (the file log always
+		// receives the message), it only decides if the message is shown on the console. Messages flagged devOnly
+		// are skipped (and not formatted) if logDevOnly is false.
+		// Method:    log
+		// FullName:  vsid::Logger::log
+		// Access:    public static
+		// Returns:   void
+		// Qualifier:
+		// Parameter: LogLevel level
+		// Parameter: std::optional<DebugLevel> debugLevel
+		// Parameter: bool devOnly
+		// Parameter: std::format_string<Args...> fmt
+		// Parameter: Args && ...args
+		//************************************
+		template<typename... Args>
+		static void log(
+			LogLevel level,
+			std::optional<DebugLevel> debugLevel,
+			bool devOnly,
+			std::format_string<Args...> fmt, Args&&... args)
+		{
+			if (!running) return;
+			if (devOnly && !logDevOnly) return;
+
+			// no debug level check here - the file log must receive every message, the debug level only filters the console
+			log(level, std::string_view(std::format(fmt, std::forward<Args>(args)...)), debugLevel, devOnly);
+		}
+
+		//************************************
+		// Description: Checks if the given debug level is active
+		// Method:    isDebugLevelActive
+		// FullName:  vsid::Logger::isDebugLevelActive
+		// Access:    public static
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: DebugLevel lvl
+		//************************************
+		inline static bool isDebugLevelActive(DebugLevel lvl)
+		{
+			std::size_t idx = static_cast<std::size_t>(lvl);
+
+			if (idx >= currentDebugLvl.size()) return false;
+
+			return currentDebugLvl[idx];
+		}
 
 		//************************************
 		// Description: Returns if the logger is running
@@ -245,6 +294,7 @@ namespace vsid
 			case DebugLevel::Dev: return "DEV";
 			case DebugLevel::Menu: return "MENU";
 			case DebugLevel::Atc: return "ATC";
+			case DebugLevel::Apt: return "APT";
 			case DebugLevel::Sid: return "SID";
 			case DebugLevel::Fpln: return "FPLN";
 			case DebugLevel::Req: return "REQ";
@@ -275,6 +325,7 @@ namespace vsid
 			if (vsid::utils::svEqualCi(lvl, "dev")) return DebugLevel::Dev;
 			if (vsid::utils::svEqualCi(lvl, "menu")) return DebugLevel::Menu;
 			if (vsid::utils::svEqualCi(lvl, "atc")) return DebugLevel::Atc;
+			if (vsid::utils::svEqualCi(lvl, "apt")) return DebugLevel::Apt;
 			if (vsid::utils::svEqualCi(lvl, "sid")) return DebugLevel::Sid;
 			if (vsid::utils::svEqualCi(lvl, "fpln")) return DebugLevel::Fpln;
 			if (vsid::utils::svEqualCi(lvl, "req")) return DebugLevel::Req;
@@ -288,24 +339,6 @@ namespace vsid
 			if (vsid::utils::svEqualCi(lvl, "cmd")) return DebugLevel::Cmd;
 
 			return DebugLevel::None;
-		}
-
-		//************************************
-		// Description: Checks if the given debug level is active
-		// Method:    isDebugLevelActive
-		// FullName:  vsid::Logger::isDebugLevelActive
-		// Access:    public static 
-		// Returns:   bool
-		// Qualifier:
-		// Parameter: DebugLevel lvl
-		//************************************
-		inline static bool isDebugLevelActive(DebugLevel lvl)
-		{
-			std::size_t idx = static_cast<std::size_t>(lvl);
-
-			if (idx >= currentDebugLvl.size()) return false;
-
-			return currentDebugLvl[idx];
 		}
 
 		//************************************

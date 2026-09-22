@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -25,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "area.h"
 #include "sid.h"
 #include "utils.h"
+#include "logger.h"
 
 #include <string>
 #include <vector>
@@ -34,8 +35,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <algorithm>
 #include <chrono>
+#include <type_traits>
 
-namespace vsid
+namespace vsid::apt
 {
 	struct AtcData {
 		std::string si;
@@ -44,7 +46,7 @@ namespace vsid
 		std::unordered_set<std::string> Icaos;
 	};
 
-	struct Airport
+	struct AirportData
 	{
 		//************************************
 		// Description: Compare operator for custom request sorting.
@@ -116,7 +118,7 @@ namespace vsid
 		int maxInitialClimb = 0;
 		bool autoHandoff = true;
 		std::map<std::string, bool> settings = {};
-		std::unordered_map<std::string, vsid::AtcData, vsid::utils::StringHash, std::equal_to<>> controllers = {};
+		std::unordered_map<std::string, vsid::apt::AtcData, vsid::utils::StringHash, std::equal_to<>> controllers = {};
 		//************************************
 		// Description: Stores requests during airport updates
 		// Param 1: std::string - request type
@@ -139,7 +141,7 @@ namespace vsid
 		 * @param myself - Controller().ControllerMyself()
 		 * @param toActivate - if the check should consider activation of automode (true) or only if it needs to be disabled
 		 */
-		inline bool hasLowerAtc(const EuroScopePlugIn::CController &myself, bool toActivate = false)
+		inline bool hasLowerAtc(const EuroScopePlugIn::CController &myself, bool toActivate = false) const
 		{
 			if (std::all_of(controllers.begin(), controllers.end(), [&](auto controller)
 				{
@@ -153,26 +155,31 @@ namespace vsid
 			{
 				return false;
 			}
-			else if (myself.GetFacility() >= 5 &&
+
+			if (myself.GetFacility() >= 5 &&
 				std::none_of(controllers.begin(), controllers.end(), [&](auto controller)
 					{
 						if (controller.second.facility < myself.GetFacility()) return true;
-						else if (appSI.contains(myself.GetPositionId()) &&
+
+						if (appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si) &&
-							((appSI[myself.GetPositionId()] > appSI[controller.second.si] && !toActivate) ||
-							(appSI[myself.GetPositionId()] >= appSI[controller.second.si] && toActivate)))
+							((appSI.at(myself.GetPositionId()) > appSI.at(controller.second.si) && !toActivate) ||
+							(appSI.at(myself.GetPositionId()) >= appSI.at(controller.second.si) && toActivate)))
 							 return true;
-						else if (!appSI.contains(myself.GetPositionId()) &&
+						
+						if (!appSI.contains(myself.GetPositionId()) &&
 							appSI.contains(controller.second.si)) return true;
-						else return false;
+						
+						return false;
 					}))
 			{
 				return false;
 			}
-			else return true;
+			
+			return true;
 		}
 
-		inline bool isSidWpt(const std::string& wpt)
+		inline bool isSidWpt(const std::string& wpt) const
 		{
 			return std::any_of(sids.begin(), sids.end(), [&](vsid::Sid sid)
 				{
@@ -195,5 +202,143 @@ namespace vsid
 			else if (arrAsDep == true && arrRwys.contains(rwy)) return true;
 			else return false;
 		}
+	};
+
+	using AirportData = vsid::apt::AirportData;
+	using AtcData = vsid::apt::AtcData;
+
+	class AirportManager
+	{
+		AirportManager() { vsid::Logger::log(LogLevel::Debug, "Airport Manager initialized", DebugLevel::Gen); };
+		~AirportManager() { vsid::Logger::log(LogLevel::Debug, "Airport Manager destroyed", DebugLevel::Gen); };
+
+	public:
+
+		//************************************
+		// Description: Returns all stored active airports
+		// Method:    getAirports
+		// FullName:  vsid::apt::AirportManager::getAirports
+		// Access:    public static 
+		// Returns:   const std::map<std::string, vsid::apt::Airport, vsid::utils::CICompare>&
+		// Qualifier:
+		//************************************
+		[[nodiscard]]
+		static const std::map<std::string, AirportData, vsid::utils::CICompare>& getAirports() { return activeAirports_; };
+
+		static const AirportData* getData(std::string_view icao) 
+		{
+			const auto it = activeAirports_.find(icao);
+			if (it == activeAirports_.end()) return nullptr;
+
+			return &it->second;
+		}
+
+		//************************************
+		// Description: Checks if an airport is active in the airport manager
+		// Method:    isActive
+		// FullName:  vsid::apt::AirportManager::isActive
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view icao
+		//************************************
+		static bool isActive(std::string_view icao) { return activeAirports_.contains(icao); };
+
+		//************************************
+		// Description: Adds an airport to the airport manager
+		// Method:    addAirport
+		// FullName:  vsid::apt::AirportManager::addAirport
+		// Access:    public static 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: const std::string & icao
+		// Parameter: const Airport & airport
+		//************************************
+		static void add(const std::string& icao, const AirportData& airport) { activeAirports_[icao] = std::move(airport); }
+
+		//************************************
+		// Description: Removes an airport from the airport manager
+		// Method:    removeAirport
+		// FullName:  vsid::apt::AirportManager::removeAirport
+		// Access:    public static 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: std::string_view icao
+		//************************************
+		static void remove(const std::string& icao) { activeAirports_.erase(icao); };
+
+		//************************************
+		// Description: Updates (multiple) airport data for a given icao if present
+		// Method:    update
+		// FullName:  vsid::apt::AirportManager::update
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view icao
+		// Parameter: Func & & func
+		//************************************
+		template<typename Func>
+			requires std::invocable<Func&&, AirportData&>
+		[[nodiscard]]
+		static bool update(std::string_view icao, Func&& func)
+		{
+			auto it = activeAirports_.find(icao);
+
+			if (it == activeAirports_.end())
+			{
+				vsid::Logger::log(vsid::LogLevel::Debug, std::format("[{}] could not update airport. Info not held.", icao),
+					vsid::DebugLevel::Fpln);
+
+				return false;
+			}
+
+			AirportData& data = it->second;
+
+			std::invoke(std::forward<Func>(func), data);
+
+			return true;
+
+			// Usage
+			/*
+			AirportManager::update(icao, [](AirportData& data) {
+				data.enableRVSids = true;
+				data.timeSids = {};
+				data.XYZ ...
+			});
+			*/
+		}
+
+		//************************************
+		// Description: Sets a single airport data member via invoking the update function
+		// Method:    set
+		// FullName:  vsid::apt::AirportManager::set
+		// Access:    public static 
+		// Returns:   bool
+		// Qualifier:
+		// Parameter: std::string_view icao
+		// Parameter: Member FplnData:: * member
+		// Parameter: Value & & value
+		//************************************
+		template<typename Member, typename Value>
+			requires std::is_assignable_v<Member&, Value&&>
+		[[nodiscard]]
+		static bool set(std::string_view icao, Member AirportData::* member, Value&& value)
+		{
+			return update(icao, [member, &value](AirportData& data)
+				{
+					data.*member = std::forward<Value>(value);
+				});
+
+			// Usage
+			/*
+			AirportManager::set(icao, &AirportData::enableRVSids, true);
+			AirportManager::set(icao, &AirportData::customRules, std::move(newCustomRules);
+			*/
+		}
+
+		static bool empty() { return activeAirports_.empty(); };
+
+	private:
+		inline static std::map<std::string, AirportData, vsid::utils::CICompare> activeAirports_;
 	};
 }

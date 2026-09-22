@@ -43,7 +43,7 @@ namespace vsid::sync {
 		// Parameter: const std::string & newScratch - the new msgs to be synced
 		// Parameter: const std::string & oldScratch - the old msgs to be restored after syncing
 		//************************************
-		void add(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch);
+		static void add(const std::string& callsign, const std::string& newScratch, const std::string& oldScratch);
 
 		//************************************
 		// Description: Iterates through the queue to remove empty msgs and start syncing for new msgs
@@ -54,7 +54,7 @@ namespace vsid::sync {
 		// Qualifier:
 		// Parameter: EuroScopePlugIn::CPlugIn * plugin
 		//************************************
-		void processQueue(EuroScopePlugIn::CPlugIn* plugin);
+		static void processQueue(EuroScopePlugIn::CPlugIn* plugin);
 
 		//************************************
 		// Description: Restores old sratch pad values or frees SyncState
@@ -66,7 +66,29 @@ namespace vsid::sync {
 		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
 		// Parameter: const std::string & scratchOverwrite
 		//************************************
-		void update(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& scratchOverwrite = "");
+		static void update(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& scratchOverwrite = "");
+
+		//************************************
+		// Description: Syncs present requests for the given flight plan
+		// Method:    syncReq
+		// FullName:  vsid::VSIDPlugin::syncReq
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		//************************************
+		static void syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan);
+
+		//************************************
+		// Description: Syncs saved gnd states and clearance flag
+		// Method:    syncStates
+		// FullName:  vsid::VSIDPlugin::syncStates
+		// Access:    public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EuroScopePlugIn::CFlightPlan & FlightPlan
+		//************************************
+		static void syncStates(EuroScopePlugIn::CFlightPlan& FlightPlan);
 
 		//************************************
 		// Description: Clears queue and sync state list
@@ -76,15 +98,15 @@ namespace vsid::sync {
 		// Returns:   void
 		// Qualifier:
 		//************************************
-		inline void clear()
+		inline static void clear()
 		{
-			this->queue.clear();
-			this->states.clear();
+			queue_.clear();
+			states_.clear();
 		}
 
 	private:
-		std::unordered_map<std::string, std::deque<SyncMsg>> queue; // queu with callsign and sync msgs
-		std::unordered_map<std::string, SyncData> states; // sync states for callsigns
-		std::unordered_set<std::string> gndStates = {"NSTS", "STUP", "PUSH", "TAXI", "DEPA"}; // default ES gnd states to overwrite
+		inline static std::unordered_map<std::string, std::deque<SyncMsg>> queue_; // queue with callsign and sync msgs
+		inline static std::unordered_map<std::string, SyncData> states_; // sync states for callsigns
+		inline static const std::unordered_set<std::string> gndStates_ = {"NSTS", "STUP", "PUSH", "TAXI", "DEPA"}; // default ES gnd states to overwrite
 	};
 }

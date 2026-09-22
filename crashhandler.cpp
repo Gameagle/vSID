@@ -1,9 +1,12 @@
 #include "pch.h"
 
 #include <minidumpapiset.h> 
+#include <afx.h>
+#include <string>
+#include <fstream>
 
+#include "include/es/EuroScopePlugIn.h"
 #include "crashhandler.h"
-#include "messageHandler.h"
 #include "timeHandler.h"
 
 PVOID vehHandler = NULL;
@@ -87,7 +90,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 
 	// stack walk
 	CONTEXT context = *exceptionInfo->ContextRecord;
-	STACKFRAME64 frame = { 0 };
+	STACKFRAME64 frame = {};
 
 	DWORD machineType = IMAGE_FILE_MACHINE_I386;
 	frame.AddrPC.Offset = context.Eip;

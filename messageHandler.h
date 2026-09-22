@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -203,6 +203,19 @@ namespace vsid
 		inline void removeGenError(const std::string& error)
 		{
 			this->genErrors.erase(error);
+		}
+
+		//************************************
+		// Description: Checks if there are currently no general errors cached
+		// Method:    genErrorsEmpty
+		// FullName:  vsid::MessageHandler::genErrorsEmpty
+		// Access:    public
+		// Returns:   bool
+		// Qualifier:
+		//************************************
+		inline bool genErrorsEmpty() const
+		{
+			return this->genErrors.empty();
 		}
 
 	private:
