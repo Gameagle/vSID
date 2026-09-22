@@ -623,8 +623,6 @@ bool vsid::Display::OnCompileCommand(const char* sCommandLine)
 
 void vsid::Display::OnAirportRunwayActivityChanged()
 {
-	vsid::Logger::log(vsid::LogLevel::Debug, "Runway Activity Changed()", vsid::DebugLevel::Menu);
-
 	if (this->menues.empty()) return;
 
 	if (std::shared_ptr sharedPlugin = this->plugin.lock())
