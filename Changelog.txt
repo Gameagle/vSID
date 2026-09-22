@@ -1,4 +1,7 @@
-[Changelog v0.15.1]
+[Changelog v0.16.0]
+>[!CAUTION]
+> Not intended for production use yet. This version is a major rewrite of the internal structure and might contain bugs. Please report any issues you encounter.
+
 :new: **New Features**
 *	FPLN - added flight plan manager, which handels creation, updates and deletion of flight plans
 *	APT - added airport manager, which handels creation, updates and deletion of airports
