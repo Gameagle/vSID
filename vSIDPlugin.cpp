@@ -3135,7 +3135,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 				FplnManager::add(std::string(callsign)); // creation of flight plan of arriving traffic
 				(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 					{
-						data.ctl = true;
 						data.sidProcessed = true; // prevent sid processing for arriving tfc
 					});
 
@@ -4856,7 +4855,8 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 	std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
 	std::string fplnRwy = vsid::fpln::getAtcBlock(FlightPlan).second;
 
-	if ((!AirportManager::isActive(adep) && !AirportManager::isActive(ades)) ||
+	if ((!AirportManager::isActive(adep) &&
+		!AirportManager::isActive(ades)) && 
 		std::string(FlightPlan.GetFlightPlanData().GetPlanType()) != "V")
 	{
 		return;
@@ -5477,7 +5477,7 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 		{
 			if (adep != ades && adep != "")
 			{
-				vsid::Logger::log(LogLevel::Debug, std::format("[{}] arrived. Removing from processed.", callsign), vsid::DebugLevel::Fpln);
+				vsid::Logger::log(LogLevel::Debug, std::format("[{}] arrived", callsign), vsid::DebugLevel::Fpln);
 
 				FplnManager::remove(callsign);
 			}
