@@ -683,76 +683,13 @@ void vsid::Display::OnAirportRunwayActivityChanged()
 }
 
 // #dev - modern menu
-//void vsid::Display::openMainMenu(int top, int left, bool render) disabled for new function
-//{
-//	if (this->menues.contains("mainmenu"))
-//	{
-//		this->menues["mainmenu"].toggleRender();
-//		return;
-//	}
-//
-//	int initTop = 0;
-//	int initLeft = 0;
-//
-//	if (top == -1 || left == -1)
-//	{
-//		CRect rArea = this->GetRadarArea();
-//
-//		initTop = rArea.bottom - 100;
-//		initLeft = rArea.right - 200;
-//	}
-//	else
-//	{
-//		initTop = top;
-//		initLeft = left;
-//	}
-//	
-//
-//	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
-//
-//	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
-//
-//	for (auto& [title, apt] : this->plugin.lock()->getActiveApts())
-//	{
-//		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Add airport button for [{}]", title), vsid::DebugLevel::Menu, true);
-//		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
-//	}
-//
-//	newMenu.update();
-//
-//	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
-//}
-
 void vsid::Display::openMainMenu(int top, int left, bool render)
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	if (m_pMainMenuDlg != nullptr)
+	if (this->menues.contains("mainmenu"))
 	{
-		if (m_pMainMenuDlg->IsWindowVisible())
-		{
-			m_pMainMenuDlg->ShowWindow(SW_HIDE);
-		}
-		else
-		{
-			m_pMainMenuDlg->ShowWindow(SW_SHOW);
-			m_pMainMenuDlg->BringWindowToTop();
-		}
-
+		this->menues["mainmenu"].toggleRender();
 		return;
 	}
-
-	HWND hEuroscopeWnd = ::GetActiveWindow();
-	CWnd* pEuroscopeWnd = CWnd::FromHandle(hEuroscopeWnd);
-
-	m_pMainMenuDlg = new CMainMenuDlg(pEuroscopeWnd);
-
-	if (auto sharedPlugin = this->plugin.lock())
-	{
-		m_pMainMenuDlg->SetAirports(AirportManager::getAirports());
-	}
-
-	m_pMainMenuDlg->Create(CMainMenuDlg::IDD, pEuroscopeWnd);
 
 	int initTop = 0;
 	int initLeft = 0;
@@ -760,6 +697,7 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 	if (top == -1 || left == -1)
 	{
 		CRect rArea = this->GetRadarArea();
+
 		initTop = rArea.bottom - 100;
 		initLeft = rArea.right - 200;
 	}
@@ -769,9 +707,71 @@ void vsid::Display::openMainMenu(int top, int left, bool render)
 		initLeft = left;
 	}
 
-	m_pMainMenuDlg->SetWindowPos(NULL, initLeft, initTop, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-	m_pMainMenuDlg->ShowWindow(SW_SHOW);
+
+	vsid::Menu newMenu = { MENU, "mainmenu", "", initTop, initLeft, 60, 50, render, 1};
+
+	newMenu.addText(MENU_TOP_BAR, "mainmenu", newMenu.getTopBar(), "Main Menu", 20, 20, 400, { 5,5,5,5, });
+
+	for (auto& [title, apt] : AirportManager::getAirports())
+	{
+		vsid::Logger::log(vsid::LogLevel::Debug, std::format("Add airport button for [{}]", title), vsid::DebugLevel::Menu, true);
+		newMenu.addButton(MENU_BUTTON, "apt_" + title, newMenu.getArea(), title, 20, 20, 400, { 5, 5, 5, 5 });
+	}
+
+	newMenu.update();
+
+	this->menues.insert({ newMenu.getTitle(), std::move(newMenu) });
 }
+
+//void vsid::Display::openMainMenu(int top, int left, bool render)
+//{
+//	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+//
+//	if (m_pMainMenuDlg != nullptr)
+//	{
+//		if (m_pMainMenuDlg->IsWindowVisible())
+//		{
+//			m_pMainMenuDlg->ShowWindow(SW_HIDE);
+//		}
+//		else
+//		{
+//			m_pMainMenuDlg->ShowWindow(SW_SHOW);
+//			m_pMainMenuDlg->BringWindowToTop();
+//		}
+//
+//		return;
+//	}
+//
+//	HWND hEuroscopeWnd = ::GetActiveWindow();
+//	CWnd* pEuroscopeWnd = CWnd::FromHandle(hEuroscopeWnd);
+//
+//	m_pMainMenuDlg = new CMainMenuDlg(pEuroscopeWnd);
+//
+//	if (auto sharedPlugin = this->plugin.lock())
+//	{
+//		m_pMainMenuDlg->SetAirports(AirportManager::getAirports());
+//	}
+//
+//	m_pMainMenuDlg->Create(CMainMenuDlg::IDD, pEuroscopeWnd);
+//
+//	int initTop = 0;
+//	int initLeft = 0;
+//
+//	if (top == -1 || left == -1)
+//	{
+//		CRect rArea = this->GetRadarArea();
+//		initTop = rArea.bottom - 100;
+//		initLeft = rArea.right - 200;
+//	}
+//	else
+//	{
+//		initTop = top;
+//		initLeft = left;
+//	}
+//
+//	m_pMainMenuDlg->SetWindowPos(NULL, initLeft, initTop, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+//	m_pMainMenuDlg->ShowWindow(SW_SHOW);
+//}
 
 // end dev
 
