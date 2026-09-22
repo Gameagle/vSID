@@ -83,15 +83,16 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # DLL source files
 set(SOURCES 
+    airportManager.cpp
     area.cpp
     configparser.cpp
     crashhandler.cpp
-    eseparser.cpp
     display.cpp
-    flightplan.cpp
+    eseparser.cpp
+    fplnManager.cpp
+    logger.cpp
     menu.cpp
     messageHandler.cpp
-    logger.cpp
     pch.cpp
     sid.cpp
     syncManager.cpp
