@@ -1029,7 +1029,7 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 			if (auto it = processed.find(callsign); it != processed.end())
 			{
-				FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+				(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 					{
 						data.validEquip = true;
 					});
@@ -1140,7 +1140,7 @@ void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std
 
 					if (processed.contains(callsign))
 					{
-						FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+						(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 							{
 								data.request = "";
 								data.reqTime = -1;
@@ -1962,7 +1962,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				}
 				else
 				{
-					FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+					(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 						{
 							data.atcRWY = true;
 						});
@@ -2254,7 +2254,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (FunctionId == TAG_FUNC_VSID_HOV)
 		{
-			FplnManager::update(callsign, [&processedFpln](vsid::fpln::FplnData& data) // #evaluate - remove setting and only update if scratchpad was received
+			(void)FplnManager::update(callsign, [&processedFpln](vsid::fpln::FplnData& data) // #evaluate - remove setting and only update if scratchpad was received
 				{
 					data.hov = !processedFpln.hov;
 				});
@@ -2270,7 +2270,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (auto it = processed.find(callsign); it != processed.end())
 		{
-			FplnManager::update(callsign, [it](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [it](vsid::fpln::FplnData& data)
 				{
 					data.ctl = !it->second.ctl;
 				});
@@ -2278,7 +2278,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		else
 		{
 			FplnManager::add(callsign); // creation of flight plan of arriving traffic
-			FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 				{
 					data.ctl = true;
 					data.sidProcessed = true; // prevent sid processing for arriving tfc
@@ -2295,7 +2295,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 
 		if (auto it = processed.find(callsign); it != processed.end())
 		{
-			FplnManager::update(callsign, [it](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [it](vsid::fpln::FplnData& data)
 				{
 					data.ctlLocal = !it->second.ctlLocal;
 				});
@@ -2303,7 +2303,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 		else
 		{
 			FplnManager::add(callsign); // creation of flight plan of arriving traffic
-			FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 				{
 					data.ctl = true;
 					data.sidProcessed = true; // prevent sid processing for arriving tfc
@@ -2834,9 +2834,14 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 							data.atcRWY = true;
 						});
 
-					vsid::Logger::log(LogLevel::Debug, vsid::DebugLevel::Rwy, false,
-						"[{}] accepted RWY because no ICAO is found and other than configured SID is found and {}",
-						callsign, (fplnData.IsAmended()) ? " fpln is amended" : "", (FlightPlan.GetClearenceFlag() ? " clearance flag set" : ""));
+					vsid::Logger::log(
+						LogLevel::Debug,
+						vsid::DebugLevel::Rwy,
+						false,
+						"[{}] accepted RWY because no ICAO is found and other than configured SID is found and {}{}",
+						callsign,
+						(fplnData.IsAmended()) ? " fpln is amended" : "",
+						(FlightPlan.GetClearenceFlag() ? " clearance flag set" : ""));
 				}
 
 				if (!blockRwy.empty() &&
@@ -3128,7 +3133,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			else if (dtg <= clrf.distCaution && alt <= aptData->elevation + clrf.altCaution)
 			{				
 				FplnManager::add(std::string(callsign)); // creation of flight plan of arriving traffic
-				FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+				(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 					{
 						data.ctl = true;
 						data.sidProcessed = true; // prevent sid processing for arriving tfc
@@ -3147,7 +3152,7 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			{
 				if (processedFpln.ldgAlt == 0)
 				{
-					FplnManager::update(callsign, [alt](vsid::fpln::FplnData& data)
+					(void)FplnManager::update(callsign, [alt](vsid::fpln::FplnData& data)
 						{
 							data.ldgAlt = alt;
 						});
@@ -3803,7 +3808,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 
 					// update via manager
 
-					AirportManager::update(icao, [&mutableSettings](vsid::apt::AirportData& data)
+					(void)AirportManager::update(icao, [&mutableSettings](vsid::apt::AirportData& data)
 						{
 							data.settings = std::move(mutableSettings);
 						});
@@ -3850,7 +3855,7 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 						auto mutableSettings = airport.settings;
 						mutableSettings.at("auto") = false;
 
-						AirportManager::update(icao, [&mutableSettings](vsid::apt::AirportData& data)
+						(void)AirportManager::update(icao, [&mutableSettings](vsid::apt::AirportData& data)
 							{
 								data.settings = std::move(mutableSettings);
 							});
@@ -4172,11 +4177,18 @@ bool vsid::VSIDPlugin::OnCompileCommand(const char* sCommandLine)
 									{
 										vsid::Logger::log(
 											LogLevel::Info,
-											std::format("[{}] [{}]: Area  is unknown.", icao, cmd.params[i])
+											std::format("[{}] Area [{}] is unknown.", icao, cmd.params[i])
 										);
 									}
 								}
 							);
+							if (!updated)
+							{
+								vsid::Logger::log(
+									LogLevel::Warning,
+									std::format("[{}] Area [{}] failed to update.", icao, cmd.params[i])
+								);
+							}
 						}
 					}	
 				}
@@ -4844,6 +4856,12 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 	std::string ades = FlightPlan.GetFlightPlanData().GetDestination();
 	std::string fplnRwy = vsid::fpln::getAtcBlock(FlightPlan).second;
 
+	if ((!AirportManager::isActive(adep) && !AirportManager::isActive(ades)) ||
+		std::string(FlightPlan.GetFlightPlanData().GetPlanType()) != "V")
+	{
+		return;
+	}
+
 	if (DataType == EuroScopePlugIn::CTR_DATA_TYPE_SCRATCH_PAD_STRING)
 	{
 		std::string scratchpad = vsid::utils::toupper(cad.GetScratchPadString());
@@ -4880,7 +4898,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 						FlightPlan.GetFlightPlanData().GetPlanType() == std::string("V"))
 					{
 						FplnManager::add(callsign); // creation of flight plan of arriving traffic
-						FplnManager::update(callsign, [ctl](vsid::fpln::FplnData &data)
+						(void)FplnManager::update(callsign, [ctl](vsid::fpln::FplnData &data)
 							{
 								data.ctl = ctl;
 							});
@@ -5127,7 +5145,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 							if (updateProcessedFpln)
 							{
-								FplnManager::update(callsign, [fplnRequestTime, fplnRequest](vsid::fpln::FplnData& data)
+								(void)FplnManager::update(callsign, [fplnRequestTime, fplnRequest](vsid::fpln::FplnData& data)
 									{
 										data.request = fplnRequest;
 										data.reqTime = fplnRequestTime;
@@ -5165,14 +5183,14 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 						if (intersection.at(0) == "NONE")
 						{
-							FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+							(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 								{
 									data.intsec = { "", false };
 								});
 						}
 						else
 						{
-							FplnManager::update(callsign, [&intersection](vsid::fpln::FplnData& data)
+							(void)FplnManager::update(callsign, [&intersection](vsid::fpln::FplnData& data)
 								{
 									data.intsec = { intersection.at(0), ((intersection.at(1) == "TRUE") ? true : false) };
 								});
@@ -5200,7 +5218,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 					bool hov = scratchpad.substr(pos + toFind.size(), scratchpad.size()) == "TRUE" ? true : false;
 
-					FplnManager::update(callsign, [hov](vsid::fpln::FplnData& data)
+					(void)FplnManager::update(callsign, [hov](vsid::fpln::FplnData& data)
 						{
 							data.hov = hov;
 						});
@@ -5243,7 +5261,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 			int fplnRequestTime = -1;
 			bool updateProcessedFpln = false;
 
-			AirportManager::update(adep, [&](vsid::apt::AirportData& data)
+			(void)AirportManager::update(adep, [&](vsid::apt::AirportData& data)
 				{
 					if (processedFpln->request != "")
 					{
@@ -5354,7 +5372,7 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 			if (updateProcessedFpln)
 			{
-				FplnManager::update(callsign, [&](vsid::fpln::FplnData& data)
+				(void)FplnManager::update(callsign, [&](vsid::fpln::FplnData& data)
 					{
 						data.request = fplnRequest;
 						data.reqTime = fplnRequestTime;
@@ -5374,7 +5392,7 @@ void vsid::VSIDPlugin::OnFlightPlanDisconnect(EuroScopePlugIn::CFlightPlan Fligh
 		vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected from the network.", callsign), vsid::DebugLevel::Fpln);
 
 		FplnManager::clearSidData(callsign);
-		FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+		(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 			{
 				data.removalTime = std::chrono::system_clock::now() + std::chrono::minutes{ 1 };
 			});
@@ -5389,7 +5407,14 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 {
 	if (!RadarTarget.IsValid()) return;
 
+	EuroScopePlugIn::CFlightPlan FlightPlan = RadarTarget.GetCorrelatedFlightPlan();
+
+	if (this->outOfVis(FlightPlan)) return;
+
 	std::string callsign = RadarTarget.GetCallsign();
+
+	if (!FplnManager::contains(callsign)) return;
+
 	std::string adep = RadarTarget.GetCorrelatedFlightPlan().GetFlightPlanData().GetOrigin();
 	std::string ades = RadarTarget.GetCorrelatedFlightPlan().GetFlightPlanData().GetDestination();
 
@@ -5399,7 +5424,7 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 		{
 			int alt = RadarTarget.GetPosition().GetPressureAltitude();
 
-			FplnManager::update(callsign, [&](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [&](vsid::fpln::FplnData& data)
 				{
 					if (alt <= std::abs(data.ldgAlt - 200))
 					{
@@ -5440,7 +5465,7 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 
 			// remove from intersections that might still be present
 
-			FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
+			(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& data)
 				{
 					data.intsec = { "", false };
 				});
@@ -5679,7 +5704,7 @@ void vsid::VSIDPlugin::OnControllerPositionUpdate(EuroScopePlugIn::CController C
 	{
 		if (!AirportManager::isActive(atcIcao)) continue;
 
-		AirportManager::update(atcIcao, [&](vsid::apt::AirportData& data)
+		(void)AirportManager::update(atcIcao, [&](vsid::apt::AirportData& data)
 			{
 				if (auto jt = data.controllers.find(atcData.si); jt == data.controllers.end())
 				{
@@ -5713,7 +5738,7 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 			vsid::Logger::log(LogLevel::Debug, std::format("[{}] disconnected. Removing from ATC list for [{}].", atcCallsign,
 				icao), vsid::DebugLevel::Atc);
 
-			AirportManager::update(icao, [&atcCallsign](vsid::apt::AirportData& data)
+			(void)AirportManager::update(icao, [&atcCallsign](vsid::apt::AirportData& data)
 				{
 					data.controllers.erase(atcCallsign);
 				});
@@ -5739,6 +5764,8 @@ void vsid::VSIDPlugin::OnControllerDisconnect(EuroScopePlugIn::CController Contr
 
 void vsid::VSIDPlugin::OnAirportRunwayActivityChanged()
 {
+	vsid::Logger::log(vsid::LogLevel::Debug, "Runway Activity Changed()", vsid::DebugLevel::Menu);
+
 	this->detectPlugins();
 
 	this->UpdateActiveAirports();
@@ -5827,7 +5854,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 	for (const auto& [aptName, rwys] : rwysByAirport)
 	{
-		AirportManager::update(aptName, [&rwys](vsid::apt::AirportData& aptData)
+		(void)AirportManager::update(aptName, [&rwys](vsid::apt::AirportData& aptData)
 			{
 				aptData.arrRwys = rwys.first;
 				aptData.depRwys = rwys.second;
@@ -6044,7 +6071,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 				}
 			}
 
-			AirportManager::update(sectionSid.apt, [&tmpSidVec](vsid::apt::AirportData& data)
+			(void)AirportManager::update(sectionSid.apt, [&tmpSidVec](vsid::apt::AirportData& data)
 				{
 					data.sids = std::move(tmpSidVec);
 				});
@@ -6110,7 +6137,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 	for (auto& [icao, _] : AirportManager::getAirports())
 	{
-		AirportManager::update(icao, [&incompSids, &incompTrans, &icao](vsid::apt::AirportData& data)
+		(void)AirportManager::update(icao, [&incompSids, &incompTrans, &icao](vsid::apt::AirportData& data)
 			{
 				for (vsid::Sid& sid : data.sids)
 				{
@@ -6162,7 +6189,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 		{
 			if (!AirportManager::isActive(incompSidPair.first)) continue; // #monitor - if incomp sids get deleted
 
-			AirportManager::update(
+			(void)AirportManager::update(
 				incompSidPair.first,
 				[&incompSid, &incompTrans, &incompSidPair](vsid::apt::AirportData& data)
 				{
@@ -6253,7 +6280,7 @@ void vsid::VSIDPlugin::UpdateActiveAirports()
 
 	for (const auto& [icao, _] : AirportManager::getAirports())
 	{
-		AirportManager::update(icao, [](vsid::apt::AirportData& data)
+		(void)AirportManager::update(icao, [](vsid::apt::AirportData& data)
 			{
 				for (vsid::Sid& sid : data.sids)
 				{
@@ -6331,7 +6358,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 
 		for (const auto& [icao, _] : AirportManager::getAirports())
 		{
-			AirportManager::update(icao, [](vsid::apt::AirportData& data)
+			(void)AirportManager::update(icao, [](vsid::apt::AirportData& data)
 				{
 					for (auto& [_, reqList] : data.requests)
 					{
@@ -6451,7 +6478,7 @@ void vsid::VSIDPlugin::OnTimer(int Counter)
 			{
 				vsid::Logger::log(LogLevel::Debug, std::format("[{}] reconnected.", callsign), vsid::DebugLevel::Fpln);
 				
-				FplnManager::update(callsign, [](vsid::fpln::FplnData& cbData)
+				(void)FplnManager::update(callsign, [](vsid::fpln::FplnData& cbData)
 					{
 						cbData.removalTime = std::nullopt;
 					});
