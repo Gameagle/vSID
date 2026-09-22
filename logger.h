@@ -88,8 +88,9 @@ namespace vsid
 		static void log(LogLevel level, const std::string_view& msg, std::optional<DebugLevel> debugLevel = std::nullopt, bool devOnly = false);
 
 		//************************************
-		// Description: Formats and logs a message, but only if the given debug level (and devOnly state) is
-		// currently active. Formatting is only done if the message is actually logged.
+		// Description: Formats and logs a message. The debug level does not prevent logging (the file log always
+		// receives the message), it only decides if the message is shown on the console. Messages flagged devOnly
+		// are skipped (and not formatted) if logDevOnly is false.
 		// Method:    log
 		// FullName:  vsid::Logger::log
 		// Access:    public static
@@ -110,8 +111,8 @@ namespace vsid
 		{
 			if (!running) return;
 			if (devOnly && !logDevOnly) return;
-			if (debugLevel.has_value() && !isDebugLevelActive(*debugLevel)) return;
 
+			// no debug level check here - the file log must receive every message, the debug level only filters the console
 			log(level, std::string_view(std::format(fmt, std::forward<Args>(args)...)), debugLevel, devOnly);
 		}
 
