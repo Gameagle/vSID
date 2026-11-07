@@ -25,10 +25,10 @@ vsid::VSIDPlugin* vsidPlugin; // pointer needed for ES
 vsid::VSIDPlugin::VSIDPlugin() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, pluginName.c_str(), pluginVersion.c_str(), pluginAuthor.c_str(), pluginCopyright.c_str()) {
 	vsid::Logger::initialize(); // initialize logger
 	vsid::Logger::setLogDevOnly(this->configParser.logDevOnly);
-	vsid::time::logTzdbVersion();
 
 	this->detectPlugins();
 	this->configParser.loadMainConfig();
+	vsid::time::logTzdbVersion(); // after the main config - uses timeProvider and zoneinfoPath
 	this->configParser.loadGrpConfig();
 	this->configParser.loadRnavList();
 
@@ -233,7 +233,27 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		for (const vsid::Sid& sid : aptData->timeSids)
 		{
 			if (sid.waypoint != sidWpt) continue;
-			if (vsid::time::isActive(aptData->timezone, sid.timeFrom, sid.timeTo))
+
+			bool timeActive = false;
+			try
+			{
+				timeActive = vsid::time::isActive(aptData->timezone, sid.timeFrom, sid.timeTo);
+			}
+			catch (...) // isActive handles its errors itself - last resort, treat as not active
+			{
+				static bool reported = false;
+				if (!reported)
+				{
+					reported = true;
+					try
+					{
+						vsid::Logger::log(LogLevel::Error, "Unexpected error in time restriction check - time-restricted SID treated as not active");
+					}
+					catch (...) {}
+				}
+			}
+
+			if (timeActive)
 			{
 				actTSid.insert(sid.waypoint);
 			}
