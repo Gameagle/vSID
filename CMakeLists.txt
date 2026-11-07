@@ -97,6 +97,7 @@ set(SOURCES
     sid.cpp
     syncManager.cpp
     timeHandler.cpp
+    tzif.cpp
     utils.cpp
     versionchecker.cpp
     vSID.cpp
