@@ -356,9 +356,11 @@ MigrationBackup/
 *.sln
 *.rc
 
+# Build folders
+
 /Debug/
 /Release/
 /.vs/
 
-
+/docs/
 
