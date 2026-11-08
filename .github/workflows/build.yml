@@ -79,13 +79,21 @@ jobs:
       run: |
         $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
         $vsPath = & $vswhere -latest -products * -property installationPath
-        $clang = Get-ChildItem -Path (Join-Path $vsPath "VC\Tools\Llvm") -Filter clang-cl.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        # The runner is x64. Use the x64 (or legacy x86 "bin") host tool, never ARM64.
+        $clang = $null
+        foreach ($sub in "x64\bin", "bin") {
+          $candidate = Join-Path $vsPath "VC\Tools\Llvm\$sub\clang-cl.exe"
+          if (Test-Path $candidate) { $clang = Get-Item $candidate; break }
+        }
         if (-not $clang) {
-          Write-Error "clang-cl not found in Visual Studio at $vsPath (component 'C++ Clang tools for Windows' missing)"
+          Write-Host "Available clang-cl binaries:"
+          Get-ChildItem -Path (Join-Path $vsPath "VC\Tools\Llvm") -Filter clang-cl.exe -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.FullName)" }
+          Write-Error "No x64 clang-cl found in Visual Studio at $vsPath (component 'C++ Clang tools for Windows' missing?)"
           exit 1
         }
         Write-Host "Using $($clang.FullName)"
         & $clang.FullName --version
+        if ($LASTEXITCODE -ne 0) { exit 1 }
 
     - name: Download and unpack libcurl
       shell: pwsh
