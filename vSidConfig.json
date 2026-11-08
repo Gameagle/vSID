@@ -2,6 +2,8 @@
     "airportConfigs": "../vSID Airportconfig",
     "preferTopsky": true,
     "esePath": "../../../../",
+    "timeProvider": "auto",
+    "zoneinfoPath": "zoneinfo",
     "colors": {
         "sidSuggestion": {"r": 255, "g": 255, "b": 255},
         "suggestedSidSet": {"r": 0, "g": 255, "b": 0},

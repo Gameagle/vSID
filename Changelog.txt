@@ -6,6 +6,8 @@
 *	FPLN - added flight plan manager, which handels creation, updates and deletion of flight plans
 *	APT - added airport manager, which handels creation, updates and deletion of airports
 *	GEN - several major changes to adapt to the new managers
+*	TIME - Wine users now get correct local-time evaluation of time-restricted SIDs: unzip `zoneinfo.zip` from the release next to the DLL. Without it a prominent error is shown and UTC is used
+*	TIME - new optional `vSidConfig.json` keys `zoneinfoPath` (folder name next to the DLL, default `zoneinfo`) and `timeProvider` (`auto` (default), `wine`, `windows`)
 
 :gear: **Changed Features / Behaviour**
 *	SYNC - sync manager is now static and handles the queue

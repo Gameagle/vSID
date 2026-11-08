@@ -7,6 +7,7 @@
 #include "sid.h"
 #include "constants.h"
 #include "logger.h"
+#include "timeHandler.h"
 
 #include <vector>
 #include <fstream>
@@ -50,6 +51,29 @@ void vsid::ConfigParser::loadMainConfig()
 	{
 		vsid::Logger::log(vsid::LogLevel::Error, "Failed to parse main config. (Critical!)");
 		return;
+	}
+
+	// time zone settings (zoneinfo folder is only read on Wine) - non-string values fall back to the defaults
+
+	try
+	{
+		auto stringValue = [&](const char* key, const char* def) -> std::string
+			{
+				if (auto it = this->vSidConfig.find(key); it != this->vSidConfig.end() && it->is_string())
+					return it->get<std::string>();
+
+				if (this->vSidConfig.contains(key))
+					vsid::Logger::log(vsid::LogLevel::Warning, std::format("Main config key [{}] must be a string. Using [{}].", key, def));
+
+				return def;
+			};
+
+		vsid::time::setTimeProvider(stringValue("timeProvider", "auto"));
+		vsid::time::setZoneinfoPath(stringValue("zoneinfoPath", "zoneinfo"));
+	}
+	catch (const std::exception& e)
+	{
+		vsid::Logger::log(vsid::LogLevel::Error, "Failed to apply the time zone settings of the main config: " + std::string(e.what()));
 	}
 
 	// set topsky preference

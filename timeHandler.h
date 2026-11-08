@@ -22,10 +22,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include <array>
 #include <chrono>
+#include <ctime>
 #include <format>
-#include <unordered_map>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 #include "constants.h"
 #include "utils.h"
@@ -36,11 +39,56 @@ namespace vsid
 {
 	namespace time
 	{
+		// Wine only: keeping legacy gmtime_s/strftime formatting until a Wine tester confirms that
+		// std::format of a sys_time works (comparing "Time format check" debug line at start-up).
+		// after confirmation we can change this to false / remove the checks
+		inline constexpr bool useLegacyFormatOnWine = true;
+
+		//************************************
+		// Description: Returns the local time of the given IANA zone at the given instant.
+		//				The only place that selects the time zone provider (std::chrono on Windows,
+		//				shipped TZif data on Wine) and runs the fallback chain:
+		//				provider -> error (reported once per cause) -> UTC (offset 0, no tz function involved).
+		// Method:    localTime
+		// FullName:  vsid::time::localTime
+		// Access:    public
+		// Returns:   std::chrono::local_seconds
+		// Qualifier: noexcept
+		// Parameter: const std::string & zoneName
+		// Parameter: std::chrono::sys_seconds t
+		//************************************
+		std::chrono::local_seconds localTime(const std::string& zoneName, std::chrono::sys_seconds t) noexcept;
+
+		//************************************
+		// Description: Sets the time provider override from the main config ("auto", "wine", "windows").
+		//				Unknown values log a warning (once) and mean "auto". A change drops all caches.
+		// Method:    setTimeProvider
+		// FullName:  vsid::time::setTimeProvider
+		// Access:    public
+		// Returns:   void
+		// Qualifier:
+		// Parameter: std::string_view value
+		//************************************
+		void setTimeProvider(std::string_view value);
+
+		//************************************
+		// Description: Sets the zoneinfo folder (relative to the DLL directory) used on Wine.
+		//				Always drops all caches (every thread) and resets the time zone error flags,
+		//				so a config reload re-checks the folder.
+		// Method:    setZoneinfoPath
+		// FullName:  vsid::time::setZoneinfoPath
+		// Access:    public
+		// Returns:   void
+		// Qualifier:
+		// Parameter: std::string relativePath
+		//************************************
+		void setZoneinfoPath(std::string relativePath);
+
 		//************************************
 		// Description: Checks if a given SID time restriction is between start and end time
 		// Method:    isActive
 		// FullName:  vsid::time::isActive
-		// Access:    public 
+		// Access:    public
 		// Returns:   bool
 		// Qualifier:
 		// Parameter: const std::string & timezone
@@ -49,36 +97,64 @@ namespace vsid
 		//************************************
 		bool isActive(const std::string& timezone, const int start, const int end);
 
-		
+
 		//************************************
-		// Description: Logs current tzdb version or prints an error if tzdb is not available
+		// Description: Logs the time provider in use and the current tzdb version (Windows) or the version
+		//				of the shipped zoneinfo data (Wine), or an error if it is not available
 		// Method:    logTzdbVersion
 		// FullName:  vsid::time::logTzdbVersion
-		// Access:    public 
+		// Access:    public
 		// Returns:   void
 		// Qualifier:
 		//************************************
 		void logTzdbVersion();
 
-		//************************************
-		// Description: Get the current date as string in format YYYY-MM-DD
-		// Method:    getDate
-		// FullName:  vsid::time::getDate
-		// Access:    public 
-		// Returns:   std::string
-		// Qualifier:
-		//************************************
-		inline std::string getDate()
+		namespace detail
 		{
-			return std::format("{:%Y-%m-%d}", std::chrono::system_clock::now());
+			//************************************
+			// Description: true if the Wine time path (TZif provider, legacy formatting) is to be used:
+			//				the timeProvider override if set, otherwise vsid::utils::usingWine().
+			//				Every Wine-vs-Windows decision for time goes through this function.
+			//************************************
+			bool useWinePath() noexcept;
+
+			//************************************
+			// Description: Legacy formatting (gmtime_s / strftime, UTC)
+			//************************************
+			inline std::string legacyFormat(std::chrono::sys_seconds tp, std::string_view fmtStr)
+			{
+				const std::string fmt(fmtStr); // strftime needs a null terminated string
+				const std::time_t time = std::chrono::system_clock::to_time_t(tp);
+				std::tm tm{};
+				if (gmtime_s(&tm, &time) != 0) return "TIME_ERROR";
+
+				std::array<char, 64> timeBuffer{};
+
+				if (std::strftime(timeBuffer.data(), timeBuffer.size(), fmt.c_str(), &tm) > 0) return std::string(timeBuffer.data());
+
+				return "TIME_ERROR";
+			}
+
+			//************************************
+			// Description: std::format formatting of a sys_time with a chrono pattern (e.g. "%H:%M:%S")
+			//************************************
+			template<typename D>
+			std::string modernFormat(std::chrono::sys_time<D> tp, std::string_view fmtStr)
+			{
+				return std::vformat("{:" + std::string(fmtStr) + "}", std::make_format_args(tp));
+			}
 		}
 
 		//************************************
-		// Description: Special workaround function to use legacy code for Wine or where modern C++ isn't available
+		// Description: The single time formatter. Formats in UTC.
+		//				Uses std::format at the precision of the given time point (%S shows fractional seconds
+		//				for a sub-second time point); on Wine (see useLegacyFormatOnWine) the legacy strftime path,
+		//				which is always truncated to full seconds. Only system_clock time points are accepted
+		//				(clock_cast from other clocks, e.g. utc_clock, reads tzdb leap second data).
 		// Method:    getFormattedTime
 		// FullName:  vsid::time::getFormattedTime
-		// Access:    public 
-		// Returns:   std::string
+		// Access:    public
+		// Returns:   std::string - "TIME_ERROR" if formatting fails
 		// Qualifier:
 		// Parameter: const std::chrono::time_point<T
 		// Parameter: U> & tp
@@ -87,116 +163,54 @@ namespace vsid
 		template<typename T, typename U>
 		std::string getFormattedTime(const std::chrono::time_point<T, U>& tp, std::string_view fmtStr = "%Y-%m-%d %H:%M:%S")
 		{
-			auto sysTp = std::chrono::clock_cast<std::chrono::system_clock>(tp);
-
-			std::time_t time = std::chrono::system_clock::to_time_t(sysTp);
-			std::tm tm{};
-			gmtime_s(&tm, &time);
-
-			std::array<char, 64> timeBuffer;
-
-			if (std::strftime(timeBuffer.data(), timeBuffer.size(), fmtStr.data(), &tm) > 0) return std::string(timeBuffer.data());
-
-			return "TIME_ERROR";
-		}
-
-		//************************************
-		// Description: Caches timezone and provides fallback if timezone unavailable
-		// Method:    getCachedTimeZone
-		// FullName:  vsid::time::getCachedTimeZone
-		// Access:    public 
-		// Returns:   const std::chrono::time_zone* - using "UTC" if using Wine or on timezone error,
-		//            nullptr if not even "UTC" can be located (tz database unavailable) - callers must
-		//            then fall back to system_clock (UTC)
-		// Qualifier:
-		// Parameter: const std::string & tzName
-		//************************************
-		inline const std::chrono::time_zone* getCachedTimeZone(const std::string& tzName)
-		{
-			thread_local std::unordered_map<std::string, const std::chrono::time_zone*> tzCache;
-
-			if (auto it = tzCache.find(tzName); it != tzCache.end()) return it->second;
-
-			const std::chrono::time_zone* tz = nullptr;
-
-			// locating "UTC" needs the tz database as well, so it can throw too (e.g. database can't be loaded)
-			auto fallbackToUtc = [&](vsid::LogLevel level, std::string_view reason, const char* what)
-				{
-					try
-					{
-						tz = std::chrono::locate_zone("UTC");
-					}
-					catch (const std::exception& eUtc)
-					{
-						tz = nullptr;
-
-						if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
-						{
-							vsid::Logger::log(
-								vsid::LogLevel::Error,
-								std::format(
-									"Timezone database unavailable [{}] - [{}]. Fallback to system clock (UTC) - [{}]",
-									tzName,
-									what,
-									eUtc.what()
-								)
-							);
-
-							messageHandler->addGenError(ERROR_TIME_ZONE);
-						}
-						return;
-					}
-
-					if (!messageHandler->genErrorsContains(ERROR_TIME_ZONE))
-					{
-						vsid::Logger::log(
-							level,
-							std::format("{} [{}]. Fallback to UTC - [{}]", reason, tzName, what)
-						);
-
-						messageHandler->addGenError(ERROR_TIME_ZONE);
-					}
-				};
+			static_assert(std::is_same_v<T, std::chrono::system_clock>, "only system_clock time points are supported");
 
 			try
 			{
-				tz = std::chrono::locate_zone(vsid::utils::usingWine() ? "UTC" : tzName);
+				if (useLegacyFormatOnWine && detail::useWinePath())
+					return detail::legacyFormat(std::chrono::floor<std::chrono::seconds>(tp), fmtStr);
 
-				messageHandler->removeGenError(ERROR_TIME_ZONE);
+				return detail::modernFormat(tp, fmtStr);
 			}
-			catch (const std::runtime_error& e)
+			catch (...)
 			{
-				fallbackToUtc(vsid::LogLevel::Warning, "Invalid timezone", e.what());
+				return "TIME_ERROR";
 			}
-			catch (const std::exception& e)
-			{
-				fallbackToUtc(vsid::LogLevel::Error, "Unexpected exception on timezone", e.what());
-			}
+		}
 
-			tzCache[tzName] = tz; // also caches nullptr to avoid retrying (and throwing) on every call
-
-			return tz;
+		//************************************
+		// Description: Get the current date as string in format YYYY-MM-DD
+		// Method:    getDate
+		// FullName:  vsid::time::getDate
+		// Access:    public
+		// Returns:   std::string
+		// Qualifier:
+		//************************************
+		inline std::string getDate()
+		{
+			return getFormattedTime(std::chrono::system_clock::now(), "%Y-%m-%d");
 		}
 
 		/**
 		 * @brief Transform a timepoint into a string
-		 * 
-		 * @tparam T - the clock e.g. utc_clock
+		 *
+		 * @tparam T - the clock (system_clock only)
 		 * @tparam U - time resolutiong e.g. ::seconds
-		 * @param timePoint 
-		 * 
+		 * @param timePoint
+		 *
 		 */
 		template<typename T, typename U>
 		std::string toFullString(const std::chrono::time_point<T, U>& timePoint)
 		{
-			return std::string(std::format("{:%Y.%m.%d %H:%M:%S}", timePoint));
+			static_assert(std::is_same_v<T, std::chrono::system_clock>, "only system_clock time points are supported");
+			return getFormattedTime(timePoint, "%Y.%m.%d %H:%M:%S");
 		}
 
 		//************************************
 		// Description: Transform a timepoint into a time string
 		// Method:    toTimeString
 		// FullName:  vsid::time::toTimeString
-		// Access:    public 
+		// Access:    public
 		// Returns:   std::string
 		// Qualifier:
 		// Parameter: const std::chrono::time_point<T
@@ -205,14 +219,9 @@ namespace vsid
 		template<typename T, typename U>
 		std::string toTimeString(const std::chrono::time_point<T, U>& timePoint)
 		{
-			if (vsid::utils::usingWine())
-			{
-				return vsid::time::getFormattedTime(timePoint, "%H:%M:%S");
-			}
-
-			return std::string(std::format("{:%H:%M:%S}", timePoint));
+			static_assert(std::is_same_v<T, std::chrono::system_clock>, "only system_clock time points are supported");
+			return getFormattedTime(timePoint, "%H:%M:%S");
 		}
 	}
 }
-
 

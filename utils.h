@@ -359,18 +359,25 @@ namespace vsid
 
 		//************************************
 		// Description: Checks if Wine is being used - used for some Wine workarounds
+		//				(true if ntdll.dll exports any of the Wine-only functions below; result is cached)
+		//				Only timeHandler may use this for time logic (see vsid::time).
 		// Method:    usingWine
 		// FullName:  vsid::utils::usingWine
-		// Access:    public 
+		// Access:    public
 		// Returns:   bool
 		// Qualifier: noexcept
 		//************************************
 		inline bool usingWine() noexcept
 		{
-			static const bool wine = []()
+			static const bool wine = []() noexcept
 				{
-					if (HMODULE hntdll = GetModuleHandleA("ntdll.dll"))
-						return GetProcAddress(hntdll, "wine_get_version") != nullptr;
+					HMODULE hntdll = GetModuleHandleA("ntdll.dll");
+					if (hntdll == nullptr) return false;
+
+					for (const char* name : { "wine_get_version", "wine_get_build_id", "wine_get_host_version" })
+					{
+						if (GetProcAddress(hntdll, name) != nullptr) return true;
+					}
 
 					return false;
 				}();
