@@ -1,6 +1,6 @@
 [Changelog v0.16.0]
->[!CAUTION]
-> Not intended for production use yet. This version is a major rewrite of the internal structure and might contain bugs. Please report any issues you encounter.
+>[!INFO]
+> This version is a major rewrite of the internal structure and might contain bugs / unintended behaviour. Please report any issues you encounter.
 
 :new: **New Features**
 *	FPLN - added flight plan manager, which handels creation, updates and deletion of flight plans
@@ -14,6 +14,7 @@
 
 :lady_beetle: **Fixes**
 *	TIME - additional fallback / checks for timezone databse (only affected users with issues should be on Linux - Windows works fine)
+*	FPLN - speed and level groups invalidated waypoints during route checks for SIDs (#448)
 
 [Changelog v0.15.0.1]
 :lady_beetle: **Fixes**
