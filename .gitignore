@@ -364,3 +364,5 @@ MigrationBackup/
 
 /docs/
 
+# Additional setting files
+vSID.sln*

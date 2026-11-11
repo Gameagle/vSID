@@ -167,6 +167,13 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 		return {};
 	}
 
+	// clean up waypoints (remove level groups) after airport checks are completed
+
+	for (auto& wpt : filedRoute)
+	{
+		wpt = vsid::fpln::getCleanWpt(wpt);
+	}
+
 	auto& processed = FplnManager::getProcessed();
 
 	std::set<std::string> depRwys = aptData->depRwys; // dep rwys to merge with arr rwys if needed
@@ -686,7 +693,6 @@ vsid::Sid vsid::VSIDPlugin::processSid(EuroScopePlugIn::CFlightPlan& FlightPlan,
 
 			continue;
 		}
-
 
 		// skip if engine type doesn't match
 
