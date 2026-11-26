@@ -84,6 +84,7 @@ namespace vsid
 		// Parameter: const std::string_view & msg
 		// Parameter: std::optional<DebugLevel> debugLevel
 		// Parameter: bool devOnly - if true, msg will only be logged if logDevOnly is true (devmode)
+		// Usage: Called by log template or used for fixed strings (not formatted)
 		//************************************
 		static void log(LogLevel level, const std::string_view& msg, std::optional<DebugLevel> debugLevel = std::nullopt, bool devOnly = false);
 
@@ -101,6 +102,7 @@ namespace vsid
 		// Parameter: bool devOnly
 		// Parameter: std::format_string<Args...> fmt
 		// Parameter: Args && ...args
+		// Usage: Used for strings containing format specifiers
 		//************************************
 		template<typename... Args>
 		static void log(
