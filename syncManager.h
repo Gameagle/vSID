@@ -68,6 +68,21 @@ namespace vsid::sync {
 		//************************************
 		static void update(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& scratchOverwrite = "");
 
+		/**
+		 * 
+		 * @brief adds a new request to the sync queue for a given flight plan and request
+		 * @param FlightPlan a Euroscope flight plan
+		 * @param callsign the callsign to add the request for
+		 * @param request the name of the request, e.g. "departure" (lower case!)
+		 * @param time the time of the request in second since epoch
+		 */
+		static void addRequest(EuroScopePlugIn::CFlightPlan& FlightPlan, const std::string& callsign,
+		                       std::string_view request, long long time, bool restoreScratch = true)
+		{
+			add(callsign, std::format(".VSID_REQ_{}/{}", request, time),
+				restoreScratch ? FlightPlan.GetControllerAssignedData().GetScratchPadString() : std::string());
+		}
+
 		//************************************
 		// Description: Syncs present requests for the given flight plan
 		// Method:    syncReq
