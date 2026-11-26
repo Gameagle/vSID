@@ -48,14 +48,16 @@ namespace vsid::apt
 
 	struct AirportData
 	{
-		//************************************
-		// Description: Compare operator for custom request sorting.
-		//************************************
+		/**
+		 * @brief Compare operator for custom request sorting.
+		 * @note first is callsign, second is request time
+		 */
 		struct compreq
 		{
-			bool operator()(auto l, auto r) const
+			bool operator()(const auto& l, const auto& r) const
 			{
-				return l.second > r.second;
+				if (l.second != r.second) return l.second > r.second;
+				return l.first < r.first; // if times equal, fall back to callsign sorting (rare occurrence)
 			}
 		};
 
@@ -101,6 +103,8 @@ namespace vsid::apt
 		std::vector<std::string> allRwys = {};
 		std::set<std::string> depRwys = {};
 		std::set<std::string> arrRwys = {};
+		// set which runways can count as one <combinedId, <set of runways>>
+		std::unordered_map<std::string, std::unordered_set<std::string>> combinedRwys{};
 		CustomRulesMap customRules = {};
 		CustomAreaMap areas = {};
 		//************************************
@@ -201,6 +205,86 @@ namespace vsid::apt
 			if (depRwys.contains(rwy)) return true;
 			else if (arrAsDep == true && arrRwys.contains(rwy)) return true;
 			else return false;
+		}
+
+		/**
+		 * @brief Pre-fills the requested runway in the return set. Walks over combinedRwys afterwards to
+		 * add the remaining runwway that might be part of a combiner
+		 * @param rwy the flight plan runway to check
+		 * @return the flight plan runway or all other runways that are combined with it
+		 */
+		inline std::set<std::string, vsid::utils::CICompare> getAllTargetRwys(const std::string& rwy)
+		{
+			std::set<std::string, vsid::utils::CICompare> targetRwys{ rwy };
+
+			for (const auto& [combiner, rwys] : combinedRwys)
+			{
+				if (rwys.contains(rwy)) targetRwys.insert(rwys.begin(), rwys.end());
+			}
+
+			return targetRwys;
+		}
+
+		/**
+		 * @brief moves a stored rwy request of a callsign to the (new) rwy and all rwys combined with it.
+		 * The request time is preserved. Entries in rwys that are not part of the new target set are removed.
+		 * @param type the request type, e.g. "departure"
+		 * @param callsign the callsign owning the request
+		 * @param newRwy the new flight plan runway
+		 */
+		inline void moveRwyRequest(const std::string& type, const std::string& callsign, const std::string& newRwy)
+		{
+			auto typeIt = rwyrequests.find(type);
+			if (typeIt == rwyrequests.end()) return;
+
+			auto targets = getAllTargetRwys(newRwy);
+			bool found = false;
+			bool changed = false;
+			long long reqTime = 0;
+
+			for (auto& [rwy, reqSet] : typeIt->second)
+			{
+				for (auto it = reqSet.begin(); it != reqSet.end();)
+				{
+					if (it->first != callsign)
+					{
+						++it;
+						continue;
+					}
+
+					if (!found)
+					{
+						found = true;
+						reqTime = it->second;
+					}
+
+					// erase every entry of the callsign to avoid duplicates with differing times.
+					// re-inserted below with the preserved request time
+					if (!targets.contains(rwy)) changed = true;
+
+					it = reqSet.erase(it);
+				}
+			}
+
+			if (!found) return;
+
+			if (changed)
+			{
+				vsid::Logger::log(
+					LogLevel::Debug,
+					DebugLevel::Req,
+					false,
+					"[{}] moved to new target runway(s) [{}]. Request time [{}] is preserved",
+					callsign,
+					vsid::utils::join(targets, ", "),
+					reqTime
+				);
+			}			
+
+			for (const auto& rwy : targets)
+			{
+				typeIt->second[rwy].insert({ callsign, reqTime });
+			}
 		}
 	};
 
@@ -336,7 +420,11 @@ namespace vsid::apt
 			*/
 		}
 
-		static bool empty() { return activeAirports_.empty(); };
+		/**
+		 * 
+		 * @return If active airports is empty
+		 */
+		static bool empty() { return activeAirports_.empty(); }
 
 	private:
 		inline static std::map<std::string, AirportData, vsid::utils::CICompare> activeAirports_;

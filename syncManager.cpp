@@ -213,11 +213,17 @@ void vsid::sync::SyncManager::syncReq(EuroScopePlugIn::CFlightPlan& FlightPlan)
 		{
 			// sync rwy requests - parallel req lists are already managed on scratchpad updates
 
-			if (activeApt->rwyrequests.contains(fpln.request))
+			// stored request is "rwy <type>", the rwy request lists are keyed by <type> only
+
+			const std::string rwyPrefix = "rwy ";
+			const bool isRwyReq = fpln.request.starts_with(rwyPrefix);
+			const std::string normType = isRwyReq ? fpln.request.substr(rwyPrefix.size()) : "";
+
+			if (isRwyReq && activeApt->rwyrequests.contains(normType))
 			{
 				bool stop = false;
 
-				for (auto& [rwy, reqRwy] : activeApt->rwyrequests.at(fpln.request))
+				for (auto& [rwy, reqRwy] : activeApt->rwyrequests.at(normType))
 				{
 					for (auto& [reqCallsign, reqTime] : reqRwy)
 					{

@@ -243,8 +243,10 @@ void vsid::Display::OnRefresh(HDC hDC, int Phase)
 									{
 										if (it->first != callsign) continue;
 
-										size_t pos = std::distance(it, rwyReq.end());
-										std::string reqPos = "R" + std::to_string(pos);
+										const size_t pos = std::distance(it, rwyReq.end());
+										const std::string reqPos = (type == "departure") ?
+											vsid::utils::toupper(type).at(0) + std::to_string(pos) :
+											"R" + std::to_string(pos);
 
 										CRect area;
 

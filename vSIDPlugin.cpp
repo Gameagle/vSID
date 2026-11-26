@@ -1162,7 +1162,16 @@ void vsid::VSIDPlugin::removeFromRequests(const std::string& callsign, const std
 						++jt;
 						continue;
 					}
-					vsid::Logger::log(LogLevel::Debug, std::format("[{}] erasing from rwy request [{}] at [{}]", callsign, type, icao), DebugLevel::Req);
+					vsid::Logger::log(
+						LogLevel::Debug,
+						DebugLevel::Req,
+						false,
+						"[{}] erasing from rwy request [{}/{}] at [{}]",
+						callsign,
+						type,
+						it->first,
+						icao
+					);
 
 					if (processed.contains(callsign))
 					{
@@ -2027,7 +2036,8 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				this->AddPopupListElement("RWY Startup", "RWY Startup", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
 				this->AddPopupListElement("Pushback", "Pushback", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
 				this->AddPopupListElement("Taxi", "Taxi", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
-				this->AddPopupListElement("Departure", "Departure", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				this->AddPopupListElement("RWY Departure", "RWY Departure", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				
 				if (fpln.GetFlightPlanData().GetPlanType() == std::string("V"))
 				{
 					this->AddPopupListElement("VFR", "VFR", TAG_FUNC_VSID_REQMENU, false, EuroScopePlugIn::POPUP_ELEMENT_NO_CHECKBOX, false, false);
@@ -2942,7 +2952,6 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 			{
 				if (!processedFpln.request.empty())
 				{
-
 					std::string request = processedFpln.request;
 					bool isFplRwyReq = request.find("rwy") != std::string::npos;
 
@@ -2966,36 +2975,45 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 						}
 					}
 
-					// check rwy requests first
-
-					if (isFplRwyReq && aptData->rwyrequests.contains(request)) // #refactor - remove double lookups
+					if (isFplRwyReq) // check rwy requests first
 					{
-						for (auto& [rwy, rwyreq] : aptData->rwyrequests.at(request))
+						if (auto reqList = aptData->rwyrequests.find(request); reqList != aptData->rwyrequests.end())
 						{
-							for (auto it = rwyreq.begin(); it != rwyreq.end(); ++it)
+							bool stop = false;
+							for (auto& [rwy, rwyreq] : reqList->second)
 							{
-								if (it->first == callsign)
+								for (auto it = rwyreq.begin(); it != rwyreq.end(); ++it)
 								{
-									int pos = std::distance(it, rwyreq.end());
-									std::string req = "R" + std::to_string(pos);
-									strcpy_s(sItemString, 16, req.c_str());
-									break;
+									if (it->first == callsign)
+									{
+										const size_t pos = std::distance(it, rwyreq.end());
+										const std::string reqPos = (request == "departure") ? 
+											vsid::utils::toupper(request).at(0) + std::to_string(pos) : 
+											"R" + std::to_string(pos);
+
+										strcpy_s(sItemString, 16, reqPos.c_str());
+
+										stop = true;
+										break;
+									}
 								}
+								if (stop) break;
 							}
 						}
 					}
-					// check normal requests
-					else if (!isFplRwyReq && aptData->requests.contains(request)) // #refactor - remove double lookups
+					else // check normal requests
 					{
-						for (auto it = aptData->requests.at(request).begin();
-							it != aptData->requests.at(request).end(); ++it)
+						if (auto reqList = aptData->requests.find(request); reqList != aptData->requests.end())
 						{
-							if (it->first == callsign)
+							for (auto it = reqList->second.begin(); it != reqList->second.end(); ++it)
 							{
-								int pos = std::distance(it, aptData->requests.at(request).end());
-								std::string req = vsid::utils::toupper(request).at(0) + std::to_string(pos);
-								strcpy_s(sItemString, 16, req.c_str());
-								break;
+								if (it->first == callsign)
+								{
+									int pos = std::distance(it, reqList->second.end());
+									std::string req = vsid::utils::toupper(request).at(0) + std::to_string(pos);
+									strcpy_s(sItemString, 16, req.c_str());
+									break;
+								}
 							}
 						}
 					}
@@ -3009,10 +3027,9 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 					long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
 
-					std::string request = processedFpln.request;
-					bool isFplRwyReq = request.find("rwy") != std::string::npos;
+					std::string request = processedFpln.request; // mutable
 
-					if (isFplRwyReq)
+					if (request.find("rwy") != std::string::npos)
 					{
 						try
 						{
@@ -3033,38 +3050,40 @@ void vsid::VSIDPlugin::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan, Eur
 					}
 
 					// determine rwy request timer on rwy requests
-					if (aptData->rwyrequests.contains(request)) // #refactor - remove double lookups
+					if (const auto reqList = aptData->rwyrequests.find(request); reqList != aptData->rwyrequests.end())
 					{
-						for (auto& [rwy, rwyReq] : aptData->rwyrequests.at(request))
+						for (const auto& [rwy, rwyReq] : reqList->second)
 						{
-							for (auto& [reqCallsign, reqTime] : rwyReq)
+							for (const auto& [reqCallsign, reqTime] : rwyReq)
 							{
 								if (reqCallsign != callsign) continue;
 
-								int minutes = static_cast<int>((now - reqTime) / 60);
+								const int minutes = static_cast<int>((now - reqTime) / 60);
+								const int cautionTime = this->configParser.getReqTime("caution");
+								const int warningTime = this->configParser.getReqTime("warning");
 
-								if (minutes < this->configParser.getReqTime("caution")) *pRGB = this->configParser.getColor("requestNeutral");
-								else if (minutes >= this->configParser.getReqTime("caution") &&
-									minutes < this->configParser.getReqTime("warning")) *pRGB = this->configParser.getColor("requestCaution");
-								else if (minutes >= this->configParser.getReqTime("warning")) *pRGB = this->configParser.getColor("requestWarning");
+								if (minutes < cautionTime) *pRGB = this->configParser.getColor("requestNeutral");
+								else if (minutes >= cautionTime && minutes < warningTime) *pRGB = this->configParser.getColor("requestCaution");
+								else if (minutes >= warningTime) *pRGB = this->configParser.getColor("requestWarning");
 
 								strcpy_s(sItemString, 16, (std::to_string(minutes) + "m").c_str());
 							}
 						}
 					}
-					// determin normal request timer
-					else if (aptData->requests.contains(request))  // #refactor -> remove double lookups
+					// determine normal request timer
+					else if (const auto reqList = aptData->requests.find(request); reqList != aptData->requests.end())
 					{
-						for (auto& [reqCallsign, reqTime] : aptData->requests.at(request))
+						for (const auto& [reqCallsign, reqTime] : reqList->second)
 						{
 							if (reqCallsign != callsign) continue;
 
-							int minutes = static_cast<int>((now - reqTime) / 60);
+							const int minutes = static_cast<int>((now - reqTime) / 60);
+							const int cautionTime = this->configParser.getReqTime("caution");
+							const int warningTime = this->configParser.getReqTime("warning");
 
-							if (minutes < this->configParser.getReqTime("caution")) *pRGB = this->configParser.getColor("requestNeutral");
-							else if (minutes >= this->configParser.getReqTime("caution") &&
-								minutes < this->configParser.getReqTime("warning")) *pRGB = this->configParser.getColor("requestCaution");
-							else if (minutes >= this->configParser.getReqTime("warning")) *pRGB = this->configParser.getColor("requestWarning");
+							if (minutes < cautionTime) *pRGB = this->configParser.getColor("requestNeutral");
+							else if (minutes >= cautionTime && minutes < warningTime) *pRGB = this->configParser.getColor("requestCaution");
+							else if (minutes >= warningTime) *pRGB = this->configParser.getColor("requestWarning");
 
 							strcpy_s(sItemString, 16, (std::to_string(minutes) + "m").c_str());
 						}
@@ -4729,93 +4748,45 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 
 	if (const auto aptData = AirportManager::getData(adep); aptData != nullptr) // #monitor - major changes
 	{
+		// update possible rwy requests when a runway is set
+
+		if (!blockRwy.empty() && !processedFpln->request.empty())
+		{
+			std::string fplnRwy = vsid::fpln::getAtcBlock(FlightPlan).second;
+
+			// update rwy requests directly if a rwy request is stored for the flight plan
+
+			if (processedFpln->request.find("rwy") != std::string::npos &&
+				!fplnRwy.empty() && vsid::utils::contains(aptData->allRwys, fplnRwy))
+			{
+				std::string normReq = vsid::utils::split(processedFpln->request, ' ').at(1);
+
+				(void)AirportManager::update(adep, [&normReq, &callsign, &fplnRwy](vsid::apt::AirportData& data)
+					{
+						data.moveRwyRequest(normReq, callsign, fplnRwy);
+					});
+			}
+			// check if a rwy request is available for stored non-rwy request and update the rwy
+
+			else if (!fplnRwy.empty() && vsid::utils::contains(aptData->allRwys, fplnRwy))
+			{
+				(void)AirportManager::update(adep, [&processedFpln, &callsign, &fplnRwy](vsid::apt::AirportData& data)
+					{
+						for (const auto& [type, _] : data.rwyrequests)
+						{
+							if (processedFpln->request.find(type) != std::string::npos)
+							{
+								data.moveRwyRequest(type, callsign, fplnRwy);
+							}
+						}
+					});
+			}
+		}
+
+		// reprocess a flight plan and respect runway or SID when already present
+
 		if (blockSid == adep && !blockRwy.empty())
 		{
-			// update possible rwy requests
-
-			if (!processedFpln->request.empty())
-			{
-				std::string fplnRwy = vsid::fpln::getAtcBlock(FlightPlan).second;
-
-				// update rwy requests directly if a rwy request is stored for the flight plan
-
-				if (processedFpln->request.find("rwy") != std::string::npos &&
-					!fplnRwy.empty() && vsid::utils::contains(aptData->allRwys, fplnRwy))
-				{
-					std::string normReq = vsid::utils::split(processedFpln->request, ' ').at(1);
-
-					(void)AirportManager::update(adep, [&normReq, &callsign, &fplnRwy](vsid::apt::AirportData& data)
-						{
-							if (auto it = data.rwyrequests.find(normReq); it != data.rwyrequests.end())
-							{
-								bool stop = false;
-
-								for (auto& [rwy, rwyReq] : it->second)
-								{
-									for (auto jt = rwyReq.begin(); jt != rwyReq.end();)
-									{
-										if (jt->first != callsign)
-										{
-											++jt;
-											continue;
-										}
-
-										if (rwy != fplnRwy)
-										{
-											data.rwyrequests[normReq][fplnRwy].insert({ callsign, jt->second });
-											rwyReq.erase(jt);
-
-											stop = true;
-											break;
-										}
-
-										++jt;
-									}
-									if (stop) break;
-								}
-							}
-						});
-				}
-				// check if a rwy request is available for stored non-rwy request and update the rwy
-				else if (!fplnRwy.empty() && vsid::utils::contains(aptData->allRwys, fplnRwy))
-				{
-					(void)AirportManager::update(adep, [&processedFpln, &callsign, &fplnRwy](vsid::apt::AirportData& data)
-						{
-							bool stop = false;
-
-							for (auto& [type, rwys] : data.rwyrequests)
-							{
-								if (processedFpln->request.find(type) == std::string::npos) continue;
-
-								for (auto& [rwy, rwyReq] : rwys)
-								{
-									for (auto it = rwyReq.begin(); it != rwyReq.end();)
-									{
-										if (it->first != callsign)
-										{
-											++it;
-											continue;
-										}
-
-										if (rwy != fplnRwy)
-										{
-											data.rwyrequests[type][fplnRwy].insert({ callsign, it->second });
-											rwyReq.erase(it);
-
-											stop = true;
-											break;
-										}
-
-										++it;
-									}
-									if (stop) break;
-								}
-								if (stop) break;
-							}
-						});	
-				}
-			}
-
 			vsid::Logger::log(
 				LogLevel::Debug,
 				vsid::DebugLevel::Sid,
@@ -4829,21 +4800,6 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 		}
 		else if (blockSid != adep && !blockRwy.empty())
 		{
-			/*vsid::Sid atcSid;
-			for (const vsid::Sid& sid : aptData->sids)
-			{
-				if (atcBlock.first.find_first_of("0123456789") != std::string::npos)
-				{
-					if (sid.base != atcBlock.first.substr(0, atcBlock.first.length() - 2)) continue;
-					if (sid.designator != std::string(1, atcBlock.first[atcBlock.first.length() - 1])) continue;
-				}
-				else
-				{
-					if (sid.base != atcBlock.first) continue;
-				}
-				atcSid = sid;
-			}*/
-
 			vsid::Logger::log(
 				LogLevel::Debug,
 				vsid::DebugLevel::Sid,
@@ -4855,8 +4811,6 @@ void vsid::VSIDPlugin::OnFlightPlanFlightPlanDataUpdate(EuroScopePlugIn::CFlight
 			);
 
 			FplnManager::reprocess(callsign);
-			
-			//FplnManager::processFlightplan(FlightPlan, true, atcBlock.second, atcSid);
 		}
 		else
 		{
@@ -4940,36 +4894,330 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 
 			if (const auto* processedFpln = FplnManager::getData(callsign); processedFpln)
 			{
-				// set intersection
+				// set intersection and departure sequence
 
 				if (const auto* aptData = AirportManager::getData(adep); aptData && scratchpad.size() <= 4)
 				{
 					if (size_t pos = scratchpad.find("+"); pos != std::string::npos)
 					{
-						std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+						// set departure sequence
 
-						if (aptData->intsec.contains(fplnRwy) && vsid::utils::contains(aptData->intsec.at(fplnRwy), intsec)) // #continue - check for spReleased
+						if (scratchpad.size() == 1) // only + present
 						{
-							(void)FplnManager::update(callsign, [&intsec](vsid::fpln::FplnData& data)
+							const long long now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+							std::optional<long long> reqTime; // empty = nothing to send
+							std::vector<std::pair<std::string, long long>> shifted; // entries pushed back to make room, nearest first
+							
+							if (auto reqIt = aptData->rwyrequests.find("departure"); reqIt != aptData->rwyrequests.end() && !fplnRwy.empty())
+							{
+								reqTime = now; // empty or missing queue -> first entry
+								
+								if (auto setIt = reqIt->second.find(fplnRwy); setIt != reqIt->second.end() && !setIt->second.empty())
 								{
-									data.intsec = { intsec, true };
-								});
+									const auto& reqSet = setIt->second; // begin() = last in queue
+									
+									auto it = std::ranges::find_if(
+										reqSet,
+										[&callsign](const auto& e) { return e.first == callsign; });
 
-							FlightPlan.GetControllerAssignedData().SetScratchPadString("");
+									if (it == reqSet.end())
+									{
+										vsid::Logger::log(
+											LogLevel::Debug,
+											DebugLevel::Req,
+											false,
+											"[{}] adding to departure sequence in rwy list [{}]",
+											callsign,
+											fplnRwy
+										);
+
+										reqTime = std::max(now, reqSet.begin()->second + 1); // new entry at the back
+									}
+									else if (it == reqSet.begin())
+									{
+										vsid::Logger::log(
+											LogLevel::Debug,
+											DebugLevel::Req,
+											false,
+											"[{}] not advancing in departure sequence. Already the last in queue",
+											callsign
+										);
+
+										reqTime.reset(); // already last in queue
+									}
+									else
+									{
+										// one position back: take the second after the neighbour behind and push every
+										// entry occupying that slot one second back (cascading)
+
+										const auto behind = std::prev(it);
+										long long slot = behind->second + 1;
+										reqTime = slot;
+
+										for (auto jt = behind; jt != reqSet.begin();)
+										{
+											--jt; // next newer entry (descending order)
+											
+											if (jt->second > slot)
+											{
+												vsid::Logger::log(
+													LogLevel::Debug,
+													DebugLevel::Req,
+													false,
+													"[{}] slot [{}] is free, next entry [{}] is at [{}]",
+													callsign,
+													slot, jt->first,
+													jt->second
+												);
+
+												break; // take the free slot
+											}
+
+											vsid::Logger::log(
+												LogLevel::Debug,
+												DebugLevel::Req,
+												false,
+												"[{}] sits on slot [{}], moving it to [{}]",
+												jt->first,
+												slot,
+												slot + 1
+											);
+
+											shifted.emplace_back(jt->first, ++slot);
+										}
+
+										if (!shifted.empty())
+										{
+											vsid::Logger::log(
+												LogLevel::Debug,
+												DebugLevel::Req,
+												false,
+												"[{}] caused shifting of [{}] entries in departure sequence",
+												callsign,
+												shifted.size()
+											);
+										}
+									}
+								}
+								else
+								{
+									vsid::Logger::log(
+										LogLevel::Debug,
+										DebugLevel::Req,
+										false,
+										"[{}] creating set for departure sequence in rwy list [{}]",
+										callsign,
+										fplnRwy
+									);
+								}
+							}
+
+							// shifted entries first, farthest back first
+							for (const auto& [shiftCs, shiftTime] : shifted | std::views::reverse)
+							{
+								auto shiftFpln = this->FlightPlanSelect(shiftCs.c_str());
+
+								if (shiftFpln.IsValid()) SyncManager::addRequest(shiftFpln, shiftCs, "rwy departure", shiftTime);
+								else
+								{
+									vsid::Logger::log(
+										LogLevel::Warning,
+										std::format(
+											"[{}] failed to select flight plan for shifting in departure sequence "
+													"(Reported as invalid)",
+											shiftCs
+										)
+									);
+
+									this->removeFromRequests(shiftCs, aptData->icao);
+								}
+							}
+
+							if (reqTime) SyncManager::addRequest(FlightPlan, callsign, "rwy departure", *reqTime, false);
+							else if (fplnRwy.empty())
+							{
+								vsid::Logger::log(
+									LogLevel::Warning,
+									std::format(
+										"[{}] has no set runway and cannot be advanced in the departure sequence",
+										callsign)
+								);
+							}
+						}
+						else
+						{
+							// set intersection as cleared
+
+							std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+
+							if (aptData->intsec.contains(fplnRwy) && vsid::utils::contains(aptData->intsec.at(fplnRwy), intsec)) // #continue - check for spReleased
+							{
+								(void)FplnManager::update(callsign, [&intsec](vsid::fpln::FplnData& data)
+									{
+										data.intsec = { intsec, true };
+									});
+
+								FlightPlan.GetControllerAssignedData().SetScratchPadString("");
+							}
 						}
 					}
 					else if (size_t pos = scratchpad.find("-"); pos != std::string::npos)
 					{
-						std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+						// set departure sequence
 
-						if (aptData->intsec.contains(fplnRwy) && vsid::utils::contains(aptData->intsec.at(fplnRwy), intsec))
+						if (scratchpad.size() == 1) // only - present
 						{
-							(void)FplnManager::update(callsign, [&intsec](vsid::fpln::FplnData& data)
-								{
-									data.intsec = { intsec, false };
-								});
+							std::optional<long long> reqTime; // empty = nothing to send
+							std::vector<std::pair<std::string, long long>> shifted; // entries pushed forward to make room, nearest first
 
-							FlightPlan.GetControllerAssignedData().SetScratchPadString("");
+							if (auto reqIt = aptData->rwyrequests.find("departure"); reqIt != aptData->rwyrequests.end() && !fplnRwy.empty())
+							{
+								if (auto setIt = reqIt->second.find(fplnRwy); setIt != reqIt->second.end() && !setIt->second.empty())
+								{
+									const auto& reqSet = setIt->second; // begin() = last in queue
+
+									auto it = std::ranges::find_if(
+										reqSet,
+										[&callsign](const auto& e) { return e.first == callsign; });
+
+									if (it == reqSet.end())
+									{
+										vsid::Logger::log(
+											LogLevel::Debug,
+											DebugLevel::Req,
+											false,
+											"[{}] not in departure sequence in rwy list [{}]. Cannot decrease position.",
+											callsign,
+											fplnRwy
+										);
+									}
+									else
+									{
+										// one position forward: take the second before the neighbour ahead and push every
+										// entry occupying that slot one second forward
+
+										const auto ahead = std::next(it);
+
+										if (ahead == reqSet.end())
+										{
+											vsid::Logger::log(
+												LogLevel::Debug,
+												DebugLevel::Req,
+												false,
+												"[{}] not decreasing position in departure sequence. Already first.",
+												callsign
+											);
+										}
+										else
+										{
+											long long slot = ahead->second - 1;
+											reqTime = slot;
+
+											for (auto jt = std::next(ahead); jt != reqSet.end(); ++jt)
+											{
+												if (jt->second < slot)
+												{
+													vsid::Logger::log(
+														LogLevel::Debug,
+														DebugLevel::Req,
+														false,
+														"[{}] slot [{}] is free, next entry [{}] is at [{}]",
+														callsign,
+														slot, jt->first,
+														jt->second
+													);
+
+													break; // take the free slot
+												}
+
+												vsid::Logger::log(
+													LogLevel::Debug,
+													DebugLevel::Req,
+													false,
+													"[{}] sits on slot [{}], moving it to [{}]",
+													jt->first,
+													slot,
+													slot - 1
+												);
+
+												shifted.emplace_back(jt->first, --slot);
+											}
+
+											if (!shifted.empty())
+											{
+												vsid::Logger::log(
+													LogLevel::Debug,
+													DebugLevel::Req,
+													false,
+													"[{}] caused shifting of [{}] entries in departure sequence",
+													callsign,
+													shifted.size()
+												);
+											}
+										}
+									}
+								}
+								else
+								{
+									vsid::Logger::log(
+										LogLevel::Debug,
+										DebugLevel::Req,
+										false,
+										"[{}] not in departure sequence. No rwy list for [{}]. "
+												"Cannot decrease position",
+										callsign,
+										fplnRwy
+									);
+								}
+							}
+
+							// shifted entries first, farthest back first
+							for (const auto& [shiftCs, shiftTime] : shifted | std::views::reverse)
+							{
+								auto shiftFpln = this->FlightPlanSelect(shiftCs.c_str());
+
+								if (shiftFpln.IsValid()) SyncManager::addRequest(shiftFpln, shiftCs, "rwy departure", shiftTime);
+								else
+								{
+									vsid::Logger::log(
+										LogLevel::Warning,
+										std::format(
+											"[{}] failed to select flight plan for shifting in departure sequence "
+											"(Reported as invalid)",
+											shiftCs
+										)
+									);
+
+									this->removeFromRequests(shiftCs, aptData->icao);
+								}
+							}
+
+							if (reqTime) SyncManager::addRequest(FlightPlan, callsign, "rwy departure", *reqTime, false);
+							else if (fplnRwy.empty())
+							{
+								vsid::Logger::log(
+									LogLevel::Warning,
+									std::format(
+										"[{}] has no set runway and cannot be decreased in the departure sequence",
+										callsign)
+								);
+							}
+						}
+						else
+						{
+							// set intersection as able
+
+							std::string intsec = scratchpad.substr(pos + 1, scratchpad.size());
+
+							if (aptData->intsec.contains(fplnRwy) && vsid::utils::contains(aptData->intsec.at(fplnRwy), intsec))
+							{
+								(void)FplnManager::update(callsign, [&intsec](vsid::fpln::FplnData& data)
+									{
+										data.intsec = { intsec, false };
+									});
+
+								FlightPlan.GetControllerAssignedData().SetScratchPadString("");
+							}
 						}
 					}
 				}
@@ -5056,6 +5304,17 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 								return;
 							}
 						}
+						if (!isRwyReq && reqType == "departure")
+						{
+							// MONITOR: legacy request type, departure only exists as rwy departure
+							vsid::Logger::log(
+								LogLevel::Debug,
+								std::format("[{}] dropping legacy request type [{}] from scratch [{}]", callsign, reqType, scratchpad),
+								vsid::DebugLevel::Req);
+
+							return;
+						}
+
 						long long reqTime = std::stoll(req.at(1));
 
 						// clear all possible requests before setting a new one
@@ -5136,6 +5395,9 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 												updateProcessedFpln = true;
 											}
 
+											// always erase first (local only, nothing is synced here). The entry is re-inserted
+											// into the target (combined) runways below and only that is synced
+
 											vsid::Logger::log(
 												LogLevel::Debug,
 												std::format(
@@ -5150,10 +5412,21 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 									}
 									if (type == reqType && !fplnRwy.empty())
 									{
-										vsid::Logger::log(LogLevel::Debug, std::format("[{}] setting in rwy requests in [{}/{}]", callsign, type,
-											fplnRwy), vsid::DebugLevel::Req);
+										// all runways the request belongs to: fpln rwy and every rwy combined with it
+										for (const auto& rwy : data.getAllTargetRwys(fplnRwy))
+										{
+											vsid::Logger::log(
+												LogLevel::Debug,
+												DebugLevel::Req,
+												false,
+												"[{}] setting in rwy requests in [{}/{}]",
+												callsign,
+												type,
+												rwy
+											);
 
-										rwys[fplnRwy].insert({ callsign, reqTime });
+											rwys[rwy].insert({ callsign, reqTime });
+										}
 
 										if (isRwyReq)
 										{
@@ -5165,7 +5438,14 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 										}
 									}
 									else if (isRwyReq && type == reqType && fplnRwy.empty())
-										vsid::Logger::log(LogLevel::Warning, std::format("[{}] to be set in runway requests, but runway hasn't been set in the flight plan.", callsign));
+									{
+										vsid::Logger::log(
+											LogLevel::Warning,
+											std::format(
+												"[{}] to be set in runway requests, but runway hasn't been set in the flight plan.",
+												callsign
+											));
+									}
 								}
 							});
 
@@ -5329,21 +5609,13 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 									break;
 								}
 
-								for (auto& [rwy, rwyReq] : data.rwyrequests["startup"])
+								for (auto& rwyReq : data.rwyrequests["startup"] | std::views::values)
 								{
-									for (auto& fp : rwyReq)
-									{
-										if (fp.first != callsign) continue;
+									if (std::erase_if(rwyReq, [&callsign](const auto& e) {return e.first == callsign;}) == 0) continue;
 
-										data.rwyrequests["startup"][rwy].erase(fp);
-
-										fplnRequest = "";
-										fplnRequestTime = -1;
-										updateProcessedFpln = true;
-
-										break;
-									}
-
+									fplnRequest = "";
+									fplnRequestTime = -1;
+									updateProcessedFpln = true;
 								}
 							}
 							else if (state == "PUSH")
@@ -5379,17 +5651,13 @@ void vsid::VSIDPlugin::OnFlightPlanControllerAssignedDataUpdate(EuroScopePlugIn:
 							}
 							else if (state == "DEPA")
 							{
-								for (auto& fp : data.requests["departure"])
+								for (auto& rwyReq : data.rwyrequests["departure"] | std::views::values)
 								{
-									if (fp.first != callsign) continue;
-
-									data.requests["departure"].erase(fp);
+									if (std::erase_if(rwyReq, [&callsign](const auto& e) {return e.first == callsign;}) == 0) continue;
 
 									fplnRequest = "";
 									fplnRequestTime = -1;
 									updateProcessedFpln = true;
-
-									break;
 								}
 							}
 						}
@@ -5458,7 +5726,7 @@ void vsid::VSIDPlugin::OnRadarTargetPositionUpdate(EuroScopePlugIn::CRadarTarget
 					}
 					else if (alt >= data.ldgAlt + 200)
 					{
-						data.mapp = true; // #continue - send mapp to network if not already set
+						data.mapp = true;
 						data.ctl = false;
 					}
 				});		
