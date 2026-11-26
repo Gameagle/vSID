@@ -518,20 +518,26 @@ void vsid::ConfigParser::loadAirportConfig()
 							data.maxInitialClimb = config.value("maxInitialClimb", 0);
 							data.timezone = config.value("timezone", "Etc/UTC");
 							data.autoHandoff = config.value("autoHandoff", true);
+							data.combinedRwys = config.value("combinedRwys", decltype(data.combinedRwys){});
 
 							for (const char* reqType : {
 								"clearance",
 								"startup",
 								"pushback",
 								"taxi",
-								"departure",
 								"vfr"
 								})
 							{
 								data.requests.try_emplace(reqType);
 							}
 
-							data.rwyrequests.try_emplace("startup");
+							for (const char* rwyReqType : {
+								"startup",
+								"departure", 
+							})
+							{
+								data.rwyrequests.try_emplace(rwyReqType);
+							}
 
 							data.settings.try_emplace("auto", false);
 							data.settings.try_emplace("lvp", false);
