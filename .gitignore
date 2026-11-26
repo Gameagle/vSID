@@ -356,9 +356,13 @@ MigrationBackup/
 *.sln
 *.rc
 
+# Build folders
+
 /Debug/
 /Release/
 /.vs/
 
+/docs/
 
-
+# Additional setting files
+vSID.sln*

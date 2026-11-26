@@ -15,7 +15,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  zoneinfo:
+    uses: ./.github/workflows/zoneinfo.yml
+
   build:
+    needs: zoneinfo
     runs-on: windows-latest
 
     permissions:
@@ -69,10 +73,27 @@ jobs:
           echo "releasename=v${{steps.dllversion.outputs.version}}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: 17
+    - name: Show clang-cl shipped with Visual Studio
+      # no LLVM installation: the Visual Studio of the runner image provides clang-cl (used via -T ClangCL)
+      shell: pwsh
+      run: |
+        $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+        $vsPath = & $vswhere -latest -products * -property installationPath
+        # The runner is x64. Use the x64 (or legacy x86 "bin") host tool, never ARM64.
+        $clang = $null
+        foreach ($sub in "x64\bin", "bin") {
+          $candidate = Join-Path $vsPath "VC\Tools\Llvm\$sub\clang-cl.exe"
+          if (Test-Path $candidate) { $clang = Get-Item $candidate; break }
+        }
+        if (-not $clang) {
+          Write-Host "Available clang-cl binaries:"
+          Get-ChildItem -Path (Join-Path $vsPath "VC\Tools\Llvm") -Filter clang-cl.exe -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.FullName)" }
+          Write-Error "No x64 clang-cl found in Visual Studio at $vsPath (component 'C++ Clang tools for Windows' missing?)"
+          exit 1
+        }
+        Write-Host "Using $($clang.FullName)"
+        & $clang.FullName --version
+        if ($LASTEXITCODE -ne 0) { exit 1 }
 
     - name: Download and unpack libcurl
       shell: pwsh
@@ -111,7 +132,7 @@ jobs:
 
     - name: Configure CMake
       # remove --trace for less verbosity
-      run: cmake -B build -S . -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl --trace
+      run: cmake -B build -S . -T ClangCL -A Win32 -DCMAKE_BUILD_TYPE=Release --trace
       
     - name: Build DLL
       # remove --verbose for less verbosity
@@ -143,12 +164,18 @@ jobs:
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path output
-        Compress-Archive -Path build\Release\vSID.dll, vSIDConfig.json, RNAV_List.json -DestinationPath output/files.zip
+        Compress-Archive -Path build\Release\vSID.dll, vSIDConfig.json, RNAV_List.json, ICAO_Aircraft.json -DestinationPath output/files.zip
 
     - name: Create second zip file (config folder)
       shell: pwsh
       run: |
         Compress-Archive -Path config -DestinationPath output/config.zip
+
+    - name: Download zoneinfo artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: zoneinfo
+        path: output
           
     - name: Extract and Compare Versions
       id: changelog_version
@@ -245,7 +272,7 @@ jobs:
 
     - name: Create GitHub Release and Upload Assets
       id: create_release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -258,3 +285,4 @@ jobs:
         files: |
           output/files.zip
           output/config.zip
+          output/zoneinfo.zip

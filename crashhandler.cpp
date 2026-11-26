@@ -1,9 +1,12 @@
 #include "pch.h"
 
 #include <minidumpapiset.h> 
+#include <afx.h>
+#include <string>
+#include <fstream>
 
+#include "include/es/EuroScopePlugIn.h"
 #include "crashhandler.h"
-#include "messageHandler.h"
 #include "timeHandler.h"
 
 PVOID vehHandler = NULL;
@@ -56,7 +59,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 	DWORD displacement;
 	DWORD64 symDisplacement = 0;
 
-	logFile << "--- CRITICAL ERROR [" << vsid::time::getFormattedTime(std::chrono::system_clock::now()) << "] ---" << std::endl;
+	logFile << "--- CRITICAL ERROR [" << vsid::time::getFormattedTime(std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now())) << "] ---" << std::endl;
 	logFile << "Crash Address: 0x" << std::hex << crashAdress << std::dec << std::endl;
 
 	// print the crash address symbol and line info if available otherwise print the offset
@@ -87,7 +90,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 
 	// stack walk
 	CONTEXT context = *exceptionInfo->ContextRecord;
-	STACKFRAME64 frame = { 0 };
+	STACKFRAME64 frame = {};
 
 	DWORD machineType = IMAGE_FILE_MACHINE_I386;
 	frame.AddrPC.Offset = context.Eip;
@@ -138,7 +141,7 @@ void vsid::crashhandler::writeStackTrace(EXCEPTION_POINTERS* exceptionInfo)
 		}
 	}
 
-	logFile << "--- CRITICAL ERROR END [" << vsid::time::getFormattedTime(std::chrono::system_clock::now()) << "] ---\n" << std::endl;
+	logFile << "--- CRITICAL ERROR END [" << vsid::time::getFormattedTime(std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now())) << "] ---\n" << std::endl;
 
 	free(symbol);
 	SymCleanup(process);

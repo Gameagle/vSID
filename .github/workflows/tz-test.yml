@@ -1,0 +1,129 @@
+name: TZ Test
+
+# REPORT-ONLY: this workflow never blocks a pull request.
+# It builds the standalone tz tests (tests/), runs the unit tests and the differential
+# test (vsid_tz_diff: our TZif reader vs. std::chrono) against the freshly compiled
+# zoneinfo, and writes the result to the job summary.
+# The tz-tests job uses continue-on-error, so a failure there (build, unit tests, differential test)
+# is shown but does not fail the check. The reusable zoneinfo job has NO continue-on-error: if it fails
+# (external/tz pin is not exactly a release tag, submodule checkout or zic failure) the workflow fails.
+# This is intended, a broken zoneinfo build is a real failure and not a reader problem.
+# SKEW (tz data version difference) is expected and informational; only BUG indicates a reader problem.
+on:
+  pull_request:
+    paths:
+      - 'tzif.*'
+      - 'tests/**'
+      - 'external/tz'
+      - '.github/workflows/zoneinfo.yml'
+      - '.github/workflows/tz-test.yml'
+
+  workflow_dispatch:
+
+jobs:
+  zoneinfo:
+    uses: ./.github/workflows/zoneinfo.yml
+    permissions:
+      contents: read
+
+  tz-tests:
+    needs: zoneinfo
+    runs-on: windows-latest
+    # report-only, see comment at the top
+    continue-on-error: true
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: 17
+
+    - name: Download zoneinfo artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: zoneinfo
+        path: zoneinfo-artifact
+
+    - name: Unzip zoneinfo
+      shell: pwsh
+      run: |
+        Expand-Archive -Path zoneinfo-artifact/zoneinfo.zip -DestinationPath zoneinfo-unzipped -Force
+        if (-not (Test-Path "zoneinfo-unzipped/zoneinfo/Europe/Berlin")) {
+          Write-Error "zoneinfo-unzipped/zoneinfo/Europe/Berlin not found"
+          exit 1
+        }
+        Get-Content "zoneinfo-unzipped/zoneinfo/+VERSION"
+
+    - name: Configure tests
+      run: cmake -S tests -B build-tests -T ClangCL -A Win32
+
+    - name: Build tests
+      run: cmake --build build-tests --config Release
+
+    - name: Run unit tests
+      run: ctest --test-dir build-tests -C Release --output-on-failure
+
+    - name: Run differential test (report-only)
+      # also runs when the unit tests failed, but not when the build failed or the run was cancelled
+      if: ${{ !cancelled() && hashFiles('build-tests/Release/vsid_tz_diff.exe') != '' }}
+      shell: bash
+      run: |
+        set +e
+        ./build-tests/Release/vsid_tz_diff.exe zoneinfo-unzipped/zoneinfo > tz-diff-output.txt 2>&1
+        code=$?
+        echo "$code" > tz-diff-exitcode.txt
+        cat tz-diff-output.txt
+        echo "vsid_tz_diff exit code: $code"
+        exit $code
+
+    - name: Write job summary
+      # always runs (except on cancel) so the summary exists even when earlier steps failed
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: |
+        # bash -eo pipefail: grep without a match must not abort the summary
+        set +e
+        {
+          echo "## TZif differential test (report-only)"
+          echo
+          if [[ ! -f tz-diff-output.txt ]]; then
+            echo "The differential test did not run (build or setup failed, see the step logs)."
+          else
+            echo "Exit code: \`$(cat tz-diff-exitcode.txt)\` (0 = no reader bug, 1 = BUG or self-check failed, 2 = usage)"
+            echo
+            echo "| Category | Count |"
+            echo "|---|---|"
+            for key in MISSING SKEW BUG; do
+              count=$(grep -E "^${key}: " tz-diff-output.txt | head -n 1 | sed -E "s/^${key}: //" || true)
+              echo "| ${key} | ${count:-n/a} |"
+            done
+            echo
+            echo "SKEW = data version difference to the Windows ICU database (expected, informational). BUG = reader disagrees with the TZif file or std::chrono beyond skew."
+            if grep -q '^SELFCHECK FAILED' tz-diff-output.txt; then
+              echo
+              echo "**SELFCHECK FAILED**"
+            fi
+            echo
+            echo "### Header"
+            echo '```'
+            grep -E '^(zoneinfo version|std::chrono tzdb version|error|usage|selfcheck FAILED)' tz-diff-output.txt | head -n 6
+            true
+            echo '```'
+            echo
+            echo "### First BUG lines"
+            echo '```'
+            grep -E '^  BUG ' tz-diff-output.txt | head -n 20 || true
+            echo '```'
+            echo
+            echo "### First SKEW lines"
+            echo '```'
+            grep -E '^  SKEW ' tz-diff-output.txt | head -n 20 || true
+            echo '```'
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"

@@ -22,7 +22,7 @@ bool vsid::Sid::empty() const
 	return base == "";
 }
 
-bool vsid::Sid::collapsedBaseMatch(std::string_view other, std::optional<std::string_view> trans)
+bool vsid::Sid::collapsedBaseMatch(std::string_view other, std::optional<std::string_view> trans) const
 {
 	std::string collapsed;
 	std::string_view s;
@@ -46,7 +46,7 @@ bool vsid::Sid::collapsedBaseMatch(std::string_view other, std::optional<std::st
 	return collapsed == other;
 }
 
-bool vsid::Sid::operator==(const Sid& sid)
+bool vsid::Sid::operator==(const Sid& sid) const
 {
 	if (this->designator != "")
 	{
@@ -62,7 +62,7 @@ bool vsid::Sid::operator==(const Sid& sid)
 	else return this->base == sid.base;
 }
 
-bool vsid::Sid::operator!=(const Sid& sid)
+bool vsid::Sid::operator!=(const Sid& sid) const
 {
 	if (this->designator != "")
 	{

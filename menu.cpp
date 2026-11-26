@@ -2,9 +2,24 @@
 
 #include "menu.h"
 #include "constants.h"
+#include "airportManager.h"
 
 #include <stdexcept>
 #include <algorithm>
+
+// #dev - modern menu
+#include "stdafx.h"
+BEGIN_MESSAGE_MAP(vsid::CMainMenuDlg, CDialogEx)
+	ON_WM_CTLCOLOR()
+END_MESSAGE_MAP()
+
+vsid::CMainMenuDlg::CMainMenuDlg(CWnd* pParent) : CDialogEx(IDD_MAIN_MENU, pParent) {
+	m_darkBackgroundBrush.CreateSolidBrush(RGB(30, 35, 45));
+}
+
+vsid::CMainMenuDlg::~CMainMenuDlg() {}
+
+// end dev
 
 
 vsid::Menu::Menu(int type, std::string title, std::string parent, int top, int left, int minWidth, int minHeight, bool render,
@@ -1038,3 +1053,65 @@ void vsid::Menu::move(int type, RECT &Area)
 	this->bottomBar.bottom += difBot;
 	this->bottomBar.left += difLeft;
 }
+
+// #dev - modern menu
+void vsid::CMainMenuDlg::SetAirports(const std::map<std::string, vsid::apt::AirportData, vsid::utils::CICompare>& apts)
+{
+	m_airports = apts;
+}
+
+BOOL vsid::CMainMenuDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	ModifyStyleEx(0, WS_EX_LAYERED);
+	SetLayeredWindowAttributes(0, 225, LWA_ALPHA);
+
+	int yPos = 20;
+	int btnID = 1000;
+
+	for (const auto& [title, apt] : m_airports)
+	{
+		auto pBtn = std::make_unique<CMFCButton>();
+
+		CRect rect(20, yPos, 420, yPos + 30);
+
+		CString btnText(title.c_str());
+
+		pBtn->Create(btnText, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, rect, this, btnID++);
+		pBtn->SetFont(GetFont());
+
+		pBtn->m_bTransparent = FALSE;
+		pBtn->m_bDontUseWinXPTheme = TRUE;
+
+		pBtn->SetFaceColor(RGB(50, 60, 75), TRUE);
+		pBtn->SetTextColor(RGB(255, 255, 255));
+
+		m_dynamicButtons.push_back(std::move(pBtn));
+		yPos += 40;
+	}
+
+	return TRUE;
+}
+
+void vsid::CMainMenuDlg::PostNcDestroy()
+{
+	CDialogEx::PostNcDestroy();
+	delete this;
+}
+
+HBRUSH vsid::CMainMenuDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetTextColor(RGB(240, 240, 240));
+		pDC->SetBkMode(TRANSPARENT);
+
+		hbr = (HBRUSH)m_darkBackgroundBrush.GetSafeHandle();
+	}
+
+	return hbr;
+}
+// end dev

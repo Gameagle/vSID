@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "eseparser.h"
-#include "flightplan.h"
+#include "fplnManager.h"
 #include "logger.h"
 
 #include <format>
@@ -182,7 +182,7 @@ void vsid::EseParser::line(Section s, std::string_view l)
 
 			if (currSid.length() < 3) break; // protection for num / desig extraction
 
-			auto [sid, trans] = vsid::fplnhelper::splitTransitionSV(currSid);
+			auto [sid, trans] = vsid::fpln::splitTransitionSV(currSid);
 
 			vsid::Logger::log(vsid::LogLevel::Debug, std::format("Parsing SID [{}] - sid: [{}] / trans : [{}]", currSid, sid, trans), vsid::DebugLevel::Ese, true);
 

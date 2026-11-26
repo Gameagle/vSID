@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -140,20 +140,22 @@ namespace vsid
 		// Parameter: std::optional<std::string_view> trans - as multiple transitions can be held it has to be specified
 		// for the check, if nullopt the sid base is checked
 		//************************************
-		bool collapsedBaseMatch(std::string_view other, std::optional<std::string_view> trans = std::nullopt);
+		bool collapsedBaseMatch(std::string_view other, std::optional<std::string_view> trans = std::nullopt) const;
 		/**
 		 * @brief Compares if two SIDs are the same
 		 *
 		 * @param sid - sid to compare to
 		 * @return true - if waypoint, number and designator match
 		 */
-		bool operator==(const Sid& sid);
+		bool operator==(const Sid& sid) const;
 		/**
 		 * @brief Compares if two SIDs are the different
 		 *
 		 * @param sid - sid to compare to
 		 * @return true - if at least one of waypoint, number or designator don't match
 		 */
-		bool operator!=(const Sid& sid);
+		bool operator!=(const Sid& sid) const;
 	};
+
+	std::optional<vsid::Sid> getSidFromString(std::string_view name);
 }

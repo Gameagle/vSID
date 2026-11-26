@@ -1,0 +1,95 @@
+name: Zoneinfo
+
+# Reusable workflow: compiles the pinned IANA tz database (external/tz submodule)
+# into TZif files with zic and publishes them as artifact "zoneinfo"
+# (contains zoneinfo.zip, top-level folder "zoneinfo/" incl. "+VERSION").
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  zoneinfo:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code (without submodules)
+      uses: actions/checkout@v6
+
+    - name: Determine tz pin
+      id: pin
+      shell: bash
+      run: |
+        # commit sha of the submodule as recorded in the checked out commit
+        # (works without checking the submodule out)
+        pin=$(git ls-tree HEAD external/tz | awk '{print $3}')
+        if [[ -z "$pin" ]]; then
+          echo "::error::external/tz is not recorded in this commit (git ls-tree HEAD external/tz is empty)"
+          exit 1
+        fi
+        echo "tz pin is $pin"
+        echo "pin=$pin" >> "$GITHUB_OUTPUT"
+
+    - name: Restore compiled zoneinfo from cache
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: out/zoneinfo
+        # bump "v1" when ZFLAGS/REDO or other compile recipe settings change
+        key: zoneinfo-v1-${{ steps.pin.outputs.pin }}
+
+    - name: Checkout tz submodule
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        git submodule update --init external/tz
+        git -C external/tz fetch --tags --quiet || true
+        echo "Checked out: $(git -C external/tz rev-parse HEAD)"
+        test "$(git -C external/tz rev-parse HEAD)" = "${{ steps.pin.outputs.pin }}"
+        # the pin must be exactly a release tag (also guards the +VERSION written later);
+        # only runs on a cache miss: the cache key is the pin, so a hit was validated when saved
+        if ! git -C external/tz describe --tags --exact-match; then
+          echo "::error::external/tz is pinned to a commit that is not a release tag. Run 'git -C external/tz checkout <tag>' and 'git add external/tz', then commit."
+          exit 1
+        fi
+
+    - name: Compile zoneinfo with zic
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        # fat TZif files (-b fat), POSIX time only (no right/ and posix/ trees)
+        make -C external/tz \
+          ZFLAGS='-b fat' \
+          REDO=posix_only \
+          TZDIR="$GITHUB_WORKSPACE/out/zoneinfo" \
+          posix_only
+
+        version=$(git -C external/tz describe --tags --exact-match)
+        printf '%s\n' "$version" > out/zoneinfo/+VERSION
+        echo "tz version: $version"
+
+        test -f out/zoneinfo/Europe/Berlin
+        test ! -e out/zoneinfo/right
+        test ! -e out/zoneinfo/posix
+        size=$(stat -c%s out/zoneinfo/Europe/Berlin)
+        echo "Europe/Berlin size: $size"
+        test "$size" -gt 2048
+
+    - name: Create zoneinfo.zip
+      shell: bash
+      run: |
+        test -f out/zoneinfo/+VERSION
+        cd out
+        zip -r -q ../zoneinfo.zip zoneinfo
+        cd ..
+        unzip -l zoneinfo.zip | grep -F 'zoneinfo/+VERSION'
+
+    - name: Upload zoneinfo artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: zoneinfo
+        path: zoneinfo.zip
+        if-no-files-found: error
+        retention-days: 14

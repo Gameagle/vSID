@@ -1,6 +1,6 @@
 /*
 vSID is a plugin for the Euroscope controller software on the Vatsim network.
-The aim auf vSID is to ease the work of any controller that edits and assigns
+The aim of vSID is to ease the work of any controller that edits and assigns
 SIDs to flightplans.
 
 Copyright (C) 2024 Gameagle (Philip Maier)
@@ -22,12 +22,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 #include "pch.h"
 
-#include "airport.h"
 #include "utils.h"
+#include "sid.h"
 #include "include/nlohmann/json.hpp"
 
 #include <string>
 #include <map>
+#include <set>
 #include <filesystem>
 
 using json = nlohmann::ordered_json;
@@ -96,13 +97,7 @@ namespace vsid
 		 * @param savedSettings - settings that are transferred in between rwy change updates
 		 * @param savedAreas - area settings that are transferred in between rwy change updates
 		 */
-		void loadAirportConfig(std::map<std::string, vsid::Airport, vsid::utils::CICompare>& activeAirports,
-							std::map<std::string, vsid::Airport::CustomRulesMap>& savedCustomRules,
-							std::map<std::string, std::map<std::string, bool>>& savedSettings,
-							std::map<std::string, vsid::Airport::CustomAreaMap>& savedAreas,
-							std::map<std::string, vsid::Airport::CustomRequestMap>& savedRequests,
-							std::map<std::string, vsid::Airport::CustomRwyRequestMap>& savedRwyRequests
-							);
+		void loadAirportConfig();
 		/**
 		 * @brief Loads vsid config
 		 *
@@ -136,7 +131,7 @@ namespace vsid
 		 * @param color - name of the key in the settings file
 		 * @return COLORREF 
 		 */
-		const COLORREF getColor(std::string color);
+		const COLORREF getColor(const std::string& color);
 
 		//************************************
 		// Method:    getClrfMinimums
@@ -157,7 +152,8 @@ namespace vsid
 		//************************************
 		inline Indicator& getIndicatorDefaultValues() { return this->indicator; };
 
-		int getReqTime(std::string time);
+		int getReqTime(const std::string& time);
+
 		json grpConfig;
 		std::set<std::string> rnavList;
 		bool preferTopsky;

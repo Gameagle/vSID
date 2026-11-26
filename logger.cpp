@@ -160,88 +160,97 @@ void vsid::Logger::workerThread()
 {
 	while (running || !bgQueue.empty())
 	{
-		LogMessage msg;
-
-		// wait if queue is not empty or if worker is not running
+		// no exception may leave the worker thread (std::terminate would take down EuroScope)
+		try
 		{
-			std::unique_lock lock(bgMutex);
-			cv.wait(lock, [] { return !bgQueue.empty() || !running; });
+			LogMessage msg;
 
-			if (!running && bgQueue.empty()) break;
-
-			msg = std::move(bgQueue.front());
-			bgQueue.pop();
-		}
-
-		// write log file
-
-		if (logFile.is_open())
-		{
-			// format file log message 
-
-			std::string fout;
-			auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-
-			if (!vsid::utils::usingWine())
+			// wait if queue is not empty or if worker is not running
 			{
-				fout = std::format("[{:%Y-%m-%d %H:%M:%S}] [{}]", now, logLvlToString(msg.level));
-			}
-			else // wine workaround
-			{
-				fout = std::format("[{}] [{}]", vsid::time::getFormattedTime(now), logLvlToString(msg.level));
+				std::unique_lock lock(bgMutex);
+				cv.wait(lock, [] { return !bgQueue.empty() || !running; });
+
+				if (!running && bgQueue.empty()) break;
+
+				msg = std::move(bgQueue.front());
+				bgQueue.pop();
 			}
 
-			if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
-				std::format_to(std::back_inserter(fout), " [{}]", debugLvlToString(msg.debugLevel.value()));
+			// write log file
 
-			std::format_to(std::back_inserter(fout), " {}\n", msg.msg);
-
-			logFile << fout;
-
-			if (logFile.fail()) // revive stream if log file was opened on the disk
-				logFile.clear();
-
-			if(msg.level >= LogLevel::Warning)
-				logFile.flush();
-
-			if (logFile.tellp() >= 5 * 1024 * 1024) rotateLogs(); // rotate if log file exceeds 5 MB
-		}
-
-		// console output
-		if (msg.level == LogLevel::Debug && msg.debugLevel.has_value()) // skip console output if debug level is not active
-		{
-			if (!isDebugLevelActive(msg.debugLevel.value())) continue;
-		}
-
-		{
-			std::lock_guard lock(consoleMutex);
-
-			if (consoleOut)
+			if (logFile.is_open())
 			{
-				// format console log message
-				std::string out = std::format("[{}] [{}]",
-					vsid::time::toTimeString(std::chrono::system_clock::now()),
+				// format file log message
+
+				std::string fout = std::format("[{}] [{}]",
+					vsid::time::getFormattedTime(std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()), "%Y-%m-%d %H:%M:%S"),
 					logLvlToString(msg.level));
 
 				if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
+					std::format_to(std::back_inserter(fout), " [{}]", debugLvlToString(msg.debugLevel.value()));
+
+				std::format_to(std::back_inserter(fout), " {}\n", msg.msg);
+
+				logFile << fout;
+
+				if (logFile.fail()) // revive stream if log file was opened on the disk
+					logFile.clear();
+
+				if(msg.level >= LogLevel::Warning)
+					logFile.flush();
+
+				if (logFile.tellp() >= 5 * 1024 * 1024) rotateLogs(); // rotate if log file exceeds 5 MB
+			}
+
+			// console output
+			if (msg.level == LogLevel::Debug && msg.debugLevel.has_value()) // skip console output if debug level is not active
+			{
+				if (!isDebugLevelActive(msg.debugLevel.value())) continue;
+			}
+
+			{
+				std::lock_guard lock(consoleMutex);
+
+				if (consoleOut)
 				{
-					out += std::format(" [{}]", debugLvlToString(msg.debugLevel.value()));
+					// format console log message
+					std::string out = std::format("[{}] [{}]",
+						vsid::time::getFormattedTime(std::chrono::system_clock::now(), "%H:%M:%S"),
+						logLvlToString(msg.level));
+
+					if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
+					{
+						out += std::format(" [{}]", debugLvlToString(msg.debugLevel.value()));
+					}
+
+					out += std::format(" {}\n", msg.msg);
+
+					fputs(out.c_str(), consoleOut);
+					fflush(consoleOut);
 				}
+			}
 
-				out += std::format(" {}\n", msg.msg);
-
-				fputs(out.c_str(), consoleOut);
-				fflush(consoleOut);
+			// push to ES queue
+			if(msg.level > LogLevel::Debug) {
+				std::lock_guard lock(esMutex);
+				esQueue.push(std::format("[{}] {}", logLvlToString(msg.level), msg.msg));
 			}
 		}
-		
-		// push to ES queue
-		if(msg.level > LogLevel::Debug) {
-			std::lock_guard lock(esMutex);
-			esQueue.push(std::format("[{}] {}", logLvlToString(msg.level), msg.msg));
+		catch (...)
+		{
+			// never call log() here (this thread drains the queue) - drop the message, note it in the file if possible
+			try
+			{
+				if (logFile.is_open())
+				{
+					logFile.clear();
+					logFile << "[LOGGER] [ERROR] Failed to process a log message (message dropped)\n";
+				}
+			}
+			catch (...) {}
 		}
 	}
-} 
+}
 
 void vsid::Logger::rotateLogs()
 {
@@ -294,7 +303,7 @@ void vsid::Logger::panicFlush()
 			if (logFile.is_open())
 			{
 				std::string fout = std::format("[{}] [CRASH DUMP] [{}]",
-					vsid::time::getFormattedTime(std::chrono::system_clock::now()), logLvlToString(msg.level));
+					vsid::time::getFormattedTime(std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now())), logLvlToString(msg.level));
 
 				if (msg.level == LogLevel::Debug && msg.debugLevel.has_value())
 					fout += std::format(" [{}]", debugLvlToString(msg.debugLevel.value()));

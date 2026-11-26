@@ -9,6 +9,10 @@
 
 #define NOMINMAX // disable max from windows.h for std::max
 
+#ifdef __INTELLISENSE__
+#define _FORCENAMELESSUNION // IntelliSense (clang-cl mode) otherwise picks the named VARIANT union -> E0135 in atlcomcli.h
+#endif
+
 // Fügen Sie hier Header hinzu, die vorkompiliert werden sollen.
 #include "framework.h"
 

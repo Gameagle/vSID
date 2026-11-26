@@ -58,7 +58,7 @@ vsid::Area::Point vsid::Area::toPoint(std::pair<std::string, std::string> &pos)
 	return {lat, lon};
 }
 
-bool vsid::Area::inside(const EuroScopePlugIn::CPosition& fplnPos)
+bool vsid::Area::inside(const EuroScopePlugIn::CPosition& fplnPos) const
 {
 	std::pair<Point, Point> l5 = { {fplnPos.m_Latitude, fplnPos.m_Longitude}, {fplnPos.m_Latitude + 0.05, fplnPos.m_Longitude + 0.05} };
 	bool inside = false;
