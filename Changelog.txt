@@ -1,3 +1,7 @@
+[Changelog v0.16.0.1]
+:lady_beetle: **Fixes**
+*	FPLN - accidentally switched gnd state check in "clearance + startup" function disabling setting the startup state
+
 [Changelog v0.16.0]
 >[!INFO]
 > This version is a major rewrite of the internal structure. Please report any issues you encounter.
