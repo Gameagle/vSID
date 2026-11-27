@@ -2189,7 +2189,7 @@ void vsid::VSIDPlugin::OnFunctionCall(int FunctionId, const char * sItemString, 
 				FplnManager::processFlightplan(fpln, false, atcRwy);
 			}
 
-			if (!std::string(fpln.GetGroundState()).empty()) SyncManager::add(callsign, "STUP", fpln.GetControllerAssignedData().GetScratchPadString());
+			if (std::string(fpln.GetGroundState()).empty()) SyncManager::add(callsign, "STUP", fpln.GetControllerAssignedData().GetScratchPadString());
 		}
 
 		if (FunctionId == TAG_FUNC_VSID_INTS_SET)
